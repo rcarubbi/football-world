@@ -1,10 +1,15 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
-const API_KEY = process.env.YOUTUBE_API_KEY;
-
-if (!API_KEY) {
-  console.warn("YOUTUBE_API_KEY is not set. YouTube features disabled.");
+let _apiKey: string | undefined;
+function getApiKey(): string {
+  if (_apiKey === undefined) {
+    _apiKey = process.env.YOUTUBE_API_KEY || "";
+    if (!_apiKey) {
+      console.warn("YOUTUBE_API_KEY is not set. YouTube features disabled.");
+    }
+  }
+  return _apiKey;
 }
 
 let limiter: RateLimiter | null = null;
@@ -63,11 +68,11 @@ export async function searchVideos(
   query: string,
   maxResults = 5
 ): Promise<YouTubeSearchResult[]> {
-  if (!API_KEY) return [];
+  if (!getApiKey()) return [];
 
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${API_KEY}`
+      `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${getApiKey()}`
     )) as {
       items: Array<{
         id: { videoId: string };
@@ -84,7 +89,7 @@ export async function searchVideos(
 
     const videoIds = data.items.map((item) => item.id.videoId).join(",");
     const detailsData = (await fetchWithRetry(
-      `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`
+      `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}&key=${getApiKey()}`
     )) as {
       items: Array<{
         id: string;

@@ -1,7 +1,9 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json";
-const API_KEY = process.env.THESPORTSDB_API_KEY || "1";
+function getApiKey(): string {
+  return process.env.THESPORTSDB_API_KEY || "1";
+}
 
 let limiter: RateLimiter | null = null;
 
@@ -41,7 +43,7 @@ async function fetchWithRetry(
 export async function searchAllTeams(leagueId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${API_KEY}/search_all_teams.php?id=${leagueId}`
+      `${BASE_URL}/${getApiKey()}/search_all_teams.php?id=${leagueId}`
     )) as { teams: unknown[] };
     return data.teams || [];
   });
@@ -50,7 +52,7 @@ export async function searchAllTeams(leagueId: string) {
 export async function lookupTeam(teamId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${API_KEY}/lookupteam.php?id=${teamId}`
+      `${BASE_URL}/${getApiKey()}/lookupteam.php?id=${teamId}`
     )) as { teams: unknown[] };
     return data.teams?.[0] || null;
   });
@@ -59,7 +61,7 @@ export async function lookupTeam(teamId: string) {
 export async function lookupAllPlayers(teamId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${API_KEY}/lookup_all_players.php?id=${teamId}`
+      `${BASE_URL}/${getApiKey()}/lookup_all_players.php?id=${teamId}`
     )) as { player: unknown[] };
     return data.player || [];
   });
@@ -68,7 +70,7 @@ export async function lookupAllPlayers(teamId: string) {
 export async function lookupPlayerHonours(playerId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${API_KEY}/lookupplayerhonours.php?id=${playerId}`
+      `${BASE_URL}/${getApiKey()}/lookupplayerhonours.php?id=${playerId}`
     )) as { honours: unknown[] };
     return data.honours || [];
   });
@@ -77,7 +79,7 @@ export async function lookupPlayerHonours(playerId: string) {
 export async function lookupPlayerTeams(playerId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${API_KEY}/lookupplayerteams.php?id=${playerId}`
+      `${BASE_URL}/${getApiKey()}/lookupplayerteams.php?id=${playerId}`
     )) as { teams: unknown[] };
     return data.teams || [];
   });

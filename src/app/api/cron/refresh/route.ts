@@ -106,35 +106,40 @@ export async function GET(request: NextRequest) {
     videos: 0,
   };
 
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const season = currentMonth >= 7 ? currentYear : currentYear - 1;
 
   // Refresh standings
   for (const league of LEAGUES) {
     try {
       const standings = (await getStandings(
-        league.footballDataCode
+        league.footballDataCode,
+        season
       )) as FootballDataStanding[];
 
-      for (const standing of standings) {
-        for (const entry of standing.table) {
-          await upsertStanding({
-            league_slug: league.slug,
-            season: currentYear.toString(),
-            position: entry.position,
-            team_name: entry.team.name,
-            team_badge: entry.team.crest,
-            played: entry.playedGames,
-            won: entry.won,
-            drawn: entry.draw,
-            lost: entry.lost,
-            goals_for: entry.goalsFor,
-            goals_against: entry.goalsAgainst,
-            goal_difference: entry.goalDifference,
-            points: entry.points,
-            form: entry.form,
-          });
-          results.standings++;
-        }
+      const regularSeason = standings.find((s) => s.stage === "REGULAR_SEASON") || standings[0];
+      if (!regularSeason) continue;
+
+      for (const entry of regularSeason.table) {
+        await upsertStanding({
+          league_slug: league.slug,
+          season: season.toString(),
+          position: entry.position,
+          team_name: entry.team.name,
+          team_badge: entry.team.crest,
+          played: entry.playedGames,
+          won: entry.won,
+          drawn: entry.draw,
+          lost: entry.lost,
+          goals_for: entry.goalsFor,
+          goals_against: entry.goalsAgainst,
+          goal_difference: entry.goalDifference,
+          points: entry.points,
+          form: entry.form,
+        });
+        results.standings++;
       }
     } catch (error) {
       console.error(`Error refreshing standings for ${league.name}:`, error);
@@ -145,7 +150,9 @@ export async function GET(request: NextRequest) {
   for (const league of LEAGUES) {
     try {
       const matches = (await getMatches(
-        league.footballDataCode
+        league.footballDataCode,
+        undefined,
+        season
       )) as FootballDataMatch[];
 
       for (const match of matches) {
@@ -153,7 +160,7 @@ export async function GET(request: NextRequest) {
         await upsertMatch({
           football_data_id: match.id.toString(),
           league_slug: league.slug,
-          season: currentYear.toString(),
+          season: season.toString(),
           matchday: match.matchday,
           status: match.status,
           home_team_name: match.homeTeam.name,
@@ -176,17 +183,17 @@ export async function GET(request: NextRequest) {
     try {
       const scorers = (await getTopScorers(
         league.apiFootballId,
-        currentYear
+        season
       )) as ApiFootballScorer[];
 
       for (const scorer of scorers.slice(0, 10)) {
         await upsertTopScorer({
           league_slug: league.slug,
-          season: currentYear.toString(),
+          season: season.toString(),
           apifootball_id: scorer.player.id.toString(),
           player_name: scorer.player.name,
           player_slug: slugify(scorer.player.name),
-          team_name: "", // Would need to fetch team info
+          team_name: "",
           goals: scorer.statistics[0]?.goals.total || 0,
           assists: scorer.statistics[0]?.assists.total || 0,
           penalties: scorer.statistics[0]?.penalty.scored || 0,
@@ -203,13 +210,13 @@ export async function GET(request: NextRequest) {
     try {
       const transfers = (await getTransfers(
         league.apiFootballId,
-        currentYear
+        season
       )) as ApiFootballTransfer[];
 
       for (const transfer of transfers.slice(0, 20)) {
         await upsertTransfer({
           league_slug: league.slug,
-          season: currentYear.toString(),
+          season: season.toString(),
           player_name: transfer.player.name,
           player_slug: slugify(transfer.player.name),
           from_team: transfer.teams.out.name,
@@ -228,13 +235,12 @@ export async function GET(request: NextRequest) {
   // Refresh videos
   for (const league of LEAGUES) {
     try {
-      const query = `${league.name} highlights ${currentYear}`;
+      const query = `${league.name} highlights ${season}`;
       const videos = await searchVideos(query, 5);
 
       for (const video of videos) {
         const durationSeconds = parseDuration(video.duration);
 
-        // Filter by duration (3-10 minutes)
         if (durationSeconds >= 180 && durationSeconds <= 600) {
           await upsertVideo({
             video_id: video.videoId,
@@ -244,7 +250,7 @@ export async function GET(request: NextRequest) {
             duration: durationSeconds,
             entity_type: "league",
             league_slug: league.slug,
-            season: currentYear.toString(),
+            season: season.toString(),
             published_at: video.publishedAt,
           });
           results.videos++;

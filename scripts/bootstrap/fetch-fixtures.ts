@@ -32,7 +32,9 @@ export async function fetchFixtures(): Promise<void> {
 
     try {
       const matches = (await getMatches(
-        league.footballDataCode
+        league.footballDataCode,
+        undefined,
+        2025
       )) as FootballDataMatch[];
 
       for (const match of matches) {

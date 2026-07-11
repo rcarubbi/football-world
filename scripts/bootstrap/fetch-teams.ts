@@ -1,12 +1,12 @@
 import { slugify } from "../../src/lib/slugify";
-import { upsertTeam } from "../../src/lib/db/teams";
+import { upsertTeam, findTeamBySlug } from "../../src/lib/db/teams";
 import { LeagueConfig } from "../../src/lib/leagues";
 
 const BASE_URL = "https://api.football-data.org/v4";
+const INTERNATIONAL_LEAGUES = new Set(["champions-league", "fifa-world-cup"]);
 
 async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
   const apiKey = process.env.FOOTBALLDATA_API_KEY;
-  console.log(`    Using API key: ${apiKey?.substring(0, 5)}...`);
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, {
@@ -44,7 +44,7 @@ interface FootballDataTeam {
 
 export async function fetchTeamsFromFootballData(league: LeagueConfig): Promise<void> {
   const data = (await fetchWithRetry(
-    `${BASE_URL}/competitions/${league.footballDataCode}/standings`
+    `${BASE_URL}/competitions/${league.footballDataCode}/standings?season=2025`
   )) as {
     standings: Array<{
       table: Array<{
@@ -58,6 +58,14 @@ export async function fetchTeamsFromFootballData(league: LeagueConfig): Promise<
   for (const entry of teams) {
     const team = entry.team;
     const slug = slugify(team.name);
+
+    if (INTERNATIONAL_LEAGUES.has(league.slug)) {
+      const existing = await findTeamBySlug(slug);
+      if (existing && !INTERNATIONAL_LEAGUES.has(existing.league_slug)) {
+        continue;
+      }
+    }
+
     await upsertTeam({
       football_data_id: team.id.toString(),
       name: team.name,

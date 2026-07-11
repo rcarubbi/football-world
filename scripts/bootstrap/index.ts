@@ -54,7 +54,11 @@ async function main() {
     console.log("Phase 1: Fetching teams from football-data.org...");
     for (const league of LEAGUES) {
       console.log(`  Fetching ${league.name}...`);
-      await fetchTeamsFromFootballData(league);
+      try {
+        await fetchTeamsFromFootballData(league);
+      } catch (error) {
+        console.error(`  Error fetching teams for ${league.name}:`, (error as Error).message);
+      }
     }
     progress.teams = true;
     await saveProgress(progress);
@@ -63,7 +67,11 @@ async function main() {
 
   if (!progress.standings) {
     console.log("Phase 2: Fetching standings...");
-    await fetchStandings();
+    try {
+      await fetchStandings();
+    } catch (error) {
+      console.error("Error fetching standings:", (error as Error).message);
+    }
     progress.standings = true;
     await saveProgress(progress);
     console.log("✓ Standings fetched\n");
@@ -71,7 +79,11 @@ async function main() {
 
   if (!progress.fixtures) {
     console.log("Phase 3: Fetching fixtures...");
-    await fetchFixtures();
+    try {
+      await fetchFixtures();
+    } catch (error) {
+      console.error("Error fetching fixtures:", (error as Error).message);
+    }
     progress.fixtures = true;
     await saveProgress(progress);
     console.log("✓ Fixtures fetched\n");

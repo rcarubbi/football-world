@@ -1,13 +1,15 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://api.football-data.org/v4";
-const API_KEY = process.env.FOOTBALLDATA_API_KEY;
+function getApiKey(): string {
+  return process.env.FOOTBALLDATA_API_KEY || "";
+}
 
 let limiter: RateLimiter | null = null;
 
 function getLimiter(): RateLimiter {
   if (!limiter) {
-    limiter = new RateLimiter(2, 10); // 2 concurrent, 10 per minute
+    limiter = new RateLimiter(2, 500); // 2 concurrent, 500/day (free tier: 10/min)
   }
   return limiter;
 }
@@ -20,7 +22,7 @@ async function fetchWithRetry(
     try {
       const response = await fetch(url, {
         headers: {
-          "X-Auth-Token": API_KEY || "",
+          "X-Auth-Token": getApiKey(),
         },
       });
       if (response.status === 429) {
@@ -42,10 +44,11 @@ async function fetchWithRetry(
   throw new Error("Max retries exceeded");
 }
 
-export async function getStandings(competitionCode: string) {
+export async function getStandings(competitionCode: string, season?: number) {
   return getLimiter().add(async () => {
+    const seasonParam = season ? `?season=${season}` : "";
     const data = (await fetchWithRetry(
-      `${BASE_URL}/competitions/${competitionCode}/standings`
+      `${BASE_URL}/competitions/${competitionCode}/standings${seasonParam}`
     )) as { standings: unknown[] };
     return data.standings || [];
   });
@@ -53,12 +56,15 @@ export async function getStandings(competitionCode: string) {
 
 export async function getMatches(
   competitionCode: string,
-  matchday?: number
+  matchday?: number,
+  season?: number
 ) {
   return getLimiter().add(async () => {
-    const url = matchday
-      ? `${BASE_URL}/competitions/${competitionCode}/matches?matchday=${matchday}`
-      : `${BASE_URL}/competitions/${competitionCode}/matches`;
+    const params = new URLSearchParams();
+    if (matchday) params.set("matchday", matchday.toString());
+    if (season) params.set("season", season.toString());
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const url = `${BASE_URL}/competitions/${competitionCode}/matches${qs}`;
     const data = (await fetchWithRetry(url)) as { matches: unknown[] };
     return data.matches || [];
   });

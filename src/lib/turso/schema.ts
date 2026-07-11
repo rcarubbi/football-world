@@ -174,4 +174,8 @@ CREATE INDEX IF NOT EXISTS idx_transfers_league ON transfers(league_slug);
 CREATE INDEX IF NOT EXISTS idx_videos_entity ON videos(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_videos_league ON videos(league_slug);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_video_id ON videos(video_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_standings_unique ON league_standings(league_slug, season, position);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_football_data_id ON matches(football_data_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_top_scorers_unique ON top_scorers(league_slug, season, player_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transfers_unique ON transfers(league_slug, season, player_name);
 `;

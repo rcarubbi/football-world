@@ -1,7 +1,9 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://v3.football.api-sports.io";
-const API_KEY = process.env.APIFOOTBALL_KEY;
+function getApiKey(): string {
+  return process.env.APIFOOTBALL_KEY || "";
+}
 
 let limiter: RateLimiter | null = null;
 
@@ -20,7 +22,7 @@ async function fetchWithRetry(
     try {
       const response = await fetch(url, {
         headers: {
-          "x-rapidapi-key": API_KEY || "",
+          "x-rapidapi-key": getApiKey(),
           "x-rapidapi-host": "v3.football.api-sports.io",
         },
       });

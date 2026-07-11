@@ -1,5 +1,4 @@
 import { Player } from "@/lib/db/players";
-import Image from "next/image";
 
 interface PlayerHeroProps {
   player: Player;
@@ -9,7 +8,7 @@ export function PlayerHero({ player }: PlayerHeroProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
       {player.photo_url ? (
-        <Image
+        <img
           src={player.photo_url}
           alt={player.name}
           width={128}

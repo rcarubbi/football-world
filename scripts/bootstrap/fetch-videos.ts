@@ -1,7 +1,18 @@
 import { searchVideos, parseDuration } from "../../src/lib/api/youtube";
-import { findAllTeams, upsertTeam } from "../../src/lib/db/teams";
+import { findAllTeams } from "../../src/lib/db/teams";
 import { upsertVideo } from "../../src/lib/db/videos";
 import { LEAGUES } from "../../src/lib/leagues";
+
+function isVideoAboutTeam(title: string, teamName: string): boolean {
+  const normalised = title.toLowerCase();
+  const words = teamName
+    .toLowerCase()
+    .replace(/fc$|cf$|ac$|sc$|bk$/g, "")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+  return words.some((w) => normalised.includes(w));
+}
 
 export async function fetchVideos(): Promise<void> {
   const currentYear = new Date().getFullYear();
@@ -19,7 +30,11 @@ export async function fetchVideos(): Promise<void> {
       for (const video of videos) {
         const durationSeconds = parseDuration(video.duration);
 
-        if (durationSeconds >= 120 && durationSeconds <= 900) {
+        if (
+          durationSeconds >= 120 &&
+          durationSeconds <= 900 &&
+          isVideoAboutTeam(video.title, team.name)
+        ) {
           await upsertVideo({
             video_id: video.videoId,
             title: video.title,

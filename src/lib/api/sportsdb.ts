@@ -1,15 +1,13 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json";
-function getApiKey(): string {
-  return process.env.THESPORTSDB_API_KEY || "1";
-}
+const FREE_KEY = "123";
 
 let limiter: RateLimiter | null = null;
 
 function getLimiter(): RateLimiter {
   if (!limiter) {
-    limiter = new RateLimiter(3, 30); // 3 concurrent, 30 per minute
+    limiter = new RateLimiter(1, 10); // 1 concurrent, 10 per minute (conservative)
   }
   return limiter;
 }
@@ -40,29 +38,20 @@ async function fetchWithRetry(
   throw new Error("Max retries exceeded");
 }
 
-export async function searchAllTeams(leagueId: string) {
+export async function searchTeams(name: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${getApiKey()}/search_all_teams.php?id=${leagueId}`
-    )) as { teams: unknown[] };
+      `${BASE_URL}/${FREE_KEY}/searchteams.php?t=${encodeURIComponent(name)}`
+    )) as { teams: unknown[] | null };
     return data.teams || [];
-  });
-}
-
-export async function lookupTeam(teamId: string) {
-  return getLimiter().add(async () => {
-    const data = (await fetchWithRetry(
-      `${BASE_URL}/${getApiKey()}/lookupteam.php?id=${teamId}`
-    )) as { teams: unknown[] };
-    return data.teams?.[0] || null;
   });
 }
 
 export async function lookupAllPlayers(teamId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${getApiKey()}/lookup_all_players.php?id=${teamId}`
-    )) as { player: unknown[] };
+      `${BASE_URL}/${FREE_KEY}/lookup_all_players.php?id=${teamId}`
+    )) as { player: unknown[] | null };
     return data.player || [];
   });
 }
@@ -70,17 +59,8 @@ export async function lookupAllPlayers(teamId: string) {
 export async function lookupPlayerHonours(playerId: string) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/${getApiKey()}/lookupplayerhonours.php?id=${playerId}`
-    )) as { honours: unknown[] };
+      `${BASE_URL}/${FREE_KEY}/lookupplayerhonours.php?id=${playerId}`
+    )) as { honours: unknown[] | null };
     return data.honours || [];
-  });
-}
-
-export async function lookupPlayerTeams(playerId: string) {
-  return getLimiter().add(async () => {
-    const data = (await fetchWithRetry(
-      `${BASE_URL}/${getApiKey()}/lookupplayerteams.php?id=${playerId}`
-    )) as { teams: unknown[] };
-    return data.teams || [];
   });
 }

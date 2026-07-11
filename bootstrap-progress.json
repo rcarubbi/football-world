@@ -4,5 +4,7 @@
   "fixtures": true,
   "wikipedia": true,
   "videos": true,
-  "squads": true
+  "squads": true,
+  "teamDetails": true,
+  "squadsSportsDB": true
 }

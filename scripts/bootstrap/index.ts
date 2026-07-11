@@ -12,6 +12,8 @@ import { fetchFixtures } from "./fetch-fixtures";
 import { scrapeWikipedia } from "./scrape-wikipedia";
 import { fetchVideos } from "./fetch-videos";
 import { fetchSquads } from "./fetch-squads";
+import { fetchTeamDetails } from "./fetch-team-details";
+import { fetchSquadsSportsDB } from "./fetch-squads-sportsdb";
 
 interface BootstrapProgress {
   teams: boolean;
@@ -20,6 +22,8 @@ interface BootstrapProgress {
   wikipedia: boolean;
   videos: boolean;
   squads: boolean;
+  teamDetails: boolean;
+  squadsSportsDB: boolean;
 }
 
 async function loadProgress(): Promise<BootstrapProgress> {
@@ -37,6 +41,8 @@ async function loadProgress(): Promise<BootstrapProgress> {
     wikipedia: false,
     videos: false,
     squads: false,
+    teamDetails: false,
+    squadsSportsDB: false,
   };
 }
 
@@ -109,11 +115,27 @@ async function main() {
   }
 
   if (!progress.squads) {
-    console.log("Phase 6: Fetching player squads...");
+    console.log("Phase 6: Fetching player squads (API-Football)...");
     await fetchSquads();
     progress.squads = true;
     await saveProgress(progress);
     console.log("✓ Squads fetched\n");
+  }
+
+  if (!progress.teamDetails) {
+    console.log("Phase 7: Fetching team details from TheSportsDB...");
+    await fetchTeamDetails();
+    progress.teamDetails = true;
+    await saveProgress(progress);
+    console.log("✓ Team details fetched\n");
+  }
+
+  if (!progress.squadsSportsDB) {
+    console.log("Phase 8: Fetching player squads from TheSportsDB...");
+    await fetchSquadsSportsDB();
+    progress.squadsSportsDB = true;
+    await saveProgress(progress);
+    console.log("✓ Squads fetched from TheSportsDB\n");
   }
 
   console.log("Bootstrap complete!");

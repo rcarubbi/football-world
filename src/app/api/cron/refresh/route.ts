@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LEAGUES } from "../../../../lib/leagues";
-import { getStandings, getMatches } from "../../../../lib/api/football-data";
-import { getTopScorers, getTransfers } from "../../../../lib/api/api-football";
+import {
+  getStandings as getStandingsFD,
+  getMatches,
+} from "../../../../lib/api/football-data";
+import {
+  getTopScorers as getTopScorersAF,
+  getTransfers,
+} from "../../../../lib/api/api-football";
+import {
+  getStandings as getStandingsBBS,
+  getTopScorers as getTopScorersBBS,
+  getBBSLeagueId,
+} from "../../../../lib/api/bigballs";
 import { searchVideos, parseDuration } from "../../../../lib/api/youtube";
 import { upsertStanding } from "../../../../lib/db/standings";
 import { upsertMatch } from "../../../../lib/db/matches";
@@ -14,11 +25,7 @@ interface FootballDataStanding {
   stage: string;
   table: Array<{
     position: number;
-    team: {
-      id: number;
-      name: string;
-      crest: string;
-    };
+    team: { id: number; name: string; crest: string };
     playedGames: number;
     won: number;
     draw: number;
@@ -36,63 +43,28 @@ interface FootballDataMatch {
   matchday: number;
   status: string;
   utcDate: string;
-  homeTeam: {
-    id: number;
-    name: string;
-  };
-  awayTeam: {
-    id: number;
-    name: string;
-  };
-  score: {
-    fullTime: {
-      home: number | null;
-      away: number | null;
-    };
-  };
+  homeTeam: { id: number; name: string };
+  awayTeam: { id: number; name: string };
+  score: { fullTime: { home: number | null; away: number | null } };
   venue: string | null;
 }
 
 interface ApiFootballScorer {
-  player: {
-    id: number;
-    name: string;
-    slug: string;
-  };
+  player: { id: number; name: string; slug: string };
   statistics: Array<{
-    goals: {
-      total: number;
-    };
-    assists: {
-      total: number;
-    };
-    penalty: {
-      scored: number;
-    };
+    goals: { total: number };
+    assists: { total: number };
+    penalty: { scored: number };
   }>;
 }
 
 interface ApiFootballTransfer {
-  player: {
-    name: string;
-  };
-  transfer: {
-    date: string;
-    type: string;
-    description: string;
-  };
-  teams: {
-    in: {
-      name: string;
-    };
-    out: {
-      name: string;
-    };
-  };
+  player: { name: string };
+  transfer: { date: string; type: string; description: string };
+  teams: { in: { name: string }; out: { name: string } };
 }
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -104,6 +76,8 @@ export async function GET(request: NextRequest) {
     topScorers: 0,
     transfers: 0,
     videos: 0,
+    standingsSource: "none",
+    topScorersSource: "none",
   };
 
   const now = new Date();
@@ -111,15 +85,45 @@ export async function GET(request: NextRequest) {
   const currentMonth = now.getMonth() + 1;
   const season = currentMonth >= 7 ? currentYear : currentYear - 1;
 
-  // Refresh standings
+  // Refresh standings — Big Balls primary, football-data.org fallback
   for (const league of LEAGUES) {
     try {
-      const standings = (await getStandings(
+      const bbsId = getBBSLeagueId(league.slug);
+
+      if (bbsId) {
+        try {
+          const rows = await getStandingsBBS(bbsId);
+          for (const entry of rows) {
+            await upsertStanding({
+              league_slug: league.slug,
+              season: season.toString(),
+              position: entry.position,
+              team_name: entry.team_name,
+              played: entry.played,
+              won: entry.won,
+              drawn: entry.drawn,
+              lost: entry.lost,
+              goals_for: entry.goals_for,
+              goals_against: entry.goals_against,
+              goal_difference: entry.goal_difference,
+              points: entry.points,
+            });
+            results.standings++;
+          }
+          results.standingsSource = "bigballs";
+          continue;
+        } catch (e) {
+          console.error(`Big Balls standings failed for ${league.name}, falling back:`, (e as Error).message);
+        }
+      }
+
+      // Fallback: football-data.org
+      const standings = (await getStandingsFD(
         league.footballDataCode,
         season
       )) as FootballDataStanding[];
-
-      const regularSeason = standings.find((s) => s.stage === "REGULAR_SEASON") || standings[0];
+      const regularSeason =
+        standings.find((s) => s.stage === "REGULAR_SEASON") || standings[0];
       if (!regularSeason) continue;
 
       for (const entry of regularSeason.table) {
@@ -141,12 +145,13 @@ export async function GET(request: NextRequest) {
         });
         results.standings++;
       }
+      results.standingsSource = "football-data";
     } catch (error) {
       console.error(`Error refreshing standings for ${league.name}:`, error);
     }
   }
 
-  // Refresh fixtures
+  // Refresh fixtures (football-data.org — Big Balls scores lack team names)
   for (const league of LEAGUES) {
     try {
       const matches = (await getMatches(
@@ -178,11 +183,37 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Refresh top scorers (API-Football free tier: seasons 2022-2024 only)
-  const apiFootballSeason = 2024;
+  // Refresh top scorers — Big Balls primary, API-Football fallback
   for (const league of LEAGUES) {
     try {
-      const scorers = (await getTopScorers(
+      const bbsId = getBBSLeagueId(league.slug);
+
+      if (bbsId) {
+        try {
+          const scorers = await getTopScorersBBS(bbsId, 2025, 10);
+          for (const scorer of scorers) {
+            await upsertTopScorer({
+              league_slug: league.slug,
+              season: season.toString(),
+              player_name: scorer.player_name,
+              player_slug: slugify(scorer.player_name),
+              team_name: scorer.team,
+              goals: scorer.goals,
+              assists: scorer.assists,
+              penalties: 0,
+            });
+            results.topScorers++;
+          }
+          results.topScorersSource = "bigballs";
+          continue;
+        } catch (e) {
+          console.error(`Big Balls top scorers failed for ${league.name}, falling back:`, (e as Error).message);
+        }
+      }
+
+      // Fallback: API-Football (season 2024 for free tier)
+      const apiFootballSeason = 2024;
+      const scorers = (await getTopScorersAF(
         league.apiFootballId,
         apiFootballSeason
       )) as ApiFootballScorer[];
@@ -201,12 +232,14 @@ export async function GET(request: NextRequest) {
         });
         results.topScorers++;
       }
+      results.topScorersSource = "apifootball";
     } catch (error) {
       console.error(`Error refreshing top scorers for ${league.name}:`, error);
     }
   }
 
-  // Refresh transfers
+  // Refresh transfers (API-Football)
+  const apiFootballSeason = 2024;
   for (const league of LEAGUES) {
     try {
       const transfers = (await getTransfers(
@@ -233,7 +266,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Refresh videos
+  // Refresh videos (YouTube)
   for (const league of LEAGUES) {
     try {
       const query = `${league.name} highlights ${season}`;

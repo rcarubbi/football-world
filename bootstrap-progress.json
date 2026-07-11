@@ -6,5 +6,5 @@
   "videos": true,
   "squads": true,
   "teamDetails": true,
-  "squadsSportsDB": true
+  "squadsSportsDB": false
 }

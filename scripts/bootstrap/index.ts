@@ -133,9 +133,18 @@ async function main() {
   if (!progress.squadsSportsDB) {
     console.log("Phase 8: Fetching player squads from TheSportsDB...");
     await fetchSquadsSportsDB();
-    progress.squadsSportsDB = true;
-    await saveProgress(progress);
-    console.log("✓ Squads fetched from TheSportsDB\n");
+    // Check if all teams have players before marking complete
+    const client = (await import("../../src/lib/turso/client")).getTursoClient();
+    const withoutPlayers = await client.execute(
+      `SELECT COUNT(*) as n FROM teams t WHERE NOT EXISTS (SELECT 1 FROM players p WHERE p.team_id = t.id)`
+    );
+    if ((withoutPlayers.rows[0].n as number) === 0) {
+      progress.squadsSportsDB = true;
+      await saveProgress(progress);
+      console.log("✓ All teams have squads\n");
+    } else {
+      console.log(`⚠ ${withoutPlayers.rows[0].n} teams still missing squads (rate limited)\n`);
+    }
   }
 
   console.log("Bootstrap complete!");

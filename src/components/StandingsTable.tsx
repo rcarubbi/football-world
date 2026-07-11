@@ -1,6 +1,14 @@
 import { Standing } from "@/lib/db/standings";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "./ui/Table";
 import { TeamBadge } from "./TeamBadge";
+import Link from "next/link";
+
+function teamSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 interface StandingsTableProps {
   standings: Standing[];
@@ -39,14 +47,17 @@ export function StandingsTable({ standings }: StandingsTableProps) {
             <TableRow key={standing.id}>
               <TableCell className="font-medium">{standing.position}</TableCell>
               <TableCell>
-                <div className="flex items-center space-x-3">
+                <Link
+                  href={`/teams/${teamSlug(standing.team_name || "")}`}
+                  className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                >
                   <TeamBadge
                     badgeUrl={standing.team_badge}
                     teamName={standing.team_name || ""}
                     size="sm"
                   />
                   <span className="font-medium">{standing.team_name}</span>
-                </div>
+                </Link>
               </TableCell>
               <TableCell className="text-center">{standing.played}</TableCell>
               <TableCell className="text-center">{standing.won}</TableCell>

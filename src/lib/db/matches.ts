@@ -69,11 +69,13 @@ export async function findMatchesByTeam(
 ): Promise<Match[]> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: `SELECT * FROM matches 
-      WHERE home_team_id = ? OR away_team_id = ? 
-      ORDER BY match_date DESC 
+    sql: `SELECT m.* FROM matches m
+      LEFT JOIN teams t ON t.id = ?
+      WHERE m.home_team_id = ? OR m.away_team_id = ?
+        OR m.home_team_name = t.name OR m.away_team_name = t.name
+      ORDER BY m.match_date DESC
       LIMIT ?`,
-    args: [teamId, teamId, limit],
+    args: [teamId, teamId, teamId, limit],
   });
   return result.rows as unknown as Match[];
 }

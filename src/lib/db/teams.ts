@@ -29,8 +29,8 @@ export async function upsertTeam(team: Partial<Team>): Promise<number> {
       location, league_slug, wikipedia_content, stadium_content
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
-      thesportsdb_id = excluded.football_data_id,
-      football_data_id = excluded.football_data_id,
+      thesportsdb_id = COALESCE(excluded.thesportsdb_id, teams.thesportsdb_id),
+      football_data_id = COALESCE(excluded.football_data_id, teams.football_data_id),
       apifootball_id = excluded.apifootball_id,
       name = excluded.name,
       short_name = excluded.short_name,

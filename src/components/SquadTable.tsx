@@ -1,5 +1,6 @@
 import { Player } from "@/lib/db/players";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "./ui/Table";
+import Image from "next/image";
 import Link from "next/link";
 
 interface SquadTableProps {
@@ -35,14 +36,15 @@ export function SquadTable({ players, teamSlug }: SquadTableProps) {
             <TableRow key={player.id}>
               <TableCell>
                 {player.photo_url ? (
-                  <img
-                    src={player.photo_url}
-                    alt={player.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                    loading="lazy"
-                  />
+                  <div className="w-10 h-10 relative">
+                    <Image
+                      src={player.photo_url}
+                      alt={player.name}
+                      fill
+                      className="rounded-full object-cover"
+                      sizes="40px"
+                    />
+                  </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                     <span className="text-gray-500 dark:text-gray-400 text-xs">

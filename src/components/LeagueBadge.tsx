@@ -1,8 +1,10 @@
 import { LEAGUES } from "@/lib/leagues";
+import { LeagueIcon } from "./LeagueIcon";
 
 interface LeagueBadgeProps {
   leagueSlug: string;
   size?: "sm" | "md" | "lg";
+  showIcon?: boolean;
 }
 
 const leagueColors: Record<string, { bg: string; text: string }> = {
@@ -16,7 +18,7 @@ const leagueColors: Record<string, { bg: string; text: string }> = {
   "brasileirao-serie-a": { bg: "bg-green-100 dark:bg-green-900", text: "text-green-800 dark:text-green-200" },
 };
 
-export function LeagueBadge({ leagueSlug, size = "md" }: LeagueBadgeProps) {
+export function LeagueBadge({ leagueSlug, size = "md", showIcon = false }: LeagueBadgeProps) {
   const league = LEAGUES.find((l) => l.slug === leagueSlug);
   const colors = leagueColors[leagueSlug] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-800 dark:text-gray-200" };
 
@@ -30,6 +32,7 @@ export function LeagueBadge({ leagueSlug, size = "md" }: LeagueBadgeProps) {
     <span
       className={`inline-flex items-center rounded-full font-medium ${colors.bg} ${colors.text} ${sizeClasses[size]}`}
     >
+      {showIcon && <LeagueIcon slug={leagueSlug} size="sm" className="mr-1.5" />}
       {league?.name || leagueSlug}
     </span>
   );

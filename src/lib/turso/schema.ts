@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS players (
   weight TEXT,
   photo_url TEXT,
   description TEXT,
+  career_summary TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (team_id) REFERENCES teams(id)
@@ -157,6 +158,43 @@ CREATE TABLE IF NOT EXISTS videos (
   published_at TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS world_cups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  year INTEGER NOT NULL,
+  host_country TEXT,
+  winner TEXT,
+  runner_up TEXT,
+  third_place TEXT,
+  fourth_place TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS world_cup_matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  world_cup_id INTEGER NOT NULL,
+  stage TEXT,
+  group_name TEXT,
+  home_team TEXT,
+  away_team TEXT,
+  home_score INTEGER,
+  away_score INTEGER,
+  venue TEXT,
+  match_date TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (world_cup_id) REFERENCES world_cups(id)
+);
+
+CREATE TABLE IF NOT EXISTS world_cup_teams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  world_cup_id INTEGER NOT NULL,
+  team_name TEXT NOT NULL,
+  fifa_code TEXT,
+  badge_url TEXT,
+  group_name TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (world_cup_id) REFERENCES world_cups(id)
+);
 `;
 
 export const INDICES = `
@@ -178,4 +216,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_standings_unique ON league_standings(leagu
 CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_football_data_id ON matches(football_data_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_top_scorers_unique ON top_scorers(league_slug, season, player_name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_transfers_unique ON transfers(league_slug, season, player_name);
+CREATE INDEX IF NOT EXISTS idx_world_cup_matches_world_cup ON world_cup_matches(world_cup_id);
+CREATE INDEX IF NOT EXISTS idx_world_cup_teams_world_cup ON world_cup_teams(world_cup_id);
 `;

@@ -1,57 +1,123 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
-let _apiKey: string | undefined;
-function getApiKey(): string {
-  if (_apiKey === undefined) {
-    _apiKey = process.env.YOUTUBE_API_KEY || "";
-    if (!_apiKey) {
-      console.warn("YOUTUBE_API_KEY is not set. YouTube features disabled.");
+
+let _apiKeys: string[] = [];
+let _currentKeyIndex = 0;
+let _exhaustedKeys: Set<string> = new Set();
+
+function loadApiKeys(): string[] {
+  if (_apiKeys.length === 0) {
+    const keys = [
+      process.env.YOUTUBE_API_KEY,
+      process.env.YOUTUBE_API_KEY_2,
+      process.env.YOUTUBE_API_KEY_3,
+      process.env.YOUTUBE_API_KEY_4,
+    ].filter((k): k is string => !!k && k.trim() !== "");
+
+    _apiKeys = keys;
+    if (_apiKeys.length === 0) {
+      console.warn("No YOUTUBE_API_KEY set. YouTube features disabled.");
+    } else {
+      console.log(`Loaded ${_apiKeys.length} YouTube API keys`);
     }
   }
-  return _apiKey;
+  return _apiKeys;
+}
+
+function getNextApiKey(): string {
+  const keys = loadApiKeys();
+  if (keys.length === 0) return "";
+
+  const startIndex = _currentKeyIndex;
+  let attempts = 0;
+
+  while (attempts < keys.length) {
+    const key = keys[_currentKeyIndex];
+    if (!_exhaustedKeys.has(key)) {
+      return key;
+    }
+    _currentKeyIndex = (_currentKeyIndex + 1) % keys.length;
+    attempts++;
+  }
+
+  console.log("All API keys exhausted, resetting...");
+  _exhaustedKeys.clear();
+  return keys[0];
+}
+
+function markKeyExhausted(key: string) {
+  _exhaustedKeys.add(key);
+  const keys = loadApiKeys();
+  const exhaustedCount = _exhaustedKeys.size;
+  console.log(`API key exhausted (${exhaustedCount}/${keys.length} exhausted)`);
+
+  if (exhaustedCount < keys.length) {
+    _currentKeyIndex = (_currentKeyIndex + 1) % keys.length;
+    console.log(`Switching to next API key`);
+  }
 }
 
 let limiter: RateLimiter | null = null;
 
 function getLimiter(): RateLimiter {
   if (!limiter) {
-    limiter = new RateLimiter(3, 100); // 3 concurrent, 100 searches/day (100 units per search + 1 per details call)
+    limiter = new RateLimiter(3, 400); // 3 concurrent, 400 searches/day per key
   }
   return limiter;
 }
 
-async function fetchWithRetry(
+async function fetchWithApiKey(
   url: string,
-  retries = 3
+  apiKey: string,
+  retries = 2
 ): Promise<unknown> {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url + `&key=${apiKey}`);
       if (response.status === 429 || response.status === 403) {
         const body = await response.text().catch(() => "");
-        if (response.status === 403 && !body.includes("quotaExceeded")) {
-          throw new Error(`HTTP 403 Forbidden: access denied for this API key`);
-        }
-        if (response.status === 403 || i === retries - 1) {
-          throw new Error(`HTTP ${response.status}: daily quota exceeded`);
-        }
-        const waitTime = Math.pow(2, i) * 1000;
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-        continue;
+        const isQuotaError = body.includes("quotaExceeded") || body.includes("quota") || body.includes("dailyLimit");
+
+        markKeyExhausted(apiKey);
+        throw new Error(`QUOTA_EXCEEDED`);
       }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       return response.json();
     } catch (error) {
+      if ((error as Error).message === "QUOTA_EXCEEDED") throw error;
       if (i === retries - 1) throw error;
       await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, i) * 1000)
+        setTimeout(resolve, Math.pow(2, i) * 500)
       );
     }
   }
   throw new Error("Max retries exceeded");
+}
+
+async function fetchWithAnyKey(
+  url: string,
+  maxAttempts = 4
+): Promise<unknown> {
+  const keys = loadApiKeys();
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const apiKey = getNextApiKey();
+    if (!apiKey) throw new Error("No YouTube API keys available");
+
+    try {
+      return await fetchWithApiKey(url, apiKey);
+    } catch (error) {
+      lastError = error as Error;
+      if (lastError.message === "QUOTA_EXCEEDED") continue;
+      throw error;
+    }
+  }
+
+  throw lastError || new Error("All API keys failed");
 }
 
 export interface YouTubeSearchResult {
@@ -68,12 +134,13 @@ export async function searchVideos(
   query: string,
   maxResults = 5
 ): Promise<YouTubeSearchResult[]> {
-  if (!getApiKey()) return [];
+  const keys = loadApiKeys();
+  if (keys.length === 0) return [];
 
   return getLimiter().add(async () => {
-    const data = (await fetchWithRetry(
-      `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&order=viewCount&maxResults=${maxResults}&key=${getApiKey()}`
-    )) as {
+    const searchUrl = `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&order=viewCount&maxResults=${maxResults}`;
+
+    const data = (await fetchWithAnyKey(searchUrl)) as {
       items: Array<{
         id: { videoId: string };
         snippet: {
@@ -88,9 +155,8 @@ export async function searchVideos(
     if (!data.items) return [];
 
     const videoIds = data.items.map((item) => item.id.videoId).join(",");
-    const detailsData = (await fetchWithRetry(
-      `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}&key=${getApiKey()}`
-    )) as {
+    const detailsUrl = `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}`;
+    const detailsData = (await fetchWithAnyKey(detailsUrl)) as {
       items: Array<{
         id: string;
         contentDetails: { duration: string };

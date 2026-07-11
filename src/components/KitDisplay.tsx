@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface KitDisplayProps {
   homeUrl: string | null;
   awayUrl: string | null;
@@ -23,12 +25,14 @@ export function KitDisplay({ homeUrl, awayUrl, thirdUrl }: KitDisplayProps) {
       <div className="grid grid-cols-3 gap-4">
         {kits.map((kit) => (
           <div key={kit.label} className="text-center">
-            <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 flex items-center justify-center">
+            <div className="aspect-square relative bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 flex items-center justify-center">
               {kit.url && (
-                <img
+                <Image
                   src={kit.url}
                   alt={`${kit.label} kit`}
-                  className="w-full h-full object-contain p-2"
+                  fill
+                  className="object-contain p-2"
+                  sizes="200px"
                 />
               )}
             </div>

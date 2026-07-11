@@ -7,6 +7,7 @@ import {
 import {
   getTopScorers as getTopScorersAF,
   getTransfers,
+  getFixtures,
 } from "../../../../lib/api/api-football";
 import {
   getStandings as getStandingsBBS,
@@ -18,8 +19,13 @@ import { upsertStanding } from "../../../../lib/db/standings";
 import { upsertMatch } from "../../../../lib/db/matches";
 import { upsertTopScorer } from "../../../../lib/db/top-scorers";
 import { upsertTransfer } from "../../../../lib/db/transfers";
+import { upsertLineup } from "../../../../lib/db/lineups";
 import { upsertVideo } from "../../../../lib/db/videos";
+import { enrichPlayers } from "../../../../../scripts/bootstrap/enrich-players";
+import { fetchWorldCup } from "../../../../../scripts/bootstrap/fetch-world-cup";
+import { fetchWorldCupTeams } from "../../../../../scripts/bootstrap/fetch-world-cup-teams";
 import { slugify } from "../../../../lib/slugify";
+import { getTursoClient } from "../../../../lib/turso/client";
 
 interface FootballDataStanding {
   stage: string;
@@ -64,6 +70,27 @@ interface ApiFootballTransfer {
   teams: { in: { name: string }; out: { name: string } };
 }
 
+interface ApiFootballFixture {
+  fixture: {
+    id: number;
+    status: { short: string };
+  };
+  teams: {
+    home: { id: number; name: string };
+    away: { id: number; name: string };
+  };
+  lineups: Array<{
+    team: { id: number; name: string };
+    formation: string;
+    startXI: Array<{
+      player: { id: number; name: string; number: number; pos: string };
+    }>;
+    substitutes: Array<{
+      player: { id: number; name: string; number: number; pos: string };
+    }>;
+  }>;
+}
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -75,6 +102,7 @@ export async function GET(request: NextRequest) {
     fixtures: 0,
     topScorers: 0,
     transfers: 0,
+    lineups: 0,
     videos: 0,
     standingsSource: "none",
     topScorersSource: "none",
@@ -266,6 +294,66 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Refresh lineups (API-Football)
+  for (const league of LEAGUES) {
+    try {
+      const fixtures = (await getFixtures(
+        league.apiFootballId,
+        season
+      )) as ApiFootballFixture[];
+
+      const finishedFixtures = fixtures.filter(
+        (f) => f.fixture.status.short === "FT"
+      );
+
+      const client = getTursoClient();
+      for (const fixture of finishedFixtures.slice(0, 5)) {
+        const matchResult = await client.execute({
+          sql: "SELECT id FROM matches WHERE apifootball_id = ?",
+          args: [fixture.fixture.id.toString()],
+        });
+
+        if (matchResult.rows.length === 0) continue;
+        const matchId = matchResult.rows[0].id as number;
+
+        for (const lineup of fixture.lineups) {
+          for (const player of lineup.startXI) {
+            await upsertLineup({
+              match_id: matchId,
+              team_name: lineup.team.name,
+              player_name: player.player.name,
+              player_number: player.player.number,
+              position: player.player.pos,
+              starter: 1,
+            });
+            results.lineups++;
+          }
+
+          for (const sub of lineup.substitutes) {
+            await upsertLineup({
+              match_id: matchId,
+              team_name: lineup.team.name,
+              player_name: sub.player.name,
+              player_number: sub.player.number,
+              position: sub.player.pos,
+              starter: 0,
+            });
+            results.lineups++;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error refreshing lineups for ${league.name}:`, error);
+    }
+  }
+
+  // Enrich players with Wikipedia data (top 20 new players)
+  try {
+    await enrichPlayers();
+  } catch (error) {
+    console.error("Error enriching players:", error);
+  }
+
   // Refresh videos (YouTube)
   for (const league of LEAGUES) {
     try {
@@ -293,6 +381,14 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.error(`Error refreshing videos for ${league.name}:`, error);
     }
+  }
+
+  // Refresh World Cup data
+  try {
+    await fetchWorldCup();
+    await fetchWorldCupTeams();
+  } catch (error) {
+    console.error("Error refreshing World Cup:", error);
   }
 
   return NextResponse.json({

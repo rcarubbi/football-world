@@ -49,3 +49,32 @@ export async function findRecentTransfers(limit = 20): Promise<Transfer[]> {
   });
   return result.rows as unknown as Transfer[];
 }
+
+export async function findRecentByTeam(teamName: string, limit = 10): Promise<Transfer[]> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT * FROM transfers 
+          WHERE from_team = ? OR to_team = ? 
+          ORDER BY transfer_date DESC LIMIT ?`,
+    args: [teamName, teamName, limit],
+  });
+  return result.rows as unknown as Transfer[];
+}
+
+export async function findRecentByLeague(leagueSlug: string, limit = 20): Promise<Transfer[]> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: "SELECT * FROM transfers WHERE league_slug = ? ORDER BY transfer_date DESC LIMIT ?",
+    args: [leagueSlug, limit],
+  });
+  return result.rows as unknown as Transfer[];
+}
+
+export async function findBySeason(leagueSlug: string, season: string): Promise<Transfer[]> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: "SELECT * FROM transfers WHERE league_slug = ? AND season = ? ORDER BY transfer_date DESC",
+    args: [leagueSlug, season],
+  });
+  return result.rows as unknown as Transfer[];
+}

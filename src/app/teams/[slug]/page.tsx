@@ -3,6 +3,8 @@ import { findTeamBySlug } from "@/lib/db/teams";
 import { findPlayersByTeam } from "@/lib/db/players";
 import { findMatchesByTeam } from "@/lib/db/matches";
 import { findVideosByTeam } from "@/lib/db/videos";
+import { findRecentByTeam } from "@/lib/db/transfers";
+import { findRecentByTeam as findLineupsByTeam } from "@/lib/db/lineups";
 import { TeamHero } from "@/components/TeamHero";
 import { TeamDescription } from "@/components/TeamDescription";
 import { SquadTable } from "@/components/SquadTable";
@@ -10,6 +12,7 @@ import { RecentResults } from "@/components/RecentResults";
 import { UpcomingFixtures } from "@/components/UpcomingFixtures";
 import { KitDisplay } from "@/components/KitDisplay";
 import { VideoGrid } from "@/components/VideoGrid";
+import { TransferHistory } from "@/components/TransferHistory";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -34,16 +37,28 @@ export default async function TeamPage({ params }: PageProps) {
     notFound();
   }
 
-  const [players, matches, videos] = await Promise.all([
+  const [players, matches, videos, transfers, lineups] = await Promise.all([
     findPlayersByTeam(team.id),
     findMatchesByTeam(team.id, 10),
     findVideosByTeam(team.id),
+    findRecentByTeam(team.name, 10),
+    findLineupsByTeam(team.id, 10),
   ]);
 
   const recentResults = matches.filter((m) => m.status === "FINISHED");
   const upcomingFixtures = matches.filter(
     (m) => m.status === "SCHEDULED" || m.status === "TIMED"
   );
+
+  const lineupsByMatch: Record<string, typeof lineups> = {};
+  for (const lineup of lineups) {
+    if (lineup.match_id) {
+      if (!lineupsByMatch[lineup.match_id]) {
+        lineupsByMatch[lineup.match_id] = [];
+      }
+      lineupsByMatch[lineup.match_id].push(lineup);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -63,12 +78,16 @@ export default async function TeamPage({ params }: PageProps) {
             awayUrl={team.kit_away_url}
             thirdUrl={team.kit_third_url}
           />
-          <RecentResults results={recentResults} />
+          <RecentResults results={recentResults} lineups={lineupsByMatch} />
           <UpcomingFixtures fixtures={upcomingFixtures} />
         </div>
       </div>
 
       {videos.length > 0 && <VideoGrid videos={videos} />}
+
+      {transfers.length > 0 && (
+        <TransferHistory transfers={transfers} />
+      )}
     </div>
   );
 }

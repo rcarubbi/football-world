@@ -6,6 +6,8 @@ import { PlayerStats } from "@/components/PlayerStats";
 import { PlayerHonours } from "@/components/PlayerHonours";
 import { CareerTimeline } from "@/components/CareerTimeline";
 import { PlayerCurrentTeam } from "@/components/PlayerCurrentTeam";
+import { PlayerBiography } from "@/components/PlayerBiography";
+import { PlayerStatistics } from "@/components/PlayerStatistics";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -45,11 +47,13 @@ export default async function PlayerPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+          <PlayerBiography player={player} />
           <PlayerStats player={player} />
           <CareerTimeline formerTeams={formerTeams as unknown as Array<{ id: number | bigint; player_id: number | bigint; team_name: string | null; joined: string | null; departed: string | null }>} />
         </div>
 
         <div className="space-y-8">
+          <PlayerStatistics player={player} />
           {currentTeam && <PlayerCurrentTeam team={currentTeam} />}
           {honours.length > 0 && <PlayerHonours honours={honours as unknown as Array<{ id: number | bigint; honour_name: string; season: string | null; team_name: string | null }>} />}
         </div>

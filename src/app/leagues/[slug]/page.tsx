@@ -4,12 +4,14 @@ import { findStandingsByLeague } from "@/lib/db/standings";
 import { findTopScorersByLeague } from "@/lib/db/top-scorers";
 import { findUpcomingMatches, findRecentMatches } from "@/lib/db/matches";
 import { findVideosByLeague } from "@/lib/db/videos";
+import { findRecentByLeague } from "@/lib/db/transfers";
 import { StandingsTable } from "@/components/StandingsTable";
 import { TopScorers } from "@/components/TopScorers";
 import { LeagueFixtures } from "@/components/LeagueFixtures";
 import { LeagueResults } from "@/components/LeagueResults";
 import { LeagueHighlights } from "@/components/LeagueHighlights";
-import { LeagueBadge } from "@/components/LeagueBadge";
+import { LeagueIcon } from "@/components/LeagueIcon";
+import { TransferHistory } from "@/components/TransferHistory";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -34,19 +36,20 @@ export default async function LeaguePage({ params }: PageProps) {
     notFound();
   }
 
-  const [standings, topScorers, upcomingMatches, recentMatches, videos] =
+  const [standings, topScorers, upcomingMatches, recentMatches, videos, transfers] =
     await Promise.all([
       findStandingsByLeague(slug),
       findTopScorersByLeague(slug),
       findUpcomingMatches(slug, 10),
       findRecentMatches(slug, 10),
       findVideosByLeague(slug),
+      findRecentByLeague(slug, 20),
     ]);
 
   return (
     <div className="space-y-8">
       <div className="flex items-center space-x-4">
-        <LeagueBadge leagueSlug={slug} size="lg" />
+        <LeagueIcon slug={slug} size="lg" />
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {league.name}
@@ -68,6 +71,10 @@ export default async function LeaguePage({ params }: PageProps) {
       </div>
 
       {videos.length > 0 && <LeagueHighlights videos={videos} />}
+
+      {transfers.length > 0 && (
+        <TransferHistory transfers={transfers} showTeamFilter />
+      )}
     </div>
   );
 }

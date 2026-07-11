@@ -14,6 +14,13 @@ import { fetchVideos } from "./fetch-videos";
 import { fetchSquads } from "./fetch-squads";
 import { fetchTeamDetails } from "./fetch-team-details";
 import { fetchSquadsSportsDB } from "./fetch-squads-sportsdb";
+import { fetchTransfers } from "./fetch-transfers";
+import { fetchLineups } from "./fetch-lineups";
+import { enrichPlayers } from "./enrich-players";
+import { supplementPlayers } from "./supplement-players";
+import { fetchWorldCup } from "./fetch-world-cup";
+import { fetchWorldCupTeams } from "./fetch-world-cup-teams";
+import { validate } from "../validate";
 
 interface BootstrapProgress {
   teams: boolean;
@@ -24,6 +31,12 @@ interface BootstrapProgress {
   squads: boolean;
   teamDetails: boolean;
   squadsSportsDB: boolean;
+  transfers: boolean;
+  lineups: boolean;
+  playerEnrichment: boolean;
+  playerSupplement: boolean;
+  worldCup: boolean;
+  worldCupTeams: boolean;
 }
 
 async function loadProgress(): Promise<BootstrapProgress> {
@@ -43,6 +56,12 @@ async function loadProgress(): Promise<BootstrapProgress> {
     squads: false,
     teamDetails: false,
     squadsSportsDB: false,
+    transfers: false,
+    lineups: false,
+    playerEnrichment: false,
+    playerSupplement: false,
+    worldCup: false,
+    worldCupTeams: false,
   };
 }
 
@@ -146,6 +165,81 @@ async function main() {
       console.log(`⚠ ${withoutPlayers.rows[0].n} teams still missing squads (rate limited)\n`);
     }
   }
+
+  if (!progress.transfers) {
+    console.log("Phase 9: Fetching transfers...");
+    try {
+      await fetchTransfers();
+    } catch (error) {
+      console.error("Error fetching transfers:", (error as Error).message);
+    }
+    progress.transfers = true;
+    await saveProgress(progress);
+    console.log("✓ Transfers fetched\n");
+  }
+
+  if (!progress.lineups) {
+    console.log("Phase 10: Fetching match lineups...");
+    try {
+      await fetchLineups();
+    } catch (error) {
+      console.error("Error fetching lineups:", (error as Error).message);
+    }
+    progress.lineups = true;
+    await saveProgress(progress);
+    console.log("✓ Lineups fetched\n");
+  }
+
+  if (!progress.playerEnrichment) {
+    console.log("Phase 11: Enriching players with Wikipedia data...");
+    try {
+      await enrichPlayers();
+    } catch (error) {
+      console.error("Error enriching players:", (error as Error).message);
+    }
+    progress.playerEnrichment = true;
+    await saveProgress(progress);
+    console.log("✓ Players enriched\n");
+  }
+
+  if (!progress.playerSupplement) {
+    console.log("Phase 12: Supplementing player data from API-Football...");
+    try {
+      await supplementPlayers();
+    } catch (error) {
+      console.error("Error supplementing players:", (error as Error).message);
+    }
+    progress.playerSupplement = true;
+    await saveProgress(progress);
+    console.log("✓ Players supplemented\n");
+  }
+
+  if (!progress.worldCup) {
+    console.log("Phase 13: Fetching World Cup matches...");
+    try {
+      await fetchWorldCup();
+    } catch (error) {
+      console.error("Error fetching World Cup:", (error as Error).message);
+    }
+    progress.worldCup = true;
+    await saveProgress(progress);
+    console.log("✓ World Cup matches fetched\n");
+  }
+
+  if (!progress.worldCupTeams) {
+    console.log("Phase 14: Fetching World Cup teams...");
+    try {
+      await fetchWorldCupTeams();
+    } catch (error) {
+      console.error("Error fetching World Cup teams:", (error as Error).message);
+    }
+    progress.worldCupTeams = true;
+    await saveProgress(progress);
+    console.log("✓ World Cup teams fetched\n");
+  }
+
+  console.log("Running data validation...");
+  await validate();
 
   console.log("Bootstrap complete!");
 }

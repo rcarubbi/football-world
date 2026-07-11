@@ -1,14 +1,8 @@
 import { Standing } from "@/lib/db/standings";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "./ui/Table";
 import { TeamBadge } from "./TeamBadge";
+import { slugify } from "@/lib/slugify";
 import Link from "next/link";
-
-function teamSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 interface StandingsTableProps {
   standings: Standing[];
@@ -48,7 +42,7 @@ export function StandingsTable({ standings }: StandingsTableProps) {
               <TableCell className="font-medium">{standing.position}</TableCell>
               <TableCell>
                 <Link
-                  href={`/teams/${teamSlug(standing.team_name || "")}`}
+                  href={`/teams/${slugify(standing.team_name || "")}`}
                   className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
                 >
                   <TeamBadge

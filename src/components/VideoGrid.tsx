@@ -5,6 +5,7 @@ import { Video } from "@/lib/db/videos";
 import { Card, CardContent } from "./ui/Card";
 import { Modal } from "./ui/Modal";
 import { Play } from "lucide-react";
+import Image from "next/image";
 
 interface VideoGridProps {
   videos: Video[];
@@ -32,10 +33,12 @@ export function VideoGrid({ videos }: VideoGridProps) {
             <CardContent className="p-0">
               <div className="relative aspect-video">
                 {video.thumbnail_url ? (
-                  <img
+                  <Image
                     src={video.thumbnail_url}
                     alt={video.title || ""}
-                    className="w-full h-full object-cover rounded-t-xl"
+                    fill
+                    className="object-cover rounded-t-xl"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-t-xl flex items-center justify-center">

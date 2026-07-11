@@ -14,6 +14,7 @@ export interface Player {
   weight: string | null;
   photo_url: string | null;
   description: string | null;
+  career_summary: string | null;
 }
 
 export async function upsertPlayer(player: Partial<Player>): Promise<number> {
@@ -21,8 +22,8 @@ export async function upsertPlayer(player: Partial<Player>): Promise<number> {
   const result = await client.execute({
     sql: `INSERT INTO players (
       thesportsdb_id, apifootball_id, name, slug, team_id, position,
-      nationality, date_of_birth, height, weight, photo_url, description
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      nationality, date_of_birth, height, weight, photo_url, description, career_summary
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       thesportsdb_id = excluded.thesportsdb_id,
       apifootball_id = excluded.apifootball_id,
@@ -35,6 +36,7 @@ export async function upsertPlayer(player: Partial<Player>): Promise<number> {
       weight = excluded.weight,
       photo_url = COALESCE(excluded.photo_url, players.photo_url),
       description = COALESCE(excluded.description, players.description),
+      career_summary = COALESCE(excluded.career_summary, players.career_summary),
       updated_at = datetime('now')
     RETURNING id`,
     args: [
@@ -50,6 +52,7 @@ export async function upsertPlayer(player: Partial<Player>): Promise<number> {
       player.weight ?? null,
       player.photo_url ?? null,
       player.description ?? null,
+      player.career_summary ?? null,
     ],
   });
   return Number(result.rows[0]?.id);

@@ -1,0 +1,7 @@
+{
+  "teams": true,
+  "standings": true,
+  "fixtures": true,
+  "wikipedia": true,
+  "videos": true
+}

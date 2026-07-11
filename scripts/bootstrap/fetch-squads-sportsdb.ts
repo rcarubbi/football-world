@@ -119,6 +119,14 @@ async function lookupPlayersForTeam(
   return true;
 }
 
+function isRateLimited(error: Error): boolean {
+  return (
+    error.message === "RATE_LIMITED" ||
+    error.message.includes("rate limit") ||
+    error.message.includes("Rate limit")
+  );
+}
+
 export async function fetchSquadsSportsDB(): Promise<void> {
   const client = getTursoClient();
   const teams = await client.execute({
@@ -154,7 +162,7 @@ export async function fetchSquadsSportsDB(): Promise<void> {
       );
       teamsProcessed++;
     } catch (error) {
-      if ((error as Error).message === "RATE_LIMITED") {
+      if (isRateLimited(error as Error)) {
         console.log("\n  Rate limited! Stopping. Re-run bootstrap to resume.");
         break;
       }

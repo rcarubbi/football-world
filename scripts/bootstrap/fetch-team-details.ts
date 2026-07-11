@@ -74,11 +74,12 @@ export async function fetchTeamDetails(): Promise<void> {
 
       console.log(`    badge:${match.strBadge ? "yes" : "no"} | stadium:${match.strStadium || "-"} | loc:${match.strLocation || "-"} | founded:${match.intFormedYear || "-"}`);
     } catch (error) {
-      if ((error as Error).message === "RATE_LIMITED") {
+      const msg = (error as Error).message;
+      if (msg === "RATE_LIMITED" || msg.includes("rate limit") || msg.includes("Rate limit")) {
         console.log("    Rate limited! Stopping. Re-run to resume.");
         break;
       }
-      console.error(`    Error: ${(error as Error).message}`);
+      console.error(`    Error: ${msg}`);
     }
   }
 }

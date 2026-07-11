@@ -80,3 +80,38 @@ export async function getTeamById(teamId: number) {
     return data.response?.[0] || null;
   });
 }
+
+export async function getSquad(teamId: number) {
+  return getLimiter().add(async () => {
+    const data = (await fetchWithRetry(
+      `${BASE_URL}/players/squads?team=${teamId}`
+    )) as {
+      response: Array<{
+        players: Array<{
+          id: number;
+          name: string;
+          age: number;
+          nationality: string[];
+          position: string;
+          height: string;
+          weight: string;
+          photo: string;
+        }>;
+      }>;
+    };
+    return data.response?.[0]?.players || [];
+  });
+}
+
+export async function getTeamsByLeague(leagueId: number, season: number) {
+  return getLimiter().add(async () => {
+    const data = (await fetchWithRetry(
+      `${BASE_URL}/teams?league=${leagueId}&season=${season}`
+    )) as {
+      response: Array<{
+        team: { id: number; name: string; logo: string };
+      }>;
+    };
+    return data.response || [];
+  });
+}

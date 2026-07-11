@@ -11,6 +11,7 @@ import { fetchStandings } from "./fetch-standings";
 import { fetchFixtures } from "./fetch-fixtures";
 import { scrapeWikipedia } from "./scrape-wikipedia";
 import { fetchVideos } from "./fetch-videos";
+import { fetchSquads } from "./fetch-squads";
 
 interface BootstrapProgress {
   teams: boolean;
@@ -18,6 +19,7 @@ interface BootstrapProgress {
   fixtures: boolean;
   wikipedia: boolean;
   videos: boolean;
+  squads: boolean;
 }
 
 async function loadProgress(): Promise<BootstrapProgress> {
@@ -34,6 +36,7 @@ async function loadProgress(): Promise<BootstrapProgress> {
     fixtures: false,
     wikipedia: false,
     videos: false,
+    squads: false,
   };
 }
 
@@ -103,6 +106,14 @@ async function main() {
     progress.videos = true;
     await saveProgress(progress);
     console.log("✓ Videos fetched\n");
+  }
+
+  if (!progress.squads) {
+    console.log("Phase 6: Fetching player squads...");
+    await fetchSquads();
+    progress.squads = true;
+    await saveProgress(progress);
+    console.log("✓ Squads fetched\n");
   }
 
   console.log("Bootstrap complete!");

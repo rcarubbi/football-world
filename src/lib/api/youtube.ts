@@ -72,7 +72,7 @@ export async function searchVideos(
 
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(
-      `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${getApiKey()}`
+      `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&order=viewCount&maxResults=${maxResults}&key=${getApiKey()}`
     )) as {
       items: Array<{
         id: { videoId: string };

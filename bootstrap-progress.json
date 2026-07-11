@@ -3,5 +3,6 @@
   "standings": true,
   "fixtures": true,
   "wikipedia": true,
-  "videos": true
+  "videos": true,
+  "squads": true
 }

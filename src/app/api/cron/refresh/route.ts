@@ -178,12 +178,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Refresh top scorers
+  // Refresh top scorers (API-Football free tier: seasons 2022-2024 only)
+  const apiFootballSeason = 2024;
   for (const league of LEAGUES) {
     try {
       const scorers = (await getTopScorers(
         league.apiFootballId,
-        season
+        apiFootballSeason
       )) as ApiFootballScorer[];
 
       for (const scorer of scorers.slice(0, 10)) {
@@ -210,7 +211,7 @@ export async function GET(request: NextRequest) {
     try {
       const transfers = (await getTransfers(
         league.apiFootballId,
-        season
+        apiFootballSeason
       )) as ApiFootballTransfer[];
 
       for (const transfer of transfers.slice(0, 20)) {
@@ -241,7 +242,7 @@ export async function GET(request: NextRequest) {
       for (const video of videos) {
         const durationSeconds = parseDuration(video.duration);
 
-        if (durationSeconds >= 180 && durationSeconds <= 600) {
+        if (durationSeconds >= 120 && durationSeconds <= 900) {
           await upsertVideo({
             video_id: video.videoId,
             title: video.title,

@@ -7,7 +7,6 @@ export async function fetchVideos(): Promise<void> {
   const currentYear = new Date().getFullYear();
   const season = `${currentYear - 1}-${currentYear}`;
 
-  // Fetch team highlight videos
   const teams = await findAllTeams();
 
   for (const team of teams) {
@@ -15,13 +14,12 @@ export async function fetchVideos(): Promise<void> {
 
     try {
       const query = `${team.name} highlights ${currentYear}`;
-      const videos = await searchVideos(query, 5);
+      const videos = await searchVideos(query, 10);
 
       for (const video of videos) {
         const durationSeconds = parseDuration(video.duration);
 
-        // Filter by duration (3-10 minutes)
-        if (durationSeconds >= 180 && durationSeconds <= 600) {
+        if (durationSeconds >= 120 && durationSeconds <= 900) {
           await upsertVideo({
             video_id: video.videoId,
             title: video.title,
@@ -41,7 +39,6 @@ export async function fetchVideos(): Promise<void> {
     }
   }
 
-  // Fetch league highlight videos
   for (const league of LEAGUES) {
     console.log(`  Fetching league videos for ${league.name}...`);
 
@@ -52,8 +49,7 @@ export async function fetchVideos(): Promise<void> {
       for (const video of videos) {
         const durationSeconds = parseDuration(video.duration);
 
-        // Filter by duration (3-10 minutes)
-        if (durationSeconds >= 180 && durationSeconds <= 600) {
+        if (durationSeconds >= 120 && durationSeconds <= 900) {
           await upsertVideo({
             video_id: video.videoId,
             title: video.title,

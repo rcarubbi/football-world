@@ -163,14 +163,33 @@ export async function fetchSquadsSportsDB(): Promise<void> {
       teamsProcessed++;
     } catch (error) {
       if (isRateLimited(error as Error)) {
-        console.log("\n  Rate limited! Stopping. Re-run bootstrap to resume.");
-        break;
+        console.log("\n  Rate limited! Waiting 60s and retrying...");
+        await sleep(60000);
+        try {
+          await lookupPlayersForTeam(
+            client,
+            {
+              id: team.id as number,
+              name: team.name as string,
+              thesportsdb_id: (team.thesportsdb_id as string) || null,
+            },
+            playersSaved
+          );
+          teamsProcessed++;
+        } catch (retryError) {
+          if (isRateLimited(retryError as Error)) {
+            console.log("\n  Still rate limited. Stopping. Re-run to resume.");
+            break;
+          }
+          console.error(`    Retry error: ${(retryError as Error).message}`);
+        }
+      } else {
+        console.error(`    Error: ${(error as Error).message}`);
       }
-      console.error(`    Error: ${(error as Error).message}`);
     }
 
     // Small delay between teams
-    await sleep(2000);
+    await sleep(5000);
   }
 
   console.log(

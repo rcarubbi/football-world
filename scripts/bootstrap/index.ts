@@ -20,6 +20,7 @@ import { enrichPlayers } from "./enrich-players";
 import { supplementPlayers } from "./supplement-players";
 import { fetchWorldCup } from "./fetch-world-cup";
 import { fetchWorldCupTeams } from "./fetch-world-cup-teams";
+import { fetchSquadsSportsAPIPro } from "./fetch-squads-sportsapipro";
 import { validate } from "../validate";
 
 interface BootstrapProgress {
@@ -37,6 +38,7 @@ interface BootstrapProgress {
   playerSupplement: boolean;
   worldCup: boolean;
   worldCupTeams: boolean;
+  squadsSportsAPIPro: boolean;
 }
 
 async function loadProgress(): Promise<BootstrapProgress> {
@@ -62,6 +64,7 @@ async function loadProgress(): Promise<BootstrapProgress> {
     playerSupplement: false,
     worldCup: false,
     worldCupTeams: false,
+    squadsSportsAPIPro: false,
   };
 }
 
@@ -164,6 +167,18 @@ async function main() {
     } else {
       console.log(`⚠ ${withoutPlayers.rows[0].n} teams still missing squads (rate limited)\n`);
     }
+  }
+
+  if (!progress.squadsSportsAPIPro) {
+    console.log("Phase 15: Fetching player squads from SportsAPIPro...");
+    try {
+      await fetchSquadsSportsAPIPro();
+    } catch (error) {
+      console.error("Error fetching squads from SportsAPIPro:", (error as Error).message);
+    }
+    progress.squadsSportsAPIPro = true;
+    await saveProgress(progress);
+    console.log("✓ SportsAPIPro squads fetched\n");
   }
 
   if (!progress.transfers) {

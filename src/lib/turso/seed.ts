@@ -28,6 +28,7 @@ export async function seedDatabase() {
     "ALTER TABLE teams ADD COLUMN thesportsdb_id TEXT",
     "ALTER TABLE teams ADD COLUMN football_data_id TEXT",
     "ALTER TABLE teams ADD COLUMN apifootball_id TEXT",
+    "ALTER TABLE teams ADD COLUMN sportsapipro_id TEXT",
   ];
 
   for (const sql of migrations) {

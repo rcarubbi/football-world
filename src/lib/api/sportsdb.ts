@@ -7,7 +7,7 @@ let limiter: RateLimiter | null = null;
 
 function getLimiter(): RateLimiter {
   if (!limiter) {
-    limiter = new RateLimiter(1, 10); // 1 concurrent, 10 per minute (conservative)
+    limiter = new RateLimiter(1, 500); // 1 concurrent, 500/day (free tier is generous)
   }
   return limiter;
 }

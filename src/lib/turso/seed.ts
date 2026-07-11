@@ -20,5 +20,23 @@ export async function seedDatabase() {
     await client.execute(statement);
   }
 
+  // Migrations: add columns that may be missing from older tables
+  const migrations = [
+    "ALTER TABLE players ADD COLUMN career_summary TEXT",
+    "ALTER TABLE players ADD COLUMN photo_url TEXT",
+    "ALTER TABLE players ADD COLUMN apifootball_id TEXT",
+    "ALTER TABLE teams ADD COLUMN thesportsdb_id TEXT",
+    "ALTER TABLE teams ADD COLUMN football_data_id TEXT",
+    "ALTER TABLE teams ADD COLUMN apifootball_id TEXT",
+  ];
+
+  for (const sql of migrations) {
+    try {
+      await client.execute(sql);
+    } catch {
+      // Column already exists — ignore
+    }
+  }
+
   console.log("Database schema initialized successfully");
 }

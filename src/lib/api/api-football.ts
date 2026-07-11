@@ -63,6 +63,15 @@ export async function getTransfers(leagueId: number, season: number) {
   });
 }
 
+export async function getTransfersByTeam(teamId: number, season: number) {
+  return getLimiter().add(async () => {
+    const data = (await fetchWithRetry(
+      `${BASE_URL}/transfers?team=${teamId}&season=${season}`
+    )) as { response: unknown[] };
+    return data.response || [];
+  });
+}
+
 export async function getFixtures(leagueId: number, season: number) {
   return getLimiter().add(async () => {
     const data = (await fetchWithRetry(

@@ -71,7 +71,7 @@ export async function validate(): Promise<ValidationResult[]> {
   results.push(await validateTable(client, "teams", 20));
   results.push(await validateTable(client, "players", 100));
   results.push(await validateTable(client, "matches", 50));
-  results.push(await validateTable(client, "standings", 20));
+  results.push(await validateTable(client, "league_standings", 20));
   results.push(await validateTable(client, "top_scorers", 10));
   results.push(await validateTable(client, "videos", 10));
   results.push(await validateTable(client, "transfers", 10));

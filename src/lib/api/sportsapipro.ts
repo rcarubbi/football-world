@@ -67,7 +67,7 @@ export async function searchTeam(
           entity: {
             id: number;
             name: string;
-            popularityRank?: number;
+            userCount?: number;
             mainCompetitionId?: number;
             country?: { alpha2?: string };
           };

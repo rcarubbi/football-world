@@ -31,7 +31,7 @@ const COUNTRY_MAP: Record<string, string> = {
   UKR: "Ukraine", URU: "Uruguay", USA: "United States", UZB: "Uzbekistan",
   VEN: "Venezuela", WAL: "Wales", ZAM: "Zambia",
   // common Wikipedia variants
-  "NIR": "Northern Ireland", "GBR": "England",
+  "GBR": "England",
 };
 
 function parseFsPlayers(wikitext: string): Array<{

@@ -102,7 +102,7 @@ export async function fetchSquadsSportsAPIPro(): Promise<void> {
       teamsProcessed++;
     } catch (error) {
       const msg = (error as Error).message;
-      if (msg.includes("429") || msg.includes("rate limit") || msg.includes("Rate limit")) {
+      if (msg.includes("429") || msg.includes("rate limit") || msg.includes("Rate limit") || msg.includes("Max retries")) {
         console.log("\n  Rate limited! Stop and re-run to resume.");
         rateLimited = true;
       } else {

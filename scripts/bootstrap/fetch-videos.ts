@@ -3,7 +3,11 @@ import { findAllTeams } from "../../src/lib/db/teams";
 import { upsertVideo } from "../../src/lib/db/videos";
 import { LEAGUES } from "../../src/lib/leagues";
 
+const F1_KEYWORDS = /\b(f1|formula\s*1|formula\s*one|grand\s*prix|fp[123]|qualifying|lap|grid|pole\s*position|race\s*result|driver|car\s*reveal|oracle\s*red\s*bull|racing\s*point)\b/i;
+
 function isVideoAboutTeam(title: string, teamName: string): boolean {
+  if (F1_KEYWORDS.test(title)) return false;
+
   const normalised = title.toLowerCase();
   const words = teamName
     .toLowerCase()
@@ -24,7 +28,7 @@ export async function fetchVideos(): Promise<void> {
     console.log(`  Fetching videos for ${team.name}...`);
 
     try {
-      const query = `${team.name} highlights ${currentYear}`;
+      const query = `${team.name} football highlights ${currentYear} -formula1 -"formula 1" -F1`;
       const videos = await searchVideos(query, 10);
 
       for (const video of videos) {
@@ -58,7 +62,7 @@ export async function fetchVideos(): Promise<void> {
     console.log(`  Fetching league videos for ${league.name}...`);
 
     try {
-      const query = `${league.name} highlights ${currentYear}`;
+      const query = `${league.name} football highlights ${currentYear}`;
       const videos = await searchVideos(query, 10);
 
       for (const video of videos) {

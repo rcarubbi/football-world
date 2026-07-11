@@ -357,7 +357,7 @@ export async function GET(request: NextRequest) {
   // Refresh videos (YouTube)
   for (const league of LEAGUES) {
     try {
-      const query = `${league.name} highlights ${season}`;
+      const query = `${league.name} football highlights ${season}`;
       const videos = await searchVideos(query, 5);
 
       for (const video of videos) {

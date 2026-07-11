@@ -143,8 +143,8 @@
 ## 17. Deployment
 
 - [x] 17.1 Configure `vercel.json` with cron schedule
-- [ ] 17.2 Set environment variables in Vercel dashboard
-- [ ] 17.3 Run bootstrap locally and verify Turso data
-- [ ] 17.4 Deploy to Vercel and verify all pages render
-- [ ] 17.5 Verify ISR revalidation works correctly
-- [ ] 17.6 Verify cron job runs successfully on Vercel
+- [x] 17.2 Set environment variables in Vercel dashboard
+- [x] 17.3 Run bootstrap locally and verify Turso data
+- [x] 17.4 Deploy to Vercel and verify all pages render
+- [x] 17.5 Verify ISR revalidation works correctly (using dynamic server rendering — always fresh from Turso)
+- [x] 17.6 Verify cron job runs successfully on Vercel (200 OK, 0 updates — season not started yet)

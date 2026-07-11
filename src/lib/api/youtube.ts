@@ -13,6 +13,7 @@ function loadApiKeys(): string[] {
       process.env.YOUTUBE_API_KEY_2,
       process.env.YOUTUBE_API_KEY_3,
       process.env.YOUTUBE_API_KEY_4,
+      process.env.YOUTUBE_API_KEY_5,
     ].filter((k): k is string => !!k && k.trim() !== "");
 
     _apiKeys = keys;
@@ -99,9 +100,10 @@ async function fetchWithApiKey(
 
 async function fetchWithAnyKey(
   url: string,
-  maxAttempts = 4
+  maxAttempts?: number
 ): Promise<unknown> {
   const keys = loadApiKeys();
+  if (maxAttempts === undefined) maxAttempts = keys.length;
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {

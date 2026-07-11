@@ -3,7 +3,7 @@
   "standings": true,
   "fixtures": true,
   "wikipedia": true,
-  "videos": true,
+  "videos": false,
   "squads": true,
   "teamDetails": true,
   "squadsSportsDB": true,

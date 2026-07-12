@@ -3,12 +3,14 @@
 import { useRef, useMemo, useEffect, memo, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
+import { useLoader } from "@react-three/fiber";
 import { useControls, folder } from "leva";
 import { Leva } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { SpotLightHelper, DirectionalLightHelper } from "three";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { use3DInteractive } from "./InteractiveContext";
@@ -290,8 +292,6 @@ function Stadium() {
 
 useGLTF.preload("/sky.glb");
 
-useGLTF.preload("/goal.glb");
-
 function SkyDome() {
   const { scenes } = useGLTF("/sky.glb");
   const { isDark } = useTheme();
@@ -352,10 +352,10 @@ function SkyDome() {
    ═══════════════════════════════════════════════════════════════════ */
 
 function Goals() {
-  const { scene } = useGLTF("/goal.glb");
+  const group = useLoader(FBXLoader, "/goalpost.fbx");
 
   const goal1 = useMemo(() => {
-    const g = scene.clone();
+    const g = group.clone();
     g.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = false;
@@ -374,7 +374,7 @@ function Goals() {
       }
     });
     return g;
-  }, [scene]);
+  }, [group]);
 
   const goal2 = useMemo(() => goal1.clone(), [goal1]);
 

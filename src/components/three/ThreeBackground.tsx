@@ -352,6 +352,16 @@ const Scene = memo(function Scene() {
     override: false,
   });
 
+  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity } = useControls("Lights", {
+    light1X: { value: -0.3, min: -5, max: 5, step: 0.01 },
+    light1Y: { value: 0.3, min: -5, max: 5, step: 0.01 },
+    light1Z: { value: 0, min: -5, max: 5, step: 0.01 },
+    light2X: { value: 0.3, min: -5, max: 5, step: 0.01 },
+    light2Y: { value: 0.3, min: -5, max: 5, step: 0.01 },
+    light2Z: { value: 0, min: -5, max: 5, step: 0.01 },
+    lightIntensity: { value: 5, min: 0, max: 20, step: 0.1 },
+  });
+
   const targetPos = useRef(new THREE.Vector3(0, 1.5, 5.5));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
 
@@ -405,26 +415,10 @@ const Scene = memo(function Scene() {
       {/* Sky behind everything */}
       <SkyDome />
 
-      {/* Lighting — only 2 shadow-casting lights for performance */}
+      {/* Lighting — stadium post lights */}
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
-      <spotLight
-        position={[-5, 8, 3]}
-        angle={0.5}
-        penumbra={0.6}
-        intensity={isDark ? 3 : 2}
-        color={colors.spot}
-        castShadow
-        shadow-mapSize={1024}
-      />
-      <spotLight
-        position={[5, 8, -3]}
-        angle={0.5}
-        penumbra={0.6}
-        intensity={isDark ? 2.5 : 1.8}
-        color={colors.spot}
-      />
-      <spotLight position={[0, 9, 0]} angle={0.7} penumbra={0.8} intensity={isDark ? 1.5 : 1.2} color="#FFFFFF" />
-      <directionalLight position={[3, 6, 5]} intensity={isDark ? 0.5 : 0.4} color="#FFF5E6" />
+      <pointLight position={[light1X, light1Y, light1Z]} intensity={lightIntensity} color="#FFFFFF" />
+      <pointLight position={[light2X, light2Y, light2Z]} intensity={lightIntensity} color="#FFFFFF" />
 
       {/* Scene objects */}
       <Football />

@@ -397,44 +397,48 @@ function Goals() {
     return g2;
   }, [goal1]);
 
-  const { pos1X, pos1Y, pos1Z, rot1X, rot1Y, rot1Z, scl1, showGoal1 } = useControls("Goal 1", {
-    showGoal1: true,
-    pos1X: { value: 2.24, min: -10, max: 10, step: 0.01 },
-    pos1Y: { value: 0.12, min: -10, max: 10, step: 0.01 },
-    pos1Z: { value: -0.37, min: -10, max: 10, step: 0.01 },
-    rot1X: { value: 3.14, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rot1Y: { value: -1.71, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rot1Z: { value: 3.08, min: -Math.PI, max: Math.PI, step: 0.01 },
-    scl1: { value: 0.05, min: 0.001, max: 0.1, step: 0.001 },
-  });
+  const [{ g1PosX, g1PosY, g1PosZ, g1RotX, g1RotY, g1RotZ, g1Scl, showGoal1 }, setGoal1] = useControls(() => ({
+    "Goal 1": folder({
+      showGoal1: true,
+      g1PosX: { value: 2.3, min: -10, max: 10, step: 0.01 },
+      g1PosY: { value: 0.15, min: -10, max: 10, step: 0.01 },
+      g1PosZ: { value: -0.19, min: -10, max: 10, step: 0.01 },
+      g1RotX: { value: 0.17, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1RotY: { value: -1.35, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1RotZ: { value: 3.08, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1Scl: { value: 0.001, min: 0.0001, max: 0.1, step: 0.0001 },
+    })
+  }), []);
 
-  const { pos2X, pos2Y, pos2Z, rot2X, rot2Y, rot2Z, scl2, showGoal2 } = useControls("Goal 2", {
-    showGoal2: true,
-    pos2X: { value: -2.24, min: -10, max: 10, step: 0.01 },
-    pos2Y: { value: 0.12, min: -10, max: 10, step: 0.01 },
-    pos2Z: { value: -0.37, min: -10, max: 10, step: 0.01 },
-    rot2X: { value: 0.36, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rot2Y: { value: 0.91, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rot2Z: { value: -0.41, min: -Math.PI, max: Math.PI, step: 0.01 },
-    scl2: { value: 0.05, min: 0.001, max: 0.1, step: 0.001 },
-  });
+  const [{ g2PosX, g2PosY, g2PosZ, g2RotX, g2RotY, g2RotZ, g2Scl, showGoal2 }, setGoal2] = useControls(() => ({
+    "Goal 2": folder({
+      showGoal2: true,
+      g2PosX: { value: -2.24, min: -10, max: 10, step: 0.01 },
+      g2PosY: { value: 0.12, min: -10, max: 10, step: 0.01 },
+      g2PosZ: { value: -0.37, min: -10, max: 10, step: 0.01 },
+      g2RotX: { value: 0.36, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g2RotY: { value: 0.91, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g2RotZ: { value: -0.41, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g2Scl: { value: 0.001, min: 0.0001, max: 0.1, step: 0.0001 },
+    })
+  }), []);
 
   return (
     <>
       {showGoal1 && (
         <primitive
           object={goal1}
-          position={[pos1X, pos1Y, pos1Z]}
-          rotation={[rot1X, rot1Y, rot1Z]}
-          scale={scl1}
+          position={[g1PosX, g1PosY, g1PosZ]}
+          rotation={[g1RotX, g1RotY, g1RotZ]}
+          scale={g1Scl}
         />
       )}
       {showGoal2 && (
         <primitive
           object={goal2}
-          position={[pos2X, pos2Y, pos2Z]}
-          rotation={[rot2X, rot2Y, rot2Z]}
-          scale={scl2}
+          position={[g2PosX, g2PosY, g2PosZ]}
+          rotation={[g2RotX, g2RotY, g2RotZ]}
+          scale={g2Scl}
         />
       )}
     </>

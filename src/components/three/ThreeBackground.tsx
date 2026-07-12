@@ -34,6 +34,42 @@ const LEAGUES = [
   { slug: "brasileirao-serie-a", lat: -14, lng: -51 },
 ];
 
+interface CameraPreset {
+  camX: number; camY: number; camZ: number;
+  lookX?: number; lookY?: number; lookZ?: number;
+  rotX: number; rotY: number; rotZ: number;
+  fov: number;
+  useRotation: boolean;
+}
+
+const DEFAULT_CAMERA_PRESETS: Record<string, CameraPreset> = {
+  "/": { camX: 0.02, camY: 0.992, camZ: -2.441, lookX: 0, lookY: -0.3, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 110, useRotation: false },
+  "/leagues/": { camX: -2.533, camY: 0.788, camZ: -2.013, lookX: 0, lookY: -0.3, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 85, useRotation: false },
+  "/leagues": { camX: 2.8, camY: 0.692, camZ: -1.813, lookX: -1.12, lookY: -0.49, lookZ: 1.24, rotX: 0, rotY: 0, rotZ: 0, fov: 85.5, useRotation: false },
+  "/teams/": { camX: 1.992, camY: -0.012, camZ: 1.759, lookX: 0, lookY: -1, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 60, useRotation: false },
+  "/teams": { camX: -2.864, camY: 0.377, camZ: 0.805, lookX: 0, lookY: -1, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 95, useRotation: false },
+  "/players/": { camX: -0.317, camY: 0.13, camZ: 0.092, lookX: 7.48, lookY: -0.25, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 45.3, useRotation: false },
+  "/players": { camX: 1.881, camY: 0.184, camZ: 0.96, lookX: 0, lookY: -1, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 60, useRotation: false },
+  "/world-cup": { camX: -1.5, camY: 1, camZ: -2, lookX: 0, lookY: -0.5, lookZ: 0, rotX: 0, rotY: 0, rotZ: 0, fov: 110, useRotation: false },
+};
+
+function resolveCameraPreset(pathname: string, presets: Map<string, CameraPreset>): CameraPreset & { targetPos: [number, number, number] } {
+  // Check exact match first, then prefix match
+  const exact = presets.get(pathname);
+  if (exact) return { ...exact, targetPos: [exact.camX, exact.camY, exact.camZ] };
+
+  // Prefix match (e.g. /leagues/xxx → /leagues)
+  for (const [key, preset] of presets) {
+    if (key !== "/" && pathname.startsWith(key)) {
+      return { ...preset, targetPos: [preset.camX, preset.camY, preset.camZ] };
+    }
+  }
+
+  // Fallback to home
+  const home = presets.get("/")!;
+  return { ...home, targetPos: [home.camX, home.camY, home.camZ] };
+}
+
 function latLngToSphere(lat: number, lng: number, r: number): [number, number, number] {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
@@ -695,6 +731,11 @@ const Scene = memo(function Scene() {
   const point1Ref = useRef<THREE.PointLight>(null);
   const point2Ref = useRef<THREE.PointLight>(null);
 
+  // Per-route camera presets (session-only, WYSIWYG editor writes here)
+  const presetsRef = useRef<Map<string, CameraPreset>>(new Map(
+    Object.entries(DEFAULT_CAMERA_PRESETS)
+  ));
+
   // Edit mode state refs
   const editModeRef = useRef(false);
   const keysRef = useRef(new Set<string>());
@@ -771,11 +812,11 @@ const Scene = memo(function Scene() {
     return () => window.removeEventListener("wheel", onWheel);
   }, [cam.editMode, camera]);
 
-  // Capture handler — writes camera state to leva
+  // Capture handler — writes camera state to leva + presets ref
   useEffect(() => {
     const onCapture = () => {
       const p = camera as THREE.PerspectiveCamera;
-      setCamera({
+      const preset: CameraPreset = {
         camX: +camera.position.x.toFixed(3),
         camY: +camera.position.y.toFixed(3),
         camZ: +camera.position.z.toFixed(3),
@@ -784,13 +825,17 @@ const Scene = memo(function Scene() {
         rotZ: +camera.rotation.z.toFixed(3),
         fov: +("fov" in p ? p.fov : 50).toFixed(1),
         useRotation: true,
+      };
+      presetsRef.current.set(pathname, preset);
+      setCamera({
+        ...preset,
         override: true,
         editMode: false,
       });
     };
     window.addEventListener("capture-camera", onCapture);
     return () => window.removeEventListener("capture-camera", onCapture);
-  }, [camera, setCamera]);
+  }, [camera, setCamera, pathname]);
 
   // Exit edit mode handler
   useEffect(() => {
@@ -801,6 +846,25 @@ const Scene = memo(function Scene() {
     return () => window.removeEventListener("camera-edit-exit", onExit);
   }, [setCamera]);
 
+  // Reset camera handler — clears custom preset for current route, restores default
+  useEffect(() => {
+    const onReset = () => {
+      presetsRef.current.delete(pathname);
+      const p = resolveCameraPreset(pathname, presetsRef.current);
+      targetPos.current.set(...p.targetPos);
+      setCamera({
+        camX: p.camX, camY: p.camY, camZ: p.camZ,
+        lookX: p.lookX ?? 0, lookY: p.lookY ?? 0, lookZ: p.lookZ ?? 0,
+        rotX: p.rotX, rotY: p.rotY, rotZ: p.rotZ,
+        fov: p.fov,
+        useRotation: p.useRotation,
+        override: false,
+      });
+    };
+    window.addEventListener("camera-reset", onReset);
+    return () => window.removeEventListener("camera-reset", onReset);
+  }, [pathname, setCamera]);
+
   // Transparent background — sky dome handles the sky
   useEffect(() => {
     scene.background = null;
@@ -809,34 +873,16 @@ const Scene = memo(function Scene() {
 
   // Camera targets per route
   useEffect(() => {
-    if (pathname === "/") {
-      targetPos.current.set(0.02, 0.992, -2.441);
-      setCamera({ camX: 0.02, camY: 0.992, camZ: -2.441, lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
-    } else if (pathname.startsWith("/leagues/")) {
-      targetPos.current.set(-2.533, 0.788, -2.013);
-      setCamera({ camX: -2.533, camY: 0.788, camZ: -2.013, lookX: 0, lookY: -0.3, lookZ: 0, fov: 85, useRotation: false, override: false });
-    } else if (pathname === "/leagues") {
-      targetPos.current.set(2.8, 0.692, -1.813);
-      setCamera({ camX: 2.8, camY: 0.692, camZ: -1.813, lookX: -1.12, lookY: -0.49, lookZ: 1.24, fov: 85.5, useRotation: false, override: false });
-    } else if (pathname.startsWith("/teams/")) {
-      targetPos.current.set(1.992, -0.012, 1.759);
-      setCamera({ camX: 1.992, camY: -0.012, camZ: 1.759, lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
-    } else if (pathname === "/teams") {
-      targetPos.current.set(-2.864, 0.377, 0.805);
-      setCamera({ camX: -2.864, camY: 0.377, camZ: 0.805, lookX: 0, lookY: -1, lookZ: 0, fov: 95, useRotation: false, override: false });
-    } else if (pathname.startsWith("/players/")) {
-      targetPos.current.set(-0.317, 0.13, 0.092);
-      setCamera({ camX: -0.317, camY: 0.13, camZ: 0.092, lookX: 7.48, lookY: -1.38, lookZ: 0, fov: 35, useRotation: false, override: false });
-    } else if (pathname === "/players") {
-      targetPos.current.set(1.881, 0.184, 0.96);
-      setCamera({ camX: 1.881, camY: 0.184, camZ: 0.96, lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
-    } else if (pathname.startsWith("/world-cup")) {
-      targetPos.current.set(-1.5, 1, -2);
-      setCamera({ camX: -1.5, camY: 1, camZ: -2, lookX: 0, lookY: -0.5, lookZ: 0, useRotation: false, override: false });
-    } else {
-      targetPos.current.set(0.02, 0.992, -2.441);
-      setCamera({ camX: 0.02, camY: 0.992, camZ: -2.441, lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
-    }
+    const p = resolveCameraPreset(pathname, presetsRef.current);
+    targetPos.current.set(...p.targetPos);
+    setCamera({
+      camX: p.camX, camY: p.camY, camZ: p.camZ,
+      lookX: p.lookX ?? 0, lookY: p.lookY ?? 0, lookZ: p.lookZ ?? 0,
+      rotX: p.rotX, rotY: p.rotY, rotZ: p.rotZ,
+      fov: p.fov,
+      useRotation: p.useRotation,
+      override: false,
+    });
   }, [pathname, setCamera]);
 
   // Camera update
@@ -904,7 +950,15 @@ const Scene = memo(function Scene() {
     } else {
       const t = 1 - Math.pow(0.01, delta);
       camera.position.lerp(targetPos.current, t);
-      camera.lookAt(cam.lookX, cam.lookY, cam.lookZ);
+      if (cam.useRotation) {
+        camera.rotation.set(cam.rotX, cam.rotY, cam.rotZ);
+      } else {
+        camera.lookAt(cam.lookX, cam.lookY, cam.lookZ);
+      }
+      if ("fov" in camera) {
+        (camera as THREE.PerspectiveCamera).fov = cam.fov;
+        camera.updateProjectionMatrix();
+      }
     }
 
     // Update sun target from rotation + length
@@ -1015,10 +1069,29 @@ export function ThreeBackground() {
     window.dispatchEvent(new Event("camera-edit-exit"));
   }, []);
 
+  const handleReset = useCallback(() => {
+    window.dispatchEvent(new Event("camera-reset"));
+  }, []);
+
   return (
     <>
       {/* Leva panel — hidden in edit mode */}
       {!editMode && <Leva hidden={levaHidden} />}
+
+      {/* Reset button — visible when NOT in edit mode and Leva is shown */}
+      {!editMode && !levaHidden && (
+        <div
+          className="fixed top-2 right-2 z-[10000] flex gap-2"
+          style={{ pointerEvents: "auto" }}
+        >
+          <button
+            onClick={handleReset}
+            className="rounded bg-yellow-600/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-yellow-700"
+          >
+            Reset Camera
+          </button>
+        </div>
+      )}
 
       {/* Capture + Exit buttons — only in edit mode */}
       {editMode && (

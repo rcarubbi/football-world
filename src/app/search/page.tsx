@@ -5,6 +5,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Search, Users, Star, Trophy } from "lucide-react";
+import { stripAccents, sqlStripAccents } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,17 +17,17 @@ async function searchAll(q: string) {
   if (!q || q.length < 2) return { teams: [], players: [] };
 
   const client = getTursoClient();
-  const pattern = `%${q}%`;
+  const pattern = `%${stripAccents(q).toLowerCase()}%`;
 
   const [teamsResult, playersResult] = await Promise.all([
     client.execute({
-      sql: `SELECT name, slug, badge_url, league_slug FROM teams WHERE name LIKE ? ORDER BY name LIMIT 10`,
+      sql: `SELECT name, slug, badge_url, league_slug FROM teams WHERE ${sqlStripAccents("name")} LIKE ? ORDER BY name LIMIT 10`,
       args: [pattern],
     }),
     client.execute({
       sql: `SELECT p.name, p.slug, p.photo_url, p.position, t.name as team_name, t.slug as team_slug, t.badge_url as team_badge
             FROM players p LEFT JOIN teams t ON p.team_id = t.id
-            WHERE p.name LIKE ? ORDER BY p.name LIMIT 10`,
+            WHERE ${sqlStripAccents("p.name")} LIKE ? ORDER BY p.name LIMIT 10`,
       args: [pattern],
     }),
   ]);

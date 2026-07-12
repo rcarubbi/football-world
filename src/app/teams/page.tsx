@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
-import { LEAGUES } from "@/lib/leagues";
 import { Card } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Users, Search } from "lucide-react";
+import { stripAccents } from "@/lib/utils";
+import { LEAGUES } from "@/lib/leagues";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -47,8 +48,8 @@ export default async function TimesPage({
   }
 
   if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    teams = teams.filter((t) => (t.name as string).toLowerCase().includes(q));
+    const q = stripAccents(searchQuery).toLowerCase();
+    teams = teams.filter((t) => stripAccents(t.name as string).toLowerCase().includes(q));
   }
 
   return (

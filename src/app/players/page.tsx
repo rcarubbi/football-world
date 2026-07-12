@@ -3,6 +3,7 @@ import { getTursoClient } from "@/lib/turso/client";
 import { PlayersGrid } from "@/components/PlayersGrid";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Star } from "lucide-react";
+import { stripAccents, sqlStripAccents } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -25,8 +26,8 @@ export default async function JogadoresPage({
   const args: (string | number)[] = [];
 
   if (searchQuery) {
-    conditions.push("LOWER(p.name) LIKE ?");
-    args.push(`%${searchQuery.toLowerCase()}%`);
+    conditions.push(`${sqlStripAccents("p.name")} LIKE ?`);
+    args.push(`%${stripAccents(searchQuery).toLowerCase()}%`);
   }
   if (positionFilter) {
     conditions.push("LOWER(p.position) = ?");
@@ -92,7 +93,16 @@ export default async function JogadoresPage({
 
       <PlayersGrid
         key={`${searchQuery || ""}-${positionFilter || ""}`}
-        initialPlayers={initialResult.rows as unknown as { id: number; name: string; slug: string; photo_url: string | null; position: string | null; nationality: string | null; team_name: string | null; team_badge: string | null }[]}
+        initialPlayers={initialResult.rows.map((r) => ({
+          id: r.id as number,
+          name: r.name as string,
+          slug: r.slug as string,
+          photo_url: r.photo_url as string | null,
+          position: r.position as string | null,
+          nationality: r.nationality as string | null,
+          team_name: r.team_name as string | null,
+          team_badge: r.team_badge as string | null,
+        }))}
         totalCount={totalCount}
         initialQuery={searchQuery}
         initialPosition={positionFilter}

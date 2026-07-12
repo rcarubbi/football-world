@@ -362,8 +362,9 @@ function Goals() {
         child.receiveShadow = false;
         if (child.material) {
           const oldMat = child.material as THREE.MeshStandardMaterial;
+          const dimColor = oldMat.color.clone().multiplyScalar(0.4);
           child.material = new THREE.MeshBasicMaterial({
-            color: oldMat.color,
+            color: dimColor,
             map: oldMat.map,
             transparent: oldMat.transparent,
             opacity: oldMat.opacity,

@@ -3,23 +3,23 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-destructive: var(--destructive);
-  --color-ring: var(--ring);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-surface: var(--surface);
-  --color-surface-hover: var(--surface-hover);
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --color-accent: rgb(var(--accent));
+  --color-accent-foreground: rgb(var(--accent-foreground));
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+  --color-border: rgb(var(--border));
+  --color-card: rgb(var(--card));
+  --color-card-foreground: rgb(var(--card-foreground));
+  --color-destructive: rgb(var(--destructive));
+  --color-ring: rgb(var(--ring));
+  --color-success: rgb(var(--success));
+  --color-warning: rgb(var(--warning));
+  --color-surface: rgb(var(--surface));
+  --color-surface-hover: rgb(var(--surface-hover));
 }
 
 :root {

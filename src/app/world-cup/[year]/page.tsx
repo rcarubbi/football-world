@@ -79,8 +79,8 @@ export default async function WorldCupYearPage({ params }: PageProps) {
   const stages = [
     { name: "Final", filter: (m: Record<string, unknown>) => m.stage === "Final" },
     { name: "Semifinal", filter: (m: Record<string, unknown>) => m.stage === "Semi-Final" },
-    { name: "Quartas de Final", filter: (m: Record<string, unknown>) => m.stage === "Quarter-Final" },
-    { name: "Oitavas de Final", filter: (m: Record<string, unknown>) => m.stage === "Round of 16" },
+    { name: "Quarter-Finals", filter: (m: Record<string, unknown>) => m.stage === "Quarter-Final" },
+    { name: "Round of 16", filter: (m: Record<string, unknown>) => m.stage === "Round of 16" },
   ];
 
   const groupedByStage = stages.map((stage) => ({
@@ -129,7 +129,7 @@ export default async function WorldCupYearPage({ params }: PageProps) {
           <CardHeader>
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Globe className="w-5 h-5 text-success" />
-              Selecoes Participantes ({teams.length})
+              Participating Teams ({teams.length})
             </h2>
           </CardHeader>
           <CardContent>

@@ -66,7 +66,7 @@ export function VideoSection({ videos, limit }: VideoSectionProps) {
           <button
             key={video.id}
             onClick={() => open(video)}
-            className="w-full flex gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors text-left"
+            className="w-full flex gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors text-left cursor-pointer"
           >
             {video.thumbnail_url ? (
               <img

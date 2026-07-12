@@ -100,13 +100,13 @@ export default async function LigaDetailPage({ params }: PageProps) {
                   <TableHeader>
                     <TableRow>
                       <TableCell className="w-10 px-2">#</TableCell>
-                      <TableCell className="px-2">Time</TableCell>
-                      <TableCell className="text-center px-2 hidden sm:table-cell">J</TableCell>
-                      <TableCell className="text-center px-2 hidden sm:table-cell">V</TableCell>
-                      <TableCell className="text-center px-2 hidden sm:table-cell">E</TableCell>
+                      <TableCell className="px-2">Team</TableCell>
+                      <TableCell className="text-center px-2 hidden sm:table-cell">P</TableCell>
+                      <TableCell className="text-center px-2 hidden sm:table-cell">W</TableCell>
                       <TableCell className="text-center px-2 hidden sm:table-cell">D</TableCell>
+                      <TableCell className="text-center px-2 hidden sm:table-cell">L</TableCell>
                       <TableCell className="text-center font-bold px-2">Pts</TableCell>
-                      <TableCell className="hidden md:table-cell px-2">Forma</TableCell>
+                      <TableCell className="hidden md:table-cell px-2">Form</TableCell>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

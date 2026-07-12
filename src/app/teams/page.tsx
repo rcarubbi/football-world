@@ -66,7 +66,7 @@ export default async function TimesPage({
         <Link
           href="/teams"
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-            !leagueFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            !leagueFilter ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-muted-foreground hover:bg-muted/60 border border-white/10"
           }`}
         >
           All
@@ -76,7 +76,7 @@ export default async function TimesPage({
             key={league.slug}
             href={`/teams?league=${league.slug}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-              leagueFilter === league.slug ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              leagueFilter === league.slug ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-muted-foreground hover:bg-muted/60 border border-white/10"
             }`}
           >
             <LeagueIcon slug={league.slug} className="w-5 h-5 text-[10px]" />

@@ -295,14 +295,14 @@ useGLTF.preload("/goal.glb");
 function SkyDome() {
   const { scenes } = useGLTF("/sky.glb");
 
-  const { posX, posY, posZ, rotX, rotY, rotZ, scl, tintR, tintG, tintB } = useControls("Sky", {
-    posX: { value: 0, min: -50, max: 50, step: 0.1 },
-    posY: { value: -2.2, min: -50, max: 50, step: 0.1 },
-    posZ: { value: 0, min: -50, max: 50, step: 0.1 },
-    rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    scl: { value: 200, min: 10, max: 500, step: 1 },
+  const { skyPosX, skyPosY, skyPosZ, skyRotX, skyRotY, skyRotZ, skyScl, tintR, tintG, tintB } = useControls("Sky", {
+    skyPosX: { value: 0, min: -50, max: 50, step: 0.1 },
+    skyPosY: { value: -2.2, min: -50, max: 50, step: 0.1 },
+    skyPosZ: { value: 0, min: -50, max: 50, step: 0.1 },
+    skyRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    skyRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    skyRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    skyScl: { value: 200, min: 10, max: 500, step: 1 },
     tintR: { value: 1, min: 0, max: 2, step: 0.01 },
     tintG: { value: 1, min: 0, max: 2, step: 0.01 },
     tintB: { value: 1, min: 0, max: 2, step: 0.01 },
@@ -322,9 +322,9 @@ function SkyDome() {
 
   return (
     <mesh
-      scale={scl}
-      position={[posX, posY, posZ]}
-      rotation={[rotX, rotY, rotZ]}
+      scale={skyScl}
+      position={[skyPosX, skyPosY, skyPosZ]}
+      rotation={[skyRotX, skyRotY, skyRotZ]}
       renderOrder={-999}
     >
       <sphereGeometry args={[1, 64, 32]} />

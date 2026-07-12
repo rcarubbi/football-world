@@ -31,7 +31,7 @@ export function ShareButton({ title, text, image, className = "" }: ShareButtonP
   return (
     <button
       onClick={handleShare}
-      className={`inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors ${className}`}
       aria-label="Share"
     >
       {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}

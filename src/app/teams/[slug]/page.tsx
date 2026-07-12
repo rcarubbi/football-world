@@ -142,7 +142,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/teams" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+      <Link href="/teams" className="inline-flex items-center gap-1 text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Teams
       </Link>
 
@@ -155,7 +155,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
             <h1 className="text-3xl sm:text-4xl font-bold flex-1">{team.name as string}</h1>
             <ShareButton title={team.name as string} image={team.badge_url as string | undefined} />
           </div>
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-red-400 dark:text-red-300">
             <Link href={`/leagues/${leagueSlug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
               <LeagueIcon slug={leagueSlug} className="w-5 h-5 text-[10px]" />
               {leagueSlug}
@@ -183,7 +183,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                 <h2 className="text-xl font-bold">About the Team</h2>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-6">
+                <p className="text-sm text-red-400 dark:text-red-300 leading-relaxed line-clamp-6">
                   {stripWikiMarkup(team.wikipedia_content as string)}
                 </p>
               </CardContent>
@@ -215,7 +215,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                       )}
                       <div className="min-w-0">
                         <div className="text-sm font-medium truncate">{player.name as string}</div>
-                        <div className="text-xs text-muted-foreground">{player.position as string || "N/A"}</div>
+                        <div className="text-xs text-red-400 dark:text-red-300">{player.position as string || "N/A"}</div>
                       </div>
                     </Link>
                   ))}

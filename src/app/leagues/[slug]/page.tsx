@@ -98,7 +98,7 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
         <LeagueIcon slug={slug} className="w-16 h-16 text-xl" />
         <div className="flex-1">
           <h1 className="text-3xl sm:text-4xl font-bold">{league.name}</h1>
-          <p className="text-muted-foreground">{league.country}</p>
+          <p className="text-red-400 dark:text-red-300">{league.country}</p>
         </div>
         <ShareButton title={league.name} image={league.logoUrl} />
       </GlassPanel>
@@ -147,9 +147,9 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                             <span className="font-medium text-sm truncate max-w-[120px]">{row.team_name as string}</span>
                           </Link>
                         </TableCell>
-                        <TableCell className="text-center text-muted-foreground px-2 hidden sm:table-cell">{row.played as number}</TableCell>
+                        <TableCell className="text-center text-red-400 dark:text-red-300 px-2 hidden sm:table-cell">{row.played as number}</TableCell>
                         <TableCell className="text-center text-success px-2 hidden sm:table-cell">{row.won as number}</TableCell>
-                        <TableCell className="text-center text-muted-foreground px-2 hidden sm:table-cell">{row.drawn as number}</TableCell>
+                        <TableCell className="text-center text-red-400 dark:text-red-300 px-2 hidden sm:table-cell">{row.drawn as number}</TableCell>
                         <TableCell className="text-center text-destructive px-2 hidden sm:table-cell">{row.lost as number}</TableCell>
                         <TableCell className="text-center font-bold px-2">{row.points as number}</TableCell>
                         <TableCell className="hidden md:table-cell px-2">
@@ -159,7 +159,7 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                                 key={i}
                                 className={`w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center ${
                                   f === "W" ? "bg-success/20 text-success" :
-                                  f === "D" ? "bg-muted text-muted-foreground" :
+                                  f === "D" ? "bg-muted text-foreground/60" :
                                   "bg-destructive/20 text-destructive"
                                 }`}
                               >
@@ -222,7 +222,7 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                         {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}
                         <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
                       </div>
-                      <div className="px-4 text-sm text-muted-foreground shrink-0">
+                      <div className="px-4 text-sm text-red-400 dark:text-red-300 shrink-0">
                         {match.match_date as string} {match.match_time ? `${match.match_time}` : ""}
                       </div>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
@@ -250,10 +250,10 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                 <div className="space-y-3">
                   {data.topScorers.map((scorer: Record<string, unknown>, i: number) => (
                     <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                      <span className="text-sm font-bold text-muted-foreground w-6 text-center">{i + 1}</span>
+                      <span className="text-sm font-bold text-red-400 dark:text-red-300 w-6 text-center">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{scorer.player_name as string}</div>
-                        <div className="text-xs text-muted-foreground">{scorer.team_name as string}</div>
+                        <div className="text-xs text-red-400 dark:text-red-300">{scorer.team_name as string}</div>
                       </div>
                       <Badge variant="accent">{scorer.goals as number} G</Badge>
                     </div>
@@ -299,7 +299,7 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                   {data.transfers.slice(0, 5).map((transfer: Record<string, unknown>, i: number) => (
                     <div key={i} className="p-3 rounded-xl bg-muted/30">
                       <div className="text-sm font-medium">{transfer.player_name as string}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                         {transfer.from_team as string} → {transfer.to_team as string}
                       </div>
                       <div className="flex gap-2 mt-2">

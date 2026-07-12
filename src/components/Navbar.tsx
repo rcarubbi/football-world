@@ -68,7 +68,7 @@ export function Navbar() {
                   className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-red-400 dark:text-red-300 hover:text-red-300 dark:hover:text-red-200 hover:bg-muted/50"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -124,7 +124,7 @@ export function Navbar() {
                     className={`flex items-center space-x-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-red-400 dark:text-red-300 hover:text-red-300 dark:hover:text-red-200 hover:bg-muted/50"
                     }`}
                   >
                     <Icon className="w-4 h-4" />

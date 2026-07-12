@@ -72,7 +72,7 @@ export default async function JogadoresPage({
           </h1>
           <ShareButton title="Players | Football World" />
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-red-400 dark:text-red-300">
           {totalCount} players available
         </p>
       </GlassPanel>
@@ -81,7 +81,7 @@ export default async function JogadoresPage({
         <Link
           href="/players"
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-            !positionFilter ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-muted-foreground hover:bg-muted/60 border border-white/10"
+            !positionFilter ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-red-400 dark:text-red-300 hover:bg-muted/60 border border-white/10"
           }`}
         >
           All
@@ -91,7 +91,7 @@ export default async function JogadoresPage({
             key={pos}
             href={`/players?position=${pos}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              positionFilter === pos ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-muted-foreground hover:bg-muted/60 border border-white/10"
+              positionFilter === pos ? "bg-primary text-primary-foreground" : "bg-muted/80 backdrop-blur-md text-red-400 dark:text-red-300 hover:bg-muted/60 border border-white/10"
             }`}
           >
             {pos}

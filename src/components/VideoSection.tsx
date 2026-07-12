@@ -77,7 +77,7 @@ export function VideoSection({ videos, limit }: VideoSectionProps) {
             ) : null}
             <div className="min-w-0">
               <div className="text-sm font-medium line-clamp-2">{video.title}</div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                 {video.channel_name}
               </div>
             </div>

@@ -92,13 +92,13 @@ export function PlayersGrid({
                 </div>
               )}
               <div className="font-medium text-sm leading-tight">{player.name}</div>
-              <div className="text-xs text-muted-foreground mt-1">{player.position || "N/A"}</div>
+              <div className="text-xs text-red-400 dark:text-red-300 mt-1">{player.position || "N/A"}</div>
               {player.team_name && (
                 <div className="flex items-center justify-center gap-1.5 mt-2">
                   {player.team_badge && (
                     <img src={player.team_badge} alt="" className="w-4 h-4 object-contain" loading="lazy" />
                   )}
-                  <span className="text-xs text-muted-foreground truncate">{player.team_name}</span>
+                  <span className="text-xs text-red-400 dark:text-red-300 truncate">{player.team_name}</span>
                 </div>
               )}
               {player.nationality && (
@@ -106,7 +106,7 @@ export function PlayersGrid({
                   {getFlagUrl(player.nationality) ? (
                     <img src={getFlagUrl(player.nationality)!} alt="" className="w-4 h-auto" loading="lazy" />
                   ) : null}
-                  <span className="text-xs text-muted-foreground">{player.nationality}</span>
+                  <span className="text-xs text-red-400 dark:text-red-300">{player.nationality}</span>
                 </div>
               )}
             </Card>
@@ -117,12 +117,12 @@ export function PlayersGrid({
       <div ref={sentinelRef} className="py-8 flex justify-center">
         {loading && <Loader2 className="w-6 h-6 animate-spin text-primary" />}
         {!hasMore && players.length > 0 && (
-          <p className="text-sm text-muted-foreground">All {totalCount} players loaded</p>
+          <p className="text-sm text-red-400 dark:text-red-300">All {totalCount} players loaded</p>
         )}
         {!loading && players.length === 0 && (
           <div className="text-center py-16">
-            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No players found</p>
+            <Search className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+            <p className="text-red-400 dark:text-red-300">No players found</p>
           </div>
         )}
       </div>

@@ -17,56 +17,56 @@ export function Footer() {
                 <span className="gradient-text">Football</span> World
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground max-w-sm">
+            <p className="text-sm text-red-400 dark:text-red-300 max-w-sm">
               Your complete guide to the world&apos;s top football championships.
               Teams, players, results, videos and much more.
             </p>
           </div>
 
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+            <h3 className="font-semibold text-sm uppercase tracking-wider text-red-400 dark:text-red-300 mb-4">
               Navigation
             </h3>
             <nav className="flex flex-col space-y-2">
-              <Link href="/leagues" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/leagues" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Leagues
               </Link>
-              <Link href="/teams" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/teams" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Teams
               </Link>
-              <Link href="/players" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/players" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Players
               </Link>
-              <Link href="/world-cup" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/world-cup" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 World Cup
               </Link>
             </nav>
           </div>
 
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+            <h3 className="font-semibold text-sm uppercase tracking-wider text-red-400 dark:text-red-300 mb-4">
               Data Sources
             </h3>
             <nav className="flex flex-col space-y-2">
-              <a href="https://www.thesportsdb.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.thesportsdb.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 TheSportsDB
               </a>
-              <a href="https://www.football-data.org" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.football-data.org" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 football-data.org
               </a>
-              <a href="https://www.api-football.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.api-football.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 API-Football
               </a>
-              <a href="https://www.bigballsdata.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.bigballsdata.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Big Balls Data
               </a>
-              <a href="https://www.sportsapipro.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.sportsapipro.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Sports API Pro
               </a>
-              <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 YouTube
               </a>
-              <a href="https://www.wikimedia.org" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://www.wikimedia.org" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Wikimedia
               </a>
             </nav>
@@ -74,16 +74,16 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-red-400 dark:text-red-300">
             Football World Portal &copy; {new Date().getFullYear()}
           </p>
           <div className="flex items-center gap-3">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-red-400 dark:text-red-300">
               Data auto-updated
             </p>
             <button
               onClick={() => window.dispatchEvent(new Event("toggle-leva"))}
-              className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              className="text-red-400/40 dark:text-red-300/40 hover:text-red-400 dark:hover:text-red-300 transition-colors"
               aria-label="Toggle debug panel"
             >
               <Bug className="w-3.5 h-3.5" />

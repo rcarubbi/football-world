@@ -62,7 +62,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
 
   return (
     <GlassPanel className="max-w-4xl mx-auto px-4 sm:px-6 py-8 m-4">
-      <Link href="/players" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+      <Link href="/players" className="inline-flex items-center gap-1 text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Players
       </Link>
 
@@ -91,7 +91,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
                 {getFlagUrl(player.nationality as string) ? (
                   <img src={getFlagUrl(player.nationality as string)!} alt="" className="w-5 h-auto" />
                 ) : null}
-                <span className="text-sm text-muted-foreground">{player.nationality as string}</span>
+                <span className="text-sm text-red-400 dark:text-red-300">{player.nationality as string}</span>
               </div>
             ) : null}
           </div>
@@ -99,25 +99,25 @@ export default async function PlayerDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             {player.date_of_birth ? (
               <div className="text-center p-3 rounded-xl bg-muted/30">
-                <Calendar className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                <Calendar className="w-4 h-4 mx-auto mb-1 text-red-400 dark:text-red-300" />
                 <div className="text-sm font-medium">
                   {new Date(player.date_of_birth as string).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </div>
-                  <div className="text-xs text-muted-foreground">Birth</div>
+                  <div className="text-xs text-red-400 dark:text-red-300">Birth</div>
               </div>
             ) : null}
             {player.height ? (
               <div className="text-center p-3 rounded-xl bg-muted/30">
-                <Ruler className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                <Ruler className="w-4 h-4 mx-auto mb-1 text-red-400 dark:text-red-300" />
                 <div className="text-sm font-medium">{player.height as string}</div>
-                <div className="text-xs text-muted-foreground">Height</div>
+                <div className="text-xs text-red-400 dark:text-red-300">Height</div>
               </div>
             ) : null}
             {player.weight ? (
               <div className="text-center p-3 rounded-xl bg-muted/30">
-                <Weight className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                <Weight className="w-4 h-4 mx-auto mb-1 text-red-400 dark:text-red-300" />
                 <div className="text-sm font-medium">{player.weight as string}</div>
-                  <div className="text-xs text-muted-foreground">Weight</div>
+                  <div className="text-xs text-red-400 dark:text-red-300">Weight</div>
               </div>
             ) : null}
             {currentTeam && (
@@ -126,7 +126,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
                   <img src={currentTeam.badge_url as string} alt="" className="w-8 h-8 mx-auto mb-1 object-contain" />
                 ) : null}
                 <div className="text-sm font-medium">{currentTeam.name as string}</div>
-                <div className="text-xs text-muted-foreground">Current Team</div>
+                <div className="text-xs text-red-400 dark:text-red-300">Current Team</div>
               </Link>
             )}
           </div>
@@ -140,7 +140,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
               <h2 className="text-xl font-bold">Biography</h2>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground leading-relaxed space-y-4">
+              <div className="text-sm text-red-400 dark:text-red-300 leading-relaxed space-y-4">
                 {player.career_summary ? <p>{player.career_summary as string}</p> : null}
                 {player.description ? <p>{player.description as string}</p> : null}
               </div>
@@ -163,7 +163,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
                     <Trophy className="w-5 h-5 text-accent shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium">{h.honour_name as string}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-red-400 dark:text-red-300">
                         {h.season ? `${h.season}` : ""}
                         {h.team_name ? ` - ${h.team_name}` : ""}
                       </div>
@@ -191,7 +191,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
                     <div className="absolute -left-4 top-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                     <div className="p-3 rounded-xl bg-muted/30">
                       <div className="text-sm font-medium">{ft.team_name as string}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                         {ft.joined ? `Joined: ${ft.joined}` : ""}
                         {ft.departed ? ` | Left: ${ft.departed}` : ""}
                       </div>

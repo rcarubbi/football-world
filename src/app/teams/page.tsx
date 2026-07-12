@@ -67,7 +67,7 @@ export default async function TimesPage({
           </h1>
           <ShareButton title="Teams | Football World" />
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-red-400 dark:text-red-300">
           {teams.length} teams available
         </p>
       </GlassPanel>
@@ -76,7 +76,7 @@ export default async function TimesPage({
         <Link
           href="/teams"
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-            !leagueFilter ? "bg-primary text-primary-foreground" : "bg-background/10 backdrop-blur-md text-muted-foreground hover:bg-background/20 border border-white/10"
+            !leagueFilter ? "bg-primary text-primary-foreground" : "bg-background/10 backdrop-blur-md text-red-400 dark:text-red-300 hover:bg-background/20 border border-white/10"
           }`}
         >
           All
@@ -86,7 +86,7 @@ export default async function TimesPage({
             key={league.slug}
             href={`/teams?league=${league.slug}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-              leagueFilter === league.slug ? "bg-primary text-primary-foreground" : "bg-background/10 backdrop-blur-md text-muted-foreground hover:bg-background/20 border border-white/10"
+              leagueFilter === league.slug ? "bg-primary text-primary-foreground" : "bg-background/10 backdrop-blur-md text-red-400 dark:text-red-300 hover:bg-background/20 border border-white/10"
             }`}
           >
             <LeagueIcon slug={league.slug} className="w-5 h-5 text-[10px]" />
@@ -107,11 +107,11 @@ export default async function TimesPage({
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-3 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-muted-foreground" />
+                  <Users className="w-6 h-6 text-red-400 dark:text-red-300" />
                 </div>
               )}
               <div className="font-medium text-sm leading-tight">{team.name as string}</div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                     {team.player_count as number} players
               </div>
               <div className="mt-2">
@@ -124,8 +124,8 @@ export default async function TimesPage({
 
       {teams.length === 0 && (
         <div className="text-center py-16">
-          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No teams found</p>
+          <Search className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+          <p className="text-red-400 dark:text-red-300">No teams found</p>
         </div>
       )}
     </div>

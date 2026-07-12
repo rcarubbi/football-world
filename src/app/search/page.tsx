@@ -63,7 +63,7 @@ export default async function BuscaPage({
           {query && <ShareButton title={`Search: ${query} | Football World`} />}
         </div>
         {query && (
-          <p className="text-muted-foreground">
+          <p className="text-red-400 dark:text-red-300">
             Results for &quot;{query}&quot;
           </p>
         )}
@@ -71,8 +71,8 @@ export default async function BuscaPage({
 
       {!query || query.length < 2 ? (
         <div className="text-center py-16">
-          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Type at least 2 characters to search</p>
+          <Search className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+          <p className="text-red-400 dark:text-red-300">Type at least 2 characters to search</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -91,14 +91,14 @@ export default async function BuscaPage({
                           <img src={team.badge_url as string} alt="" className="w-10 h-10 object-contain" />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <Users className="w-4 h-4 text-red-400 dark:text-red-300" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
                           <div className="font-medium text-sm">{team.name as string}</div>
                           <div className="flex items-center gap-1.5 mt-1">
                             <LeagueIcon slug={team.league_slug as string} className="w-4 h-4 text-[8px]" />
-                            <span className="text-xs text-muted-foreground">{team.league_slug as string}</span>
+                            <span className="text-xs text-red-400 dark:text-red-300">{team.league_slug as string}</span>
                           </div>
                         </div>
                       </div>
@@ -132,7 +132,7 @@ export default async function BuscaPage({
                           <div className="flex items-center gap-2 mt-1">
                             {player.position && <Badge variant="outline" className="text-[10px]">{player.position as string}</Badge>}
                             {player.team_name && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <span className="text-xs text-red-400 dark:text-red-300 flex items-center gap-1">
                                 {player.team_badge && <img src={player.team_badge as string} alt="" className="w-3 h-3 object-contain" />}
                                 {player.team_name as string}
                               </span>
@@ -149,8 +149,8 @@ export default async function BuscaPage({
 
           {results.teams.length === 0 && results.players.length === 0 && (
             <div className="text-center py-16">
-              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No results found for &quot;{query}&quot;</p>
+              <Search className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+              <p className="text-red-400 dark:text-red-300">No results found for &quot;{query}&quot;</p>
             </div>
           )}
         </div>

@@ -27,7 +27,7 @@ export default function LigasPage() {
           </h1>
           <ShareButton title="Leagues | Football World" />
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-red-400 dark:text-red-300">
           Explore the world&apos;s top football leagues
         </p>
       </GlassPanel>
@@ -40,7 +40,7 @@ export default function LigasPage() {
                 <LeagueIcon slug={league.slug} className="w-20 h-20" />
                 <div className="min-w-0">
                   <h2 className="font-bold text-xl leading-tight">{league.name}</h2>
-                  <p className="text-sm text-muted-foreground mt-1.5">{league.country}</p>
+                  <p className="text-sm text-red-400 dark:text-red-300 mt-1.5">{league.country}</p>
                 </div>
               </div>
             </Card>

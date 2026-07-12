@@ -101,7 +101,7 @@ function MatchCard({ match }: { match: MatchRow }) {
         )}
       </div>
       {match.venue && (
-        <div className="text-[10px] text-muted-foreground mt-1.5 truncate">{match.venue}</div>
+        <div className="text-[10px] text-red-400 dark:text-red-300 mt-1.5 truncate">{match.venue}</div>
       )}
     </div>
   );
@@ -169,7 +169,7 @@ function GroupTable({ groupName, matches }: { groupName: string; matches: MatchR
                 </TableCell>
                 <TableCell className="text-center text-xs px-1 hidden sm:table-cell">{row.p}</TableCell>
                 <TableCell className="text-center text-xs text-success px-1 hidden sm:table-cell">{row.w}</TableCell>
-                <TableCell className="text-center text-xs text-muted-foreground px-1 hidden sm:table-cell">{row.d}</TableCell>
+                <TableCell className="text-center text-xs text-red-400 dark:text-red-300 px-1 hidden sm:table-cell">{row.d}</TableCell>
                 <TableCell className="text-center text-xs text-destructive px-1 hidden sm:table-cell">{row.l}</TableCell>
                 <TableCell className="text-center text-xs px-1 hidden sm:table-cell">{row.gf}</TableCell>
                 <TableCell className="text-center text-xs px-1 hidden sm:table-cell">{row.ga}</TableCell>
@@ -210,7 +210,7 @@ function KnockoutRound({ title, matches, icon }: { title: string; matches: Match
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
         {icon}
         <Badge variant="accent">{title}</Badge>
-        <span className="text-muted-foreground text-sm font-normal">({matches.length} match{matches.length > 1 ? "es" : ""})</span>
+        <span className="text-red-400 dark:text-red-300 text-sm font-normal">({matches.length} match{matches.length > 1 ? "es" : ""})</span>
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {matches.map((m) => (
@@ -238,8 +238,8 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
           </div>
         </GlassPanel>
         <div className="text-center py-16">
-          <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No World Cup data found</p>
+          <Globe className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+          <p className="text-red-400 dark:text-red-300">No World Cup data found</p>
         </div>
       </div>
     );
@@ -281,7 +281,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
               <ShareButton title={`World Cup ${currentYear}`} />
             </div>
             {edition && (
-              <div className="mt-2 text-muted-foreground">
+              <div className="mt-2 text-red-400 dark:text-red-300">
                 Hosted in <span className="text-foreground font-medium">{edition.host}</span>
               </div>
             )}
@@ -322,7 +322,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
                 <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                   {edition.mascot.name}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-md">
+                <p className="text-sm text-red-400 dark:text-red-300 leading-relaxed mt-2 max-w-md">
                   {edition.mascot.description}
                 </p>
               </div>
@@ -335,19 +335,19 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <Card className="p-4 text-center">
           <Trophy className="w-6 h-6 text-accent mx-auto mb-2" />
-          <div className="text-sm text-muted-foreground">Champion</div>
+          <div className="text-sm text-red-400 dark:text-red-300">Champion</div>
           <div className="font-bold">{cup.winner as string}</div>
         </Card>
         <Card className="p-4 text-center">
-          <div className="text-sm text-muted-foreground">Runner-up</div>
+          <div className="text-sm text-red-400 dark:text-red-300">Runner-up</div>
           <div className="font-bold">{cup.runner_up as string}</div>
         </Card>
         <Card className="p-4 text-center">
-          <div className="text-sm text-muted-foreground">3rd Place</div>
+          <div className="text-sm text-red-400 dark:text-red-300">3rd Place</div>
           <div className="font-bold">{cup.third_place as string}</div>
         </Card>
         <Card className="p-4 text-center">
-          <div className="text-sm text-muted-foreground">4th Place</div>
+          <div className="text-sm text-red-400 dark:text-red-300">4th Place</div>
           <div className="font-bold">{cup.fourth_place as string}</div>
         </Card>
       </div>
@@ -371,7 +371,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{team.team_name as string}</div>
                     {team.group_name ? (
-                      <div className="text-[10px] text-muted-foreground">{(team.group_name as string).replace("GROUP_", "Group ")}</div>
+                      <div className="text-[10px] text-red-400 dark:text-red-300">{(team.group_name as string).replace("GROUP_", "Group ")}</div>
                     ) : null}
                   </div>
                 </div>
@@ -386,7 +386,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Badge>Group Stage</Badge>
-            <span className="text-muted-foreground text-sm font-normal">({groupMatches.length} matches)</span>
+            <span className="text-red-400 dark:text-red-300 text-sm font-normal">({groupMatches.length} matches)</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {groupNames.map((gn) => (
@@ -418,8 +418,8 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
 
       {matches.length === 0 && (
         <div className="text-center py-16">
-          <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No match data available for {currentYear}</p>
+          <Globe className="w-12 h-12 text-red-400 dark:text-red-300 mx-auto mb-4" />
+          <p className="text-red-400 dark:text-red-300">No match data available for {currentYear}</p>
         </div>
       )}
     </div>

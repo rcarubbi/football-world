@@ -62,7 +62,7 @@ export default async function HomePage() {
               <span className="gradient-text">Football</span>{" "}
               in one place
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-lg">
+            <p className="text-lg sm:text-xl text-red-400 dark:text-red-300 max-w-lg">
               Teams, players, leagues, results, videos and much more.
               Explore the universe of world football.
             </p>
@@ -92,7 +92,7 @@ export default async function HomePage() {
               ].map((stat) => (
                 <div key={stat.label} className="text-center sm:text-left">
                   <div className="text-2xl font-bold">{stat.value.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground flex items-center justify-center sm:justify-start gap-1">
+                  <div className="text-xs text-red-400 dark:text-red-300 flex items-center justify-center sm:justify-start gap-1">
                     <stat.icon className="w-3 h-3" />
                     {stat.label}
                   </div>
@@ -123,7 +123,7 @@ export default async function HomePage() {
                   <LeagueIcon slug={league.slug} />
                   <div className="min-w-0">
                     <div className="font-semibold text-sm truncate">{league.name}</div>
-                    <div className="text-xs text-muted-foreground">{league.country}</div>
+                    <div className="text-xs text-red-400 dark:text-red-300">{league.country}</div>
                   </div>
                 </div>
               </Card>
@@ -143,7 +143,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.recentMatches.map((match: Record<string, unknown>) => (
               <Card key={match.id as number} hover className="p-4">
-                <div className="text-xs text-muted-foreground mb-2">
+                <div className="text-xs text-red-400 dark:text-red-300 mb-2">
                   {match.league_slug as string} &middot; {match.match_date as string}
                 </div>
                 <div className="flex items-center justify-between">
@@ -190,7 +190,7 @@ export default async function HomePage() {
                     />
                   ) : null}
                   <div className="font-medium text-sm truncate">{team.name as string}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                     {team.player_count as number} players
                   </div>
                 </Card>

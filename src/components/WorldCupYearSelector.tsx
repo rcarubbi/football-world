@@ -22,7 +22,7 @@ export function WorldCupYearSelector({ years, currentYear }: WorldCupYearSelecto
 
   return (
     <div className="relative inline-flex items-center gap-2">
-      <label className="text-sm text-muted-foreground">Year:</label>
+      <label className="text-sm text-red-400 dark:text-red-300">Year:</label>
       <div className="relative">
         <select
           value={currentYear}
@@ -33,7 +33,7 @@ export function WorldCupYearSelector({ years, currentYear }: WorldCupYearSelecto
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-muted-foreground" />
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-red-400 dark:text-red-300" />
       </div>
     </div>
   );

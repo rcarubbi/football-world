@@ -9,7 +9,14 @@ import { Globe, Trophy } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { WorldCupYearSelector } from "@/components/WorldCupYearSelector";
 import { getWorldCupEdition } from "@/lib/world-cup-data";
+import { getFlagUrl } from "@/lib/flags";
 import type { Metadata } from "next";
+
+function FlagImg({ team, size = 20 }: { team: string; size?: number }) {
+  const flagUrl = getFlagUrl(team);
+  if (!flagUrl) return null;
+  return <img src={flagUrl} alt="" width={size} height={Math.round(size * 0.67)} className="rounded-[2px] shrink-0" loading="lazy" />;
+}
 
 export const metadata: Metadata = {
   title: "World Cup | Football World",
@@ -77,14 +84,16 @@ function MatchCard({ match }: { match: MatchRow }) {
 
   return (
     <div className="bg-card/80 backdrop-blur-md border border-white/10 shadow-lg rounded-xl p-3">
-      <div className={`flex items-center justify-between p-1.5 rounded-lg ${homeWin ? "bg-success/10" : ""}`}>
+      <div className={`flex items-center gap-2 p-1.5 rounded-lg ${homeWin ? "bg-success/10" : ""}`}>
+        <FlagImg team={match.home_team} />
         <span className="text-sm font-medium truncate flex-1">{match.home_team}</span>
         {match.home_score !== null && (
           <span className={`text-sm font-bold ml-2 ${homeWin ? "text-success" : ""}`}>{match.home_score}</span>
         )}
       </div>
       <div className="h-px bg-border my-1" />
-      <div className={`flex items-center justify-between p-1.5 rounded-lg ${awayWin ? "bg-success/10" : ""}`}>
+      <div className={`flex items-center gap-2 p-1.5 rounded-lg ${awayWin ? "bg-success/10" : ""}`}>
+        <FlagImg team={match.away_team} />
         <span className="text-sm font-medium truncate flex-1">{match.away_team}</span>
         {match.away_score !== null && (
           <span className={`text-sm font-bold ml-2 ${awayWin ? "text-success" : ""}`}>{match.away_score}</span>
@@ -151,7 +160,12 @@ function GroupTable({ groupName, matches }: { groupName: string; matches: MatchR
             {sorted.map((row, i) => (
               <TableRow key={row.name}>
                 <TableCell className="px-1 text-xs">{i + 1}</TableCell>
-                <TableCell className="px-1 text-xs font-medium truncate max-w-[100px]">{row.name}</TableCell>
+                <TableCell className="px-1 text-xs font-medium truncate max-w-[100px]">
+                  <span className="inline-flex items-center gap-1.5">
+                    <FlagImg team={row.name} size={16} />
+                    {row.name}
+                  </span>
+                </TableCell>
                 <TableCell className="text-center text-xs px-1 hidden sm:table-cell">{row.p}</TableCell>
                 <TableCell className="text-center text-xs text-success px-1 hidden sm:table-cell">{row.w}</TableCell>
                 <TableCell className="text-center text-xs text-muted-foreground px-1 hidden sm:table-cell">{row.d}</TableCell>
@@ -168,11 +182,17 @@ function GroupTable({ groupName, matches }: { groupName: string; matches: MatchR
         <div className="mt-3 space-y-2">
           {matches.map((m) => (
             <div key={m.id} className="flex items-center justify-between text-xs px-1">
-              <span className="truncate flex-1">{m.home_team}</span>
+              <span className="truncate flex-1 inline-flex items-center gap-1.5">
+                <FlagImg team={m.home_team} size={14} />
+                {m.home_team}
+              </span>
               <span className="font-bold px-2">
                 {m.home_score !== null ? `${m.home_score} - ${m.away_score}` : "TBD"}
               </span>
-              <span className="truncate flex-1 text-right">{m.away_team}</span>
+              <span className="truncate flex-1 text-right inline-flex items-center gap-1.5 justify-end">
+                {m.away_team}
+                <FlagImg team={m.away_team} size={14} />
+              </span>
             </div>
           ))}
         </div>
@@ -279,16 +299,9 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
           )}
         </div>
         {edition?.mascot && (
-          <div className="flex items-center gap-4 mt-5 pt-5 border-t border-border">
-            <img
-              src={edition.mascot.imageUrl}
-              alt={edition.mascot.name}
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-lg bg-muted/50 p-1 shrink-0"
-            />
-            <div className="min-w-0">
-              <div className="font-semibold text-sm">{edition.mascot.name}</div>
-              <div className="text-xs text-muted-foreground leading-relaxed">{edition.mascot.description}</div>
-            </div>
+          <div className="mt-5 pt-5 border-t border-border">
+            <div className="font-semibold text-sm">{edition.mascot.name}</div>
+            <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">{edition.mascot.description}</div>
           </div>
         )}
       </GlassPanel>

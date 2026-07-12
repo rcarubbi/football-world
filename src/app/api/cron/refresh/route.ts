@@ -140,6 +140,15 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+async function findTeamIdByName(name: string): Promise<{ id: number; badge_url: string | null } | null> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT id, badge_url FROM teams WHERE name = ? OR name = ? OR name = ? LIMIT 1`,
+    args: [name, name + ' FC', name.replace(' FC', '')],
+  });
+  return result.rows.length > 0 ? { id: result.rows[0].id as number, badge_url: result.rows[0].badge_url as string | null } : null;
+}
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -571,11 +580,14 @@ export async function GET(request: NextRequest) {
         try {
           const rows = await getStandingsBBS(bbsId);
           for (const entry of rows) {
+            const team = await findTeamIdByName(entry.team_name);
             await upsertStanding({
               league_slug: league.slug,
               season: season.toString(),
               position: entry.position,
+              team_id: team?.id ?? null,
               team_name: entry.team_name,
+              team_badge: team?.badge_url ?? null,
               played: entry.played,
               won: entry.won,
               drawn: entry.drawn,
@@ -603,12 +615,14 @@ export async function GET(request: NextRequest) {
       if (!regularSeason) continue;
 
       for (const entry of regularSeason.table) {
+        const team = await findTeamIdByName(entry.team.name);
         await upsertStanding({
           league_slug: league.slug,
           season: season.toString(),
           position: entry.position,
+          team_id: team?.id ?? null,
           team_name: entry.team.name,
-          team_badge: entry.team.crest,
+          team_badge: entry.team.crest ?? team?.badge_url ?? null,
           played: entry.playedGames,
           won: entry.won,
           drawn: entry.draw,

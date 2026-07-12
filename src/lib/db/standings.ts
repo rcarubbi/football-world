@@ -68,9 +68,30 @@ export async function findStandingsByLeague(
 ): Promise<Standing[]> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: `SELECT ls.*, t.slug as team_slug
+    sql: `SELECT ls.*,
+          COALESCE(t.slug, t2.slug) as team_slug,
+          COALESCE(ls.team_badge, t.badge_url, t2.badge_url) as team_badge_resolved
           FROM league_standings ls
           LEFT JOIN teams t ON ls.team_id = t.id
+          LEFT JOIN teams t2 ON t.id IS NULL AND (
+            t2.name = ls.team_name
+            OR t2.name = ls.team_name || ' FC'
+            OR t2.name || ' FC' = ls.team_name
+            OR t2.name = 'Manchester United FC' AND ls.team_name IN ('Man Utd', 'Manchester United')
+            OR t2.name = 'Manchester City FC' AND ls.team_name IN ('Man City', 'Manchester City')
+            OR t2.name = 'Tottenham Hotspur FC' AND ls.team_name IN ('Tottenham', 'Tottenham Hotspur')
+            OR t2.name = 'Newcastle United FC' AND ls.team_name IN ('Newcastle', 'Newcastle Utd')
+            OR t2.name = 'Nottingham Forest FC' AND ls.team_name IN ('Nottm Forest', 'Nottingham Forest')
+            OR t2.name = 'Real Madrid CF' AND ls.team_name IN ('Real Madrid')
+            OR t2.name = 'FC Barcelona' AND ls.team_name IN ('Barcelona')
+            OR t2.name = 'FC Bayern München' AND ls.team_name IN ('Bayern Munich', 'Bayern München')
+            OR t2.name = 'Borussia Dortmund' AND ls.team_name IN ('Dortmund', 'Borussia Dortmund')
+            OR t2.name = 'Paris Saint-Germain FC' AND ls.team_name IN ('PSG', 'Paris Saint-Germain')
+            OR t2.name = 'Inter Milan' AND ls.team_name IN ('Inter', 'Inter Milan')
+            OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan', 'AC Milan')
+            OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
+            OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
+          )
           WHERE ls.league_slug = ?
           ORDER BY ls.position`,
     args: [leagueSlug],

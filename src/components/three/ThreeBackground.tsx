@@ -811,31 +811,31 @@ const Scene = memo(function Scene() {
   useEffect(() => {
     if (pathname === "/") {
       targetPos.current.set(0.02, 0.992, -2.441);
-      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
+      setCamera({ camX: 0.02, camY: 0.992, camZ: -2.441, lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
     } else if (pathname.startsWith("/leagues/")) {
       targetPos.current.set(-2.533, 0.788, -2.013);
-      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0, fov: 85, useRotation: false, override: false });
+      setCamera({ camX: -2.533, camY: 0.788, camZ: -2.013, lookX: 0, lookY: -0.3, lookZ: 0, fov: 85, useRotation: false, override: false });
     } else if (pathname === "/leagues") {
       targetPos.current.set(2.8, 0.692, -1.813);
-      setCamera({ lookX: -1.12, lookY: -0.49, lookZ: 1.24, fov: 85.5, useRotation: false, override: false });
+      setCamera({ camX: 2.8, camY: 0.692, camZ: -1.813, lookX: -1.12, lookY: -0.49, lookZ: 1.24, fov: 85.5, useRotation: false, override: false });
     } else if (pathname.startsWith("/teams/")) {
       targetPos.current.set(1.992, -0.012, 1.759);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
+      setCamera({ camX: 1.992, camY: -0.012, camZ: 1.759, lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
     } else if (pathname === "/teams") {
       targetPos.current.set(-2.864, 0.377, 0.805);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 95, useRotation: false, override: false });
+      setCamera({ camX: -2.864, camY: 0.377, camZ: 0.805, lookX: 0, lookY: -1, lookZ: 0, fov: 95, useRotation: false, override: false });
     } else if (pathname.startsWith("/players/")) {
       targetPos.current.set(-0.317, 0.13, 0.092);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 35, useRotation: false, override: false });
+      setCamera({ camX: -0.317, camY: 0.13, camZ: 0.092, lookX: 0, lookY: -1, lookZ: 0, fov: 35, useRotation: false, override: false });
     } else if (pathname === "/players") {
       targetPos.current.set(1.881, 0.184, 0.96);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
+      setCamera({ camX: 1.881, camY: 0.184, camZ: 0.96, lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });
     } else if (pathname.startsWith("/world-cup")) {
       targetPos.current.set(-1.5, 1, -2);
-      setCamera({ lookX: 0, lookY: -0.5, lookZ: 0, useRotation: false, override: false });
+      setCamera({ camX: -1.5, camY: 1, camZ: -2, lookX: 0, lookY: -0.5, lookZ: 0, useRotation: false, override: false });
     } else {
       targetPos.current.set(0.02, 0.992, -2.441);
-      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
+      setCamera({ camX: 0.02, camY: 0.992, camZ: -2.441, lookX: 0, lookY: -0.3, lookZ: 0, useRotation: false, override: false });
     }
   }, [pathname, setCamera]);
 

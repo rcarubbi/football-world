@@ -94,8 +94,8 @@ const GrassPitch = memo(function GrassPitch() {
     posY: { value: 0.01, min: -10, max: 10, step: 0.01 },
     posZ: { value: -0.1, min: -10, max: 10, step: 0.01 },
     rot: { value: [4.77, 0, 0], step: 0.01 },
-    width: { value: 5, min: 5, max: 30, step: 0.01 },
-    height: { value: 3, min: 3, max: 20, step: 0.01 },
+    width: { value: 5, min: 1, max: 30, step: 0.01 },
+    height: { value: 3, min: 1, max: 20, step: 0.01 },
   });
 
   const tex = useMemo(() => {
@@ -803,6 +803,8 @@ const Scene = memo(function Scene() {
       <primitive object={spot2TargetRef.current} position={[light2X + 5 * Math.sin(spot2RotY), light2Y - 5 * Math.sin(spot2RotX), light2Z + 5 * Math.cos(spot2RotY)]} />
       <spotLight ref={spot1Ref} position={[light1X, light1Y, light1Z]} target={spot1TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
       <spotLight ref={spot2Ref} position={[light2X, light2Y, light2Z]} target={spot2TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
+      <pointLight position={[light1X, light1Y, light1Z]} intensity={isDark ? 2 : 0} color="#FFFFFF" distance={3} />
+      <pointLight position={[light2X, light2Y, light2Z]} intensity={isDark ? 2 : 0} color="#FFFFFF" distance={3} />
 
       {/* Light helpers */}
       <LightHelper type="directional" target={dirLightRef.current!} visible={showSunHelper} />

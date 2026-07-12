@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, Trophy, Globe } from "lucide-react";
 import type { Metadata } from "next";
@@ -96,13 +97,13 @@ export default async function WorldCupYearPage({ params }: PageProps) {
         <ArrowLeft className="w-4 h-4" /> Back to World Cups
       </Link>
 
-      <div className="flex items-start gap-6 mb-8">
+      <GlassPanel className="flex items-start gap-6 p-6 mb-8">
         <div>
           <h1 className="text-4xl sm:text-5xl font-bold">{cup.year as number}</h1>
           <p className="text-lg text-muted-foreground mt-1">{cup.host_country as string}</p>
         </div>
         <Trophy className="w-16 h-16 text-accent" />
-      </div>
+      </GlassPanel>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="p-4 text-center">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LEAGUES } from "@/lib/leagues";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Card } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function LigasPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <GlassPanel className="p-6 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           <Trophy className="w-8 h-8 inline-block mr-2 text-primary" />
           Leagues
@@ -21,7 +22,7 @@ export default function LigasPage() {
         <p className="text-muted-foreground">
           Explore the world&apos;s top football leagues
         </p>
-      </div>
+      </GlassPanel>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {LEAGUES.map((league) => (

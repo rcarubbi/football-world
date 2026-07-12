@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { Card } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Search, Users, Star, Trophy } from "lucide-react";
@@ -47,7 +48,7 @@ export default async function BuscaPage({
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <GlassPanel className="p-6 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           <Search className="w-8 h-8 inline-block mr-2 text-primary" />
           Search
@@ -57,7 +58,7 @@ export default async function BuscaPage({
             Results for &quot;{query}&quot;
           </p>
         )}
-      </div>
+      </GlassPanel>
 
       {!query || query.length < 2 ? (
         <div className="text-center py-16">

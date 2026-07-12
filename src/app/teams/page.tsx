@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { LEAGUES } from "@/lib/leagues";
 import { Card } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Users, Search } from "lucide-react";
 import type { Metadata } from "next";
@@ -52,7 +53,7 @@ export default async function TimesPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <GlassPanel className="p-6 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           <Users className="w-8 h-8 inline-block mr-2 text-primary" />
           Teams
@@ -60,7 +61,7 @@ export default async function TimesPage({
         <p className="text-muted-foreground">
           {teams.length} teams available
         </p>
-      </div>
+      </GlassPanel>
 
       <div className="mb-6 flex flex-wrap gap-2">
         <Link

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Globe, Trophy, Calendar } from "lucide-react";
 import type { Metadata } from "next";
@@ -21,7 +22,7 @@ export default async function CopaDoMundoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <GlassPanel className="p-6 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           <Globe className="w-8 h-8 inline-block mr-2 text-success" />
           World Cup
@@ -29,7 +30,7 @@ export default async function CopaDoMundoPage() {
         <p className="text-muted-foreground">
           Complete FIFA World Cup history
         </p>
-      </div>
+      </GlassPanel>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {worldCups.map((cup) => (

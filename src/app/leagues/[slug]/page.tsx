@@ -4,6 +4,7 @@ import { LEAGUES, getLeagueBySlug } from "@/lib/leagues";
 import { getTursoClient } from "@/lib/turso/client";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { VideoSection } from "@/components/VideoSection";
@@ -77,13 +78,13 @@ export default async function LigaDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
+      <GlassPanel className="flex items-center gap-4 p-6 mb-8">
         <LeagueIcon slug={slug} className="w-16 h-16 text-xl" />
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold">{league.name}</h1>
           <p className="text-muted-foreground">{league.country}</p>
         </div>
-      </div>
+      </GlassPanel>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

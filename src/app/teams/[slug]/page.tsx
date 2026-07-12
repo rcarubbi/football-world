@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { stripWikiMarkup } from "@/lib/utils";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { VideoSection } from "@/components/VideoSection";
 import { Users, MapPin, Calendar, Video, Trophy, ArrowLeft } from "lucide-react";
@@ -139,7 +140,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
         <ArrowLeft className="w-4 h-4" /> Back to Teams
       </Link>
 
-      <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+      <GlassPanel className="flex flex-col sm:flex-row items-start gap-6 p-6 mb-8">
         {team.badge_url ? (
           <img src={team.badge_url as string} alt={team.name as string} className="w-24 h-24 object-contain" />
         ) : null}
@@ -159,11 +160,11 @@ export default async function TeamDetailPage({ params }: PageProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          {team.kit_home_url ? <img src={team.kit_home_url as string} alt="Kit casa" className="h-20 object-contain" /> : null}
-          {team.kit_away_url ? <img src={team.kit_away_url as string} alt="Kit fora" className="h-20 object-contain" /> : null}
-          {team.kit_third_url ? <img src={team.kit_third_url as string} alt="Kit terceira" className="h-20 object-contain" /> : null}
+          {team.kit_home_url ? <img src={team.kit_home_url as string} alt="Home kit" className="h-20 object-contain" /> : null}
+          {team.kit_away_url ? <img src={team.kit_away_url as string} alt="Away kit" className="h-20 object-contain" /> : null}
+          {team.kit_third_url ? <img src={team.kit_third_url as string} alt="Third kit" className="h-20 object-contain" /> : null}
         </div>
-      </div>
+      </GlassPanel>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

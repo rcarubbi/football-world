@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { PlayersGrid } from "@/components/PlayersGrid";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Star } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -57,7 +58,7 @@ export default async function JogadoresPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <GlassPanel className="p-6 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           <Star className="w-8 h-8 inline-block mr-2 text-accent" />
           Players
@@ -65,7 +66,7 @@ export default async function JogadoresPage({
         <p className="text-muted-foreground">
           {totalCount} players available
         </p>
-      </div>
+      </GlassPanel>
 
       <div className="mb-6 flex flex-wrap gap-2">
         <Link

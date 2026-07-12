@@ -826,7 +826,7 @@ const Scene = memo(function Scene() {
       setCamera({ camX: -2.864, camY: 0.377, camZ: 0.805, lookX: 0, lookY: -1, lookZ: 0, fov: 95, useRotation: false, override: false });
     } else if (pathname.startsWith("/players/")) {
       targetPos.current.set(-0.317, 0.13, 0.092);
-      setCamera({ camX: -0.317, camY: 0.13, camZ: 0.092, rotX: -2.802, rotY: 0.008, rotZ: 3.138, fov: 35, useRotation: true, override: false });
+      setCamera({ camX: -0.317, camY: 0.13, camZ: 0.092, lookX: 7.48, lookY: -1.38, lookZ: 0, fov: 35, useRotation: false, override: false });
     } else if (pathname === "/players") {
       targetPos.current.set(1.881, 0.184, 0.96);
       setCamera({ camX: 1.881, camY: 0.184, camZ: 0.96, lookX: 0, lookY: -1, lookZ: 0, fov: 60, useRotation: false, override: false });

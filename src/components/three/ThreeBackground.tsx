@@ -208,7 +208,7 @@ const GrassPitch = memo(function GrassPitch() {
   return (
     <mesh rotation={rot as [number, number, number]} position={pos as [number, number, number]} receiveShadow>
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial map={tex} roughness={0.85} metalness={0} />
+      <meshStandardMaterial map={tex} roughness={1} metalness={0} />
     </mesh>
   );
 });

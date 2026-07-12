@@ -1,9 +1,8 @@
 "use client";
 
 import { useRef, useMemo, useEffect, memo } from "react";
-import { Canvas, useFrame, useThree, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { OBJLoader, MTLLoader } from "three-stdlib";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -195,55 +194,111 @@ const GrassPitch = memo(function GrassPitch() {
   );
 });
 
-
-
 /* ═══════════════════════════════════════════════════════════════════
-   STADIUM — OBJ model
+   STADIUM — GLB model (Craven Cottage)
+   Scale: model pitch is ~105×68m, target pitch is 16×10.5m → ~0.152
+   Model is Z-up (Blender), rotated -90° X to Y-up (Three.js)
    ═══════════════════════════════════════════════════════════════════ */
 
-const SCALE = 0.00015;
+useGLTF.preload("/stadium.glb");
 
-function StadiumOBJ() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mtlRaw: any = useLoader(MTLLoader, "/stadium.mtl");
-  const raw = useLoader(OBJLoader, "/stadium.obj") as THREE.Group;
+// Pitch mesh names to hide (model has its own pitch, we use procedural one)
+const PITCH_MESH_NAMES = new Set([
+  "st081_pitch_0",
+  "st081_pitch_1",
+  "field_1",
+  "field_2",
+]);
 
-  const mtl = useMemo(() => {
-    if (!mtlRaw?.materialsInfo) return null;
-    mtlRaw.preload();
-    return mtlRaw.materials as Record<string, THREE.MeshStandardMaterial>;
-  }, [mtlRaw]);
+const STADIUM_SCALE = 0.152;
+const STADIUM_Y = -2.2;
 
-  const obj = useMemo(() => {
-    const g = raw.clone();
+function Stadium() {
+  const { scene } = useGLTF("/stadium.glb");
+  const { isDark } = useTheme();
+
+  const stadium = useMemo(() => {
+    const g = scene.clone();
+
+    // Hide built-in pitch meshes, enable shadows on everything else
     g.traverse((child) => {
       if (child instanceof THREE.Mesh) {
+        const name = child.parent?.name || child.name;
+        if (PITCH_MESH_NAMES.has(name) || PITCH_MESH_NAMES.has(child.name)) {
+          child.visible = false;
+          return;
+        }
         child.castShadow = true;
         child.receiveShadow = true;
-        const matName = child.material?.name;
-        if (matName && mtl?.[matName]) {
-          child.material = mtl[matName];
-        } else {
+
+        // Ensure materials use standard pipeline
+        if (child.material) {
           const mat = child.material as THREE.MeshStandardMaterial;
-          if (mat) mat.roughness = 0.7;
+          if ("roughness" in mat) {
+            mat.roughness = Math.max(mat.roughness, 0.5);
+            mat.needsUpdate = true;
+          }
         }
       }
     });
-    return g;
-  }, [raw, mtl]);
 
-  const { isDark } = useTheme();
+    return g;
+  }, [scene]);
 
   return (
     <>
-      <primitive object={obj} scale={SCALE} position={[0, -2.2, 0]} />
+      {/* Rotate Z-up → Y-up, scale to match pitch dimensions */}
+      <group rotation={[-Math.PI / 2, 0, 0]} scale={STADIUM_SCALE} position={[0, STADIUM_Y, 0]}>
+        <primitive object={stadium} />
+      </group>
+
+      {/* Stadium overhead light */}
       <pointLight
-        position={[0, 50662 * SCALE - 2.2, 0]}
-        intensity={isDark ? 2 : 1.5}
+        position={[0, 18 * STADIUM_SCALE + STADIUM_Y, 0]}
+        intensity={isDark ? 3 : 2}
         color={isDark ? "#ffddaa" : "#ffffff"}
-        distance={100}
+        distance={30}
       />
     </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SKY DOME — GLB skybox, scaled to surround entire scene
+   ═══════════════════════════════════════════════════════════════════ */
+
+useGLTF.preload("/sky.glb");
+
+function SkyDome() {
+  const { scene } = useGLTF("/sky.glb");
+
+  const sky = useMemo(() => {
+    const g = scene.clone();
+
+    // Make sky render behind everything, unaffected by lighting
+    g.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.renderOrder = -1;
+        child.frustumCulled = false;
+
+        // Replace material with unlit sky material
+        if (child.material) {
+          const oldMat = child.material as THREE.MeshStandardMaterial;
+          const skyMat = new THREE.MeshBasicMaterial({
+            map: oldMat.map,
+            side: THREE.BackSide,
+            fog: false,
+          });
+          child.material = skyMat;
+        }
+      }
+    });
+
+    return g;
+  }, [scene]);
+
+  return (
+    <primitive object={sky} scale={200} position={[0, -2.2, 0]} />
   );
 }
 
@@ -259,7 +314,7 @@ const Scene = memo(function Scene() {
   const targetPos = useRef(new THREE.Vector3(0, 1.5, 5.5));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
 
-  // Transparent background — let CSS handle the background color
+  // Transparent background — sky dome handles the sky
   useEffect(() => {
     scene.background = null;
     scene.fog = null;
@@ -297,6 +352,9 @@ const Scene = memo(function Scene() {
 
   return (
     <>
+      {/* Sky behind everything */}
+      <SkyDome />
+
       {/* Lighting — only 2 shadow-casting lights for performance */}
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
       <spotLight
@@ -321,7 +379,7 @@ const Scene = memo(function Scene() {
       {/* Scene objects */}
       <Football />
       <GrassPitch />
-        <StadiumOBJ />
+      <Stadium />
 
       {/* Camera controls */}
       <OrbitControls

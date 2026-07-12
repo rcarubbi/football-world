@@ -825,7 +825,7 @@ const Scene = memo(function Scene() {
       targetPos.current.set(-2.864, 0.377, 0.805);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 95 });
     } else if (pathname.startsWith("/players/")) {
-      targetPos.current.set(-0.26, 0.086, 0.105);
+      targetPos.current.set(-0.26, 0.086, 0.1);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 45 });
     } else if (pathname === "/players") {
       targetPos.current.set(1.881, 0.184, 0.96);

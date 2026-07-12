@@ -486,7 +486,7 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
+  const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, spotAngle, spotPenumbra, spotDistance, spotRotX, spotRotY, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
     Lights: folder({
       sunX: { value: 13.6, min: -20, max: 20, step: 0.1 },
       sunY: { value: 3.3, min: 0, max: 20, step: 0.1 },
@@ -503,6 +503,11 @@ const Scene = memo(function Scene() {
       light2Y: { value: 1.65, min: 0, max: 10, step: 0.1 },
       light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
       lightIntensity: { value: isDark ? 20 : 0, min: 0, max: 20, step: 0.1 },
+      spotAngle: { value: 0.6, min: 0, max: Math.PI / 2, step: 0.01 },
+      spotPenumbra: { value: 0.4, min: 0, max: 1, step: 0.01 },
+      spotDistance: { value: 20, min: 1, max: 50, step: 0.1 },
+      spotRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spotRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
       showSunHelper: false,
       showPost1Helper: false,
       showPost2Helper: false,
@@ -765,10 +770,10 @@ const Scene = memo(function Scene() {
         castShadow
         shadow-mapSize={1024}
       />
-      <primitive object={spot1TargetRef.current} position={[light1X, 0, light1Z]} />
-      <primitive object={spot2TargetRef.current} position={[light2X, 0, light2Z]} />
-      <spotLight ref={spot1Ref} position={[light1X, light1Y, light1Z]} target={spot1TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={0.6} penumbra={0.4} distance={20} castShadow />
-      <spotLight ref={spot2Ref} position={[light2X, light2Y, light2Z]} target={spot2TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={0.6} penumbra={0.4} distance={20} castShadow />
+      <primitive object={spot1TargetRef.current} position={[light1X + 5 * Math.sin(spotRotY), 0, light1Z + 5 * Math.cos(spotRotY)]} />
+      <primitive object={spot2TargetRef.current} position={[light2X + 5 * Math.sin(spotRotY), 0, light2Z + 5 * Math.cos(spotRotY)]} />
+      <spotLight ref={spot1Ref} position={[light1X, light1Y, light1Z]} target={spot1TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
+      <spotLight ref={spot2Ref} position={[light2X, light2Y, light2Z]} target={spot2TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
 
       {/* Light helpers */}
       <LightHelper type="directional" target={dirLightRef.current!} visible={showSunHelper} />

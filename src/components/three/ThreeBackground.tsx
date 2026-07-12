@@ -712,11 +712,11 @@ const Scene = memo(function Scene() {
   }, [isDark, setSun, setSpot1, setSpot2]);
 
   const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
-    bloomThreshold: { value: 0.4, min: 0, max: 2, step: 0.01 },
-    bloomIntensity: { value: 0.5, min: 0, max: 3, step: 0.01 },
-    bloomSmoothing: { value: 0.9, min: 0, max: 1, step: 0.01 },
-    vignetteOffset: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    vignetteDarkness: { value: 0.5, min: 0, max: 1, step: 0.01 },
+    bloomThreshold: { value: 0.91, min: 0, max: 2, step: 0.01 },
+    bloomIntensity: { value: 1.22, min: 0, max: 3, step: 0.01 },
+    bloomSmoothing: { value: 0.63, min: 0, max: 1, step: 0.01 },
+    vignetteOffset: { value: 0.72, min: 0, max: 1, step: 0.01 },
+    vignetteDarkness: { value: 0.57, min: 0, max: 1, step: 0.01 },
   });
 
   const targetPos = useRef(new THREE.Vector3(0.02, 0.992, -2.441));

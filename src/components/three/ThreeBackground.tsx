@@ -49,7 +49,7 @@ const Football = memo(function Football() {
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
   const { pos, rot, scl } = useControls("Football", {
-    pos: { value: [0, -0.8, 0], step: 0.1 },
+    pos: { value: [0, -2.1, 0], step: 0.1 },
     rot: { value: [0, 0, 0], step: 0.01 },
     scl: { value: 1.2, min: 0.1, max: 5, step: 0.05 },
   });
@@ -228,12 +228,23 @@ const PITCH_MESH_NAMES = new Set([
 function Stadium() {
   const { scene } = useGLTF("/stadium.glb");
   const { isDark } = useTheme();
+  const pathname = usePathname();
 
-  const { pos, rot, scl } = useControls("Stadium", {
-    pos: { value: [0, -2.2, 0], step: 0.1 },
-    rot: { value: [-Math.PI / 2, 0, 0], step: 0.01 },
-    scl: { value: 0.152, min: 0.01, max: 1, step: 0.001 },
+  const baseControls = useControls("Stadium", {
+    scl: { value: 0.24, min: 0.01, max: 1, step: 0.001 },
+    rotY: { value: 3.15, min: -Math.PI, max: Math.PI, step: 0.01 },
   });
+
+  // Route-dependent position offsets
+  const routePos = useMemo(() => {
+    if (pathname.startsWith("/leagues")) return [-0.5, -5.0, -1.0] as [number, number, number];
+    if (pathname.startsWith("/teams")) return [2.5, -3.7, 0.4] as [number, number, number];
+    return [0, -5, -4] as [number, number, number];
+  }, [pathname]);
+
+  const pos = routePos;
+  const rot: [number, number, number] = [-Math.PI / 2, baseControls.rotY, 0];
+  const scl = baseControls.scl;
 
   const stadium = useMemo(() => {
     const g = scene.clone();
@@ -298,21 +309,21 @@ function SkyDome() {
   const sky = useMemo(() => {
     const g = scene.clone();
 
-    // Make sky render behind everything, unaffected by lighting
     g.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.renderOrder = -1;
         child.frustumCulled = false;
 
-        // Replace material with unlit sky material
         if (child.material) {
           const oldMat = child.material as THREE.MeshStandardMaterial;
-          const skyMat = new THREE.MeshBasicMaterial({
-            map: oldMat.map,
+          const tex = oldMat.emissiveMap || oldMat.map;
+          child.material = new THREE.MeshBasicMaterial({
+            map: tex,
             side: THREE.BackSide,
             fog: false,
+            depthWrite: false,
+            depthTest: false,
           });
-          child.material = skyMat;
         }
       }
     });

@@ -51,7 +51,7 @@ function BracketMatch({ home, away, homeScore, awayScore }: { home: string; away
   const awayWin = homeScore !== null && awayScore !== null && awayScore > homeScore;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-3 min-w-[180px]">
+    <div className="bg-card/80 backdrop-blur-md border border-white/10 shadow-lg rounded-xl p-3 min-w-[180px]">
       <div className={`flex items-center justify-between p-1.5 rounded-lg ${homeWin ? "bg-success/10" : ""}`}>
         <span className="text-xs font-medium truncate flex-1">{home}</span>
         {homeScore !== null && (
@@ -184,7 +184,7 @@ export default async function WorldCupYearPage({ params }: PageProps) {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {groupMatches.map((match: Record<string, unknown>) => (
-              <div key={match.id as number} className="bg-card border border-border rounded-xl p-3">
+              <div key={match.id as number} className="bg-card/80 backdrop-blur-md border border-white/10 shadow-lg rounded-xl p-3">
                 <div className="text-[10px] text-muted-foreground mb-1">{match.group_name as string}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium truncate flex-1">{match.home_team as string}</span>

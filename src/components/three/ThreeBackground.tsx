@@ -341,13 +341,14 @@ const Scene = memo(function Scene() {
   const { colors, isDark } = useTheme();
   const pathname = usePathname();
 
-  const { camX, camY, camZ, lookX, lookY, lookZ, override } = useControls("Camera", {
+  const { camX, camY, camZ, lookX, lookY, lookZ, fov, override } = useControls("Camera", {
     camX: { value: 0, min: -20, max: 20, step: 0.01 },
     camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
     camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
     lookX: { value: 0, min: -20, max: 20, step: 0.01 },
     lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
     lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
+    fov: { value: 50, min: 10, max: 120, step: 0.1 },
     override: false,
   });
 
@@ -388,6 +389,10 @@ const Scene = memo(function Scene() {
     if (override) {
       camera.position.set(camX, camY, camZ);
       camera.lookAt(lookX, lookY, lookZ);
+      if ("fov" in camera) {
+        (camera as THREE.PerspectiveCamera).fov = fov;
+        camera.updateProjectionMatrix();
+      }
     } else {
       const t = 1 - Math.pow(0.01, delta);
       camera.position.lerp(targetPos.current, t);

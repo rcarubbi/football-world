@@ -3,6 +3,7 @@
 import { useRef, useMemo, useEffect, memo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
+import { useControls } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -46,6 +47,12 @@ const Football = memo(function Football() {
   const mouse = useRef({ x: 0, y: 0 });
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
+  const { pos, rot, scl } = useControls("Football", {
+    pos: { value: [0, -0.8, 0], step: 0.1 },
+    rot: { value: [0, 0, 0], step: 0.01 },
+    scl: { value: 1.2, min: 0.1, max: 5, step: 0.05 },
+  });
+
   useFrame((_, delta) => {
     if (!ref.current) return;
     ref.current.rotation.y += delta * 0.3;
@@ -63,7 +70,7 @@ const Football = memo(function Football() {
   }, []);
 
   return (
-    <group ref={ref} dispose={null} scale={1.2} position={[0, -0.8, 0]}>
+    <group ref={ref} dispose={null} scale={scl} position={pos as [number, number, number]} rotation={rot as [number, number, number]}>
       <mesh geometry={(nodes.FootBall as THREE.Mesh).geometry} material={materials.FootBall}>
         <mesh geometry={(nodes.Seams as THREE.Mesh).geometry} material={materials.Seams} />
       </mesh>
@@ -77,6 +84,13 @@ const Football = memo(function Football() {
 
 const GrassPitch = memo(function GrassPitch() {
   const { colors } = useTheme();
+
+  const { pos, rot, width, height } = useControls("Pitch", {
+    pos: { value: [0, -2.2, 0], step: 0.1 },
+    rot: { value: [-Math.PI / 2, 0, 0], step: 0.01 },
+    width: { value: 16, min: 5, max: 30, step: 0.1 },
+    height: { value: 10.5, min: 3, max: 20, step: 0.1 },
+  });
 
   const tex = useMemo(() => {
     const W = 2048;
@@ -187,8 +201,8 @@ const GrassPitch = memo(function GrassPitch() {
   }, [colors]); // rebuild on theme change
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.2, 0]} receiveShadow>
-      <planeGeometry args={[16, 10.5]} />
+    <mesh rotation={rot as [number, number, number]} position={pos as [number, number, number]} receiveShadow>
+      <planeGeometry args={[width, height]} />
       <meshStandardMaterial map={tex} roughness={0.85} metalness={0} />
     </mesh>
   );
@@ -210,12 +224,15 @@ const PITCH_MESH_NAMES = new Set([
   "field_2",
 ]);
 
-const STADIUM_SCALE = 0.152;
-const STADIUM_Y = -2.2;
-
 function Stadium() {
   const { scene } = useGLTF("/stadium.glb");
   const { isDark } = useTheme();
+
+  const { pos, rot, scl } = useControls("Stadium", {
+    pos: { value: [0, -2.2, 0], step: 0.1 },
+    rot: { value: [-Math.PI / 2, 0, 0], step: 0.01 },
+    scl: { value: 0.152, min: 0.01, max: 1, step: 0.001 },
+  });
 
   const stadium = useMemo(() => {
     const g = scene.clone();
@@ -248,13 +265,13 @@ function Stadium() {
   return (
     <>
       {/* Rotate Z-up → Y-up, scale to match pitch dimensions */}
-      <group rotation={[-Math.PI / 2, 0, 0]} scale={STADIUM_SCALE} position={[0, STADIUM_Y, 0]}>
+      <group rotation={rot as [number, number, number]} scale={scl} position={pos as [number, number, number]}>
         <primitive object={stadium} />
       </group>
 
       {/* Stadium overhead light */}
       <pointLight
-        position={[0, 18 * STADIUM_SCALE + STADIUM_Y, 0]}
+        position={[0, 18 * scl + pos[1], 0]}
         intensity={isDark ? 3 : 2}
         color={isDark ? "#ffddaa" : "#ffffff"}
         distance={30}
@@ -271,6 +288,11 @@ useGLTF.preload("/sky.glb");
 
 function SkyDome() {
   const { scene } = useGLTF("/sky.glb");
+
+  const { scl, posY } = useControls("Sky", {
+    scl: { value: 200, min: 10, max: 500, step: 1 },
+    posY: { value: -2.2, min: -50, max: 50, step: 0.1 },
+  });
 
   const sky = useMemo(() => {
     const g = scene.clone();
@@ -298,7 +320,7 @@ function SkyDome() {
   }, [scene]);
 
   return (
-    <primitive object={sky} scale={200} position={[0, -2.2, 0]} />
+    <primitive object={sky} scale={scl} position={[0, posY, 0]} />
   );
 }
 

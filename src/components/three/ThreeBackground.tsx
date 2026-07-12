@@ -9,7 +9,7 @@ import { Leva } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
-import { SpotLightHelper, DirectionalLightHelper } from "three";
+import { SpotLightHelper, DirectionalLightHelper, PointLightHelper } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
@@ -403,12 +403,12 @@ function Goals() {
   const [{ g1PosX, g1PosY, g1PosZ, g1RotX, g1RotY, g1RotZ, g1Scl, showGoal1 }, setGoal1] = useControls(() => ({
     "Goal 1": folder({
       showGoal1: true,
-      g1PosX: { value: 2.3, min: -10, max: 10, step: 0.01 },
-      g1PosY: { value: 0.15, min: -10, max: 10, step: 0.01 },
-      g1PosZ: { value: -0.19, min: -10, max: 10, step: 0.01 },
-      g1RotX: { value: 0.17, min: -Math.PI, max: Math.PI, step: 0.01 },
-      g1RotY: { value: -1.35, min: -Math.PI, max: Math.PI, step: 0.01 },
-      g1RotZ: { value: 3.08, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1PosX: { value: 2.2, min: -10, max: 10, step: 0.01 },
+      g1PosY: { value: 0.12, min: -10, max: 10, step: 0.01 },
+      g1PosZ: { value: 0, min: -10, max: 10, step: 0.01 },
+      g1RotX: { value: 3.141592653589793, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1RotY: { value: -1.59, min: -Math.PI, max: Math.PI, step: 0.01 },
+      g1RotZ: { value: 3.1, min: -Math.PI, max: Math.PI, step: 0.01 },
       g1Scl: { value: 0.001, min: 0.001, max: 0.1, step: 0.001 },
     })
   }), []);
@@ -458,7 +458,7 @@ function LightHelper({
   visible,
   size = 1,
 }: {
-  type: "directional" | "spot";
+  type: "directional" | "spot" | "point";
   target: THREE.Light;
   visible: boolean;
   size?: number;
@@ -471,7 +471,9 @@ function LightHelper({
     const helper =
       type === "directional"
         ? new DirectionalLightHelper(target as THREE.DirectionalLight, size)
-        : new SpotLightHelper(target as THREE.SpotLight, new THREE.Color("#FFFFFF"));
+        : type === "spot"
+          ? new SpotLightHelper(target as THREE.SpotLight, new THREE.Color("#FFFFFF"))
+          : new PointLightHelper(target as THREE.PointLight, size);
     scene.add(helper);
     helperRef.current = helper;
     return () => {
@@ -541,6 +543,7 @@ const Scene = memo(function Scene() {
       point1Intensity: { value: isDark ? 2 : 0, min: 0, max: 20, step: 0.1 },
       point1Distance: { value: 3, min: 0.1, max: 20, step: 0.1 },
       showPost1Helper: false,
+      showPoint1Helper: false,
     })
   }), []);
 
@@ -558,6 +561,7 @@ const Scene = memo(function Scene() {
       point2Intensity: { value: isDark ? 2 : 0, min: 0, max: 20, step: 0.1 },
       point2Distance: { value: 3, min: 0.1, max: 20, step: 0.1 },
       showPost2Helper: false,
+      showPoint2Helper: false,
     })
   }), []);
 
@@ -585,6 +589,8 @@ const Scene = memo(function Scene() {
   const spot2Ref = useRef<THREE.SpotLight>(null);
   const spot1TargetRef = useRef<THREE.Object3D>(new THREE.Object3D());
   const spot2TargetRef = useRef<THREE.Object3D>(new THREE.Object3D());
+  const point1Ref = useRef<THREE.PointLight>(null);
+  const point2Ref = useRef<THREE.PointLight>(null);
 
   // Edit mode state refs
   const editModeRef = useRef(false);
@@ -823,13 +829,15 @@ const Scene = memo(function Scene() {
       <primitive object={spot2TargetRef.current} position={[spot2.spot2X + 5 * Math.sin(spot2.spot2RotY), spot2.spot2Y - 5 * Math.sin(spot2.spot2RotX), spot2.spot2Z + 5 * Math.cos(spot2.spot2RotY)]} />
       <spotLight ref={spot1Ref} position={[spot1.spot1X, spot1.spot1Y, spot1.spot1Z]} target={spot1TargetRef.current} intensity={spot1.spot1Intensity} color="#FFFFFF" angle={spot1.spot1Angle} penumbra={spot1.spot1Penumbra} distance={spot1.spot1Distance} castShadow />
       <spotLight ref={spot2Ref} position={[spot2.spot2X, spot2.spot2Y, spot2.spot2Z]} target={spot2TargetRef.current} intensity={spot2.spot2Intensity} color="#FFFFFF" angle={spot2.spot2Angle} penumbra={spot2.spot2Penumbra} distance={spot2.spot2Distance} castShadow />
-      <pointLight position={[spot1.spot1X, spot1.spot1Y, spot1.spot1Z]} intensity={spot1.point1Intensity} color="#FFFFFF" distance={spot1.point1Distance} />
-      <pointLight position={[spot2.spot2X, spot2.spot2Y, spot2.spot2Z]} intensity={spot2.point2Intensity} color="#FFFFFF" distance={spot2.point2Distance} />
+      <pointLight ref={point1Ref} position={[spot1.spot1X, spot1.spot1Y, spot1.spot1Z]} intensity={spot1.point1Intensity} color="#FFFFFF" distance={spot1.point1Distance} />
+      <pointLight ref={point2Ref} position={[spot2.spot2X, spot2.spot2Y, spot2.spot2Z]} intensity={spot2.point2Intensity} color="#FFFFFF" distance={spot2.point2Distance} />
 
       {/* Light helpers */}
       <LightHelper type="directional" target={dirLightRef.current!} visible={sun.showSunHelper} />
       <LightHelper type="spot" target={spot1Ref.current!} visible={spot1.showPost1Helper} size={0.3} />
       <LightHelper type="spot" target={spot2Ref.current!} visible={spot2.showPost2Helper} size={0.3} />
+      <LightHelper type="point" target={point1Ref.current!} visible={spot1.showPoint1Helper} size={0.3} />
+      <LightHelper type="point" target={point2Ref.current!} visible={spot2.showPoint2Helper} size={0.3} />
 
       {/* Scene objects */}
       <Football />

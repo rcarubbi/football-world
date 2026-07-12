@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useMemo, useEffect, memo, useState } from "react";
+import { useRef, useMemo, useEffect, memo, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { useControls } from "leva";
+import { useControls, folder } from "leva";
 import { Leva } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -341,20 +341,23 @@ const Scene = memo(function Scene() {
   const { colors, isDark } = useTheme();
   const pathname = usePathname();
 
-  const { camX, camY, camZ, lookX, lookY, lookZ, rotX, rotY, rotZ, fov, useRotation, override } = useControls("Camera", {
-    camX: { value: 0, min: -20, max: 20, step: 0.01 },
-    camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
-    camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
-    lookX: { value: 0, min: -20, max: 20, step: 0.01 },
-    lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
-    lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
-    rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    fov: { value: 50, min: 10, max: 120, step: 0.1 },
-    useRotation: false,
-    override: false,
-  });
+  const [cam, setCamera] = useControls(() => ({
+    Camera: folder({
+      camX: { value: 0, min: -20, max: 20, step: 0.01 },
+      camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
+      camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
+      lookX: { value: 0, min: -20, max: 20, step: 0.01 },
+      lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
+      lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
+      rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      fov: { value: 50, min: 10, max: 120, step: 0.1 },
+      useRotation: false,
+      editMode: false,
+      override: false,
+    }),
+  }));
 
   const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity } = useControls("Lights", {
     light1X: { value: -0.3, min: -5, max: 5, step: 0.01 },
@@ -368,6 +371,112 @@ const Scene = memo(function Scene() {
 
   const targetPos = useRef(new THREE.Vector3(0, 1.5, 5.5));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
+
+  // Edit mode state refs
+  const editModeRef = useRef(false);
+  const keysRef = useRef(new Set<string>());
+  const mouseDelta = useRef({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+
+  // Sync editMode ref + dispatch event for ThreeBackground
+  useEffect(() => {
+    editModeRef.current = cam.editMode;
+    window.dispatchEvent(new CustomEvent("camera-edit", { detail: cam.editMode }));
+  }, [cam.editMode]);
+
+  // Keyboard handlers — WASD + arrows for camera movement
+  useEffect(() => {
+    if (!cam.editMode) return;
+
+    const isInput = () => {
+      const el = document.activeElement;
+      return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isInput()) return;
+      keysRef.current.add(e.code);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      keysRef.current.delete(e.code);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      keysRef.current.clear();
+    };
+  }, [cam.editMode]);
+
+  // Mouse drag for camera rotation
+  useEffect(() => {
+    if (!cam.editMode) return;
+
+    const onMouseDown = () => { isDragging.current = true; };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      mouseDelta.current.x += e.movementX;
+      mouseDelta.current.y += e.movementY;
+    };
+    const onMouseUp = () => { isDragging.current = false; };
+
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      isDragging.current = false;
+      mouseDelta.current.x = 0;
+      mouseDelta.current.y = 0;
+    };
+  }, [cam.editMode]);
+
+  // Scroll wheel for FOV zoom
+  useEffect(() => {
+    if (!cam.editMode) return;
+    const onWheel = (e: WheelEvent) => {
+      const p = camera as THREE.PerspectiveCamera;
+      if (!("fov" in p)) return;
+      p.fov = Math.max(10, Math.min(120, p.fov + e.deltaY * 0.05));
+      p.updateProjectionMatrix();
+    };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [cam.editMode, camera]);
+
+  // Capture handler — writes camera state to leva
+  useEffect(() => {
+    const onCapture = () => {
+      const p = camera as THREE.PerspectiveCamera;
+      setCamera({
+          camX: +camera.position.x.toFixed(3),
+          camY: +camera.position.y.toFixed(3),
+          camZ: +camera.position.z.toFixed(3),
+          rotX: +camera.rotation.x.toFixed(3),
+          rotY: +camera.rotation.y.toFixed(3),
+          rotZ: +camera.rotation.z.toFixed(3),
+          fov: +("fov" in p ? p.fov : 50).toFixed(1),
+          useRotation: true,
+          override: true,
+          editMode: false,
+      });
+    };
+    window.addEventListener("capture-camera", onCapture);
+    return () => window.removeEventListener("capture-camera", onCapture);
+  }, [camera, setCamera]);
+
+  // Exit edit mode handler
+  useEffect(() => {
+    const onExit = () => {
+      setCamera({ editMode: false });
+    };
+    window.addEventListener("camera-edit-exit", onExit);
+    return () => window.removeEventListener("camera-edit-exit", onExit);
+  }, [setCamera]);
 
   // Transparent background — sky dome handles the sky
   useEffect(() => {
@@ -398,17 +507,66 @@ const Scene = memo(function Scene() {
     }
   }, [pathname]);
 
-  // Smooth camera lerp in useFrame (delta-safe)
+  // Camera update
   useFrame((_, delta) => {
-    if (override) {
-      camera.position.set(camX, camY, camZ);
-      if (useRotation) {
-        camera.rotation.set(rotX, rotY, rotZ);
+    if (editModeRef.current) {
+      // FPS-style camera controls
+      const speed = 3 * delta;
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      forward.normalize();
+      const right = new THREE.Vector3()
+        .crossVectors(forward, new THREE.Vector3(0, 1, 0))
+        .normalize();
+
+      const keys = keysRef.current;
+      if (keys.has("ArrowUp") || keys.has("KeyW"))
+        camera.position.addScaledVector(forward, speed);
+      if (keys.has("ArrowDown") || keys.has("KeyS"))
+        camera.position.addScaledVector(forward, -speed);
+      if (keys.has("ArrowLeft") || keys.has("KeyA"))
+        camera.position.addScaledVector(right, -speed);
+      if (keys.has("ArrowRight") || keys.has("KeyD"))
+        camera.position.addScaledVector(right, speed);
+      if (keys.has("ShiftLeft") || keys.has("ShiftRight"))
+        camera.position.y += speed;
+      if (keys.has("ControlLeft") || keys.has("ControlRight"))
+        camera.position.y -= speed;
+
+      // Mouse rotation (drag to look)
+      const dx = mouseDelta.current.x;
+      const dy = mouseDelta.current.y;
+      if (dx !== 0 || dy !== 0) {
+        // Yaw — rotate around world Y
+        const yaw = new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          -dx * 0.003
+        );
+        camera.quaternion.premultiply(yaw);
+
+        // Pitch — rotate around camera's local X
+        const pitchAxis = new THREE.Vector3(1, 0, 0).applyQuaternion(
+          camera.quaternion
+        );
+        const pitch = new THREE.Quaternion().setFromAxisAngle(
+          pitchAxis,
+          -dy * 0.003
+        );
+        camera.quaternion.premultiply(pitch);
+
+        mouseDelta.current.x = 0;
+        mouseDelta.current.y = 0;
+      }
+    } else if (cam.override) {
+      camera.position.set(cam.camX, cam.camY, cam.camZ);
+      if (cam.useRotation) {
+        camera.rotation.set(cam.rotX, cam.rotY, cam.rotZ);
       } else {
-        camera.lookAt(lookX, lookY, lookZ);
+        camera.lookAt(cam.lookX, cam.lookY, cam.lookZ);
       }
       if ("fov" in camera) {
-        (camera as THREE.PerspectiveCamera).fov = fov;
+        (camera as THREE.PerspectiveCamera).fov = cam.fov;
         camera.updateProjectionMatrix();
       }
     } else {
@@ -433,11 +591,12 @@ const Scene = memo(function Scene() {
       <GrassPitch />
       <Stadium />
 
-      {/* Camera controls */}
+      {/* Camera controls — disabled in edit mode */}
       <OrbitControls
+        enabled={!cam.editMode}
         enableZoom={false}
         enablePan={false}
-        autoRotate
+        autoRotate={!cam.editMode}
         autoRotateSpeed={0.2}
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 2.2}
@@ -460,20 +619,74 @@ const Scene = memo(function Scene() {
    ═══════════════════════════════════════════════════════════════════ */
 
 export function ThreeBackground() {
-  const { interactive } = use3DInteractive();
+  const { interactive, setInteractive } = use3DInteractive();
   const [levaHidden, setLevaHidden] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  // Listen for edit mode changes from Scene
+  useEffect(() => {
+    const onEdit = (e: Event) => {
+      const active = (e as CustomEvent).detail as boolean;
+      setEditMode(active);
+      setInteractive(active);
+    };
+    window.addEventListener("camera-edit", onEdit);
+    return () => window.removeEventListener("camera-edit", onEdit);
+  }, [setInteractive]);
+
+  const handleCapture = useCallback(() => {
+    window.dispatchEvent(new Event("capture-camera"));
+  }, []);
+
+  const handleExit = useCallback(() => {
+    window.dispatchEvent(new Event("camera-edit-exit"));
+  }, []);
 
   return (
     <>
-      <Leva hidden={levaHidden} />
-      <button
-        onClick={() => setLevaHidden((h) => !h)}
-        className="fixed top-2 right-2 z-50 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/80"
-        style={{ pointerEvents: "auto" }}
+      {/* Leva panel — hidden in edit mode */}
+      {!editMode && <Leva hidden={levaHidden} />}
+
+      {/* Controls toggle — hidden in edit mode */}
+      {!editMode && (
+        <button
+          onClick={() => setLevaHidden((h) => !h)}
+          className="fixed top-2 right-2 z-50 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/80"
+          style={{ pointerEvents: "auto" }}
+        >
+          {levaHidden ? "Show Controls" : "Hide Controls"}
+        </button>
+      )}
+
+      {/* Capture + Exit buttons — only in edit mode */}
+      {editMode && (
+        <div
+          className="fixed top-2 right-2 z-[10000] flex gap-2"
+          style={{ pointerEvents: "auto" }}
+        >
+          <button
+            onClick={handleCapture}
+            className="rounded bg-green-600/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-green-700"
+          >
+            Capture Camera
+          </button>
+          <button
+            onClick={handleExit}
+            className="rounded bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-red-700"
+          >
+            Exit
+          </button>
+        </div>
+      )}
+
+      {/* Canvas — z-9999 in edit mode to cover all HTML */}
+      <div
+        className="fixed inset-0"
+        style={{
+          zIndex: editMode ? 9999 : 0,
+          pointerEvents: interactive ? "auto" : "none",
+        }}
       >
-        {levaHidden ? "Show Controls" : "Hide Controls"}
-      </button>
-      <div className="fixed inset-0 z-0" style={{ pointerEvents: interactive ? "auto" : "none" }}>
         <Canvas
           camera={{ position: [0, 1.5, 5.5], fov: 42 }}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}

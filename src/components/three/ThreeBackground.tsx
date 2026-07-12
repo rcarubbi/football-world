@@ -540,8 +540,11 @@ const Scene = memo(function Scene() {
       spot1Angle: { value: 0.60, min: 0, max: Math.PI / 2, step: 0.01 },
       spot1Penumbra: { value: 1, min: 0, max: 1, step: 0.01 },
       spot1Distance: { value: 4.66, min: 1, max: 50, step: 0.1 },
-      point1Intensity: { value: isDark ? 2 : 0, min: 0, max: 20, step: 0.1 },
-      point1Distance: { value: 3, min: 0.1, max: 20, step: 0.1 },
+      point1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
+      point1Y: { value: 1.6, min: -10, max: 10, step: 0.1 },
+      point1Z: { value: 2.3, min: -10, max: 10, step: 0.1 },
+      point1Intensity: { value: 2, min: 0, max: 20, step: 0.1 },
+      point1Distance: { value: 2, min: 0.1, max: 20, step: 0.1 },
       showPost1Helper: false,
       showPoint1Helper: false,
     })
@@ -558,8 +561,11 @@ const Scene = memo(function Scene() {
       spot2Angle: { value: 0.60, min: 0, max: Math.PI / 2, step: 0.01 },
       spot2Penumbra: { value: 1, min: 0, max: 1, step: 0.01 },
       spot2Distance: { value: 4.67, min: 1, max: 50, step: 0.1 },
-      point2Intensity: { value: isDark ? 2 : 0, min: 0, max: 20, step: 0.1 },
-      point2Distance: { value: 3, min: 0.1, max: 20, step: 0.1 },
+      point2X: { value: -2.6, min: -10, max: 10, step: 0.1 },
+      point2Y: { value: 1.6, min: -10, max: 10, step: 0.1 },
+      point2Z: { value: 2, min: -10, max: 10, step: 0.1 },
+      point2Intensity: { value: 2, min: 0, max: 20, step: 0.1 },
+      point2Distance: { value: 2, min: 0.1, max: 20, step: 0.1 },
       showPost2Helper: false,
       showPoint2Helper: false,
     })
@@ -567,8 +573,8 @@ const Scene = memo(function Scene() {
 
   useEffect(() => {
     setSun({ sunIntensity: isDark ? 0 : 5.3 });
-    setSpot1({ spot1Intensity: isDark ? 20 : 0, point1Intensity: isDark ? 2 : 0 });
-    setSpot2({ spot2Intensity: isDark ? 20 : 0, point2Intensity: isDark ? 2 : 0 });
+    setSpot1({ spot1Intensity: isDark ? 20 : 0 });
+    setSpot2({ spot2Intensity: isDark ? 20 : 0 });
   }, [isDark, setSun, setSpot1, setSpot2]);
 
   const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
@@ -829,8 +835,8 @@ const Scene = memo(function Scene() {
       <primitive object={spot2TargetRef.current} position={[spot2.spot2X + 5 * Math.sin(spot2.spot2RotY), spot2.spot2Y - 5 * Math.sin(spot2.spot2RotX), spot2.spot2Z + 5 * Math.cos(spot2.spot2RotY)]} />
       <spotLight ref={spot1Ref} position={[spot1.spot1X, spot1.spot1Y, spot1.spot1Z]} target={spot1TargetRef.current} intensity={spot1.spot1Intensity} color="#FFFFFF" angle={spot1.spot1Angle} penumbra={spot1.spot1Penumbra} distance={spot1.spot1Distance} castShadow />
       <spotLight ref={spot2Ref} position={[spot2.spot2X, spot2.spot2Y, spot2.spot2Z]} target={spot2TargetRef.current} intensity={spot2.spot2Intensity} color="#FFFFFF" angle={spot2.spot2Angle} penumbra={spot2.spot2Penumbra} distance={spot2.spot2Distance} castShadow />
-      <pointLight ref={point1Ref} position={[spot1.spot1X, spot1.spot1Y, spot1.spot1Z]} intensity={spot1.point1Intensity} color="#FFFFFF" distance={spot1.point1Distance} />
-      <pointLight ref={point2Ref} position={[spot2.spot2X, spot2.spot2Y, spot2.spot2Z]} intensity={spot2.point2Intensity} color="#FFFFFF" distance={spot2.point2Distance} />
+      <pointLight ref={point1Ref} position={[spot1.point1X, spot1.point1Y, spot1.point1Z]} intensity={spot1.point1Intensity} color="#FFFFFF" distance={spot1.point1Distance} />
+      <pointLight ref={point2Ref} position={[spot2.point2X, spot2.point2Y, spot2.point2Z]} intensity={spot2.point2Intensity} color="#FFFFFF" distance={spot2.point2Distance} />
 
       {/* Light helpers */}
       <LightHelper type="directional" target={dirLightRef.current!} visible={sun.showSunHelper} />

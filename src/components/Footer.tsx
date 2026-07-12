@@ -57,8 +57,17 @@ export function Footer() {
               <a href="https://www.api-football.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 API-Football
               </a>
+              <a href="https://www.bigballsdata.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Big Balls Data
+              </a>
+              <a href="https://www.sportsapipro.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Sports API Pro
+              </a>
               <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 YouTube
+              </a>
+              <a href="https://www.wikimedia.org" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Wikimedia
               </a>
             </nav>
           </div>

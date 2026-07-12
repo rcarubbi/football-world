@@ -46,7 +46,6 @@ next-env.d.ts
 stadium3dmodels/
 sky3dModels/
 public/goalpost.*
-public/stadium.mtl
 
 # local database
 local.db

@@ -341,14 +341,18 @@ const Scene = memo(function Scene() {
   const { colors, isDark } = useTheme();
   const pathname = usePathname();
 
-  const { camX, camY, camZ, lookX, lookY, lookZ, fov, override } = useControls("Camera", {
+  const { camX, camY, camZ, lookX, lookY, lookZ, rotX, rotY, rotZ, fov, useRotation, override } = useControls("Camera", {
     camX: { value: 0, min: -20, max: 20, step: 0.01 },
     camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
     camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
     lookX: { value: 0, min: -20, max: 20, step: 0.01 },
     lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
     lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
+    rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
     fov: { value: 50, min: 10, max: 120, step: 0.1 },
+    useRotation: false,
     override: false,
   });
 
@@ -398,7 +402,11 @@ const Scene = memo(function Scene() {
   useFrame((_, delta) => {
     if (override) {
       camera.position.set(camX, camY, camZ);
-      camera.lookAt(lookX, lookY, lookZ);
+      if (useRotation) {
+        camera.rotation.set(rotX, rotY, rotZ);
+      } else {
+        camera.lookAt(lookX, lookY, lookZ);
+      }
       if ("fov" in camera) {
         (camera as THREE.PerspectiveCamera).fov = fov;
         camera.updateProjectionMatrix();

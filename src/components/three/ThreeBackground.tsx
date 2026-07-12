@@ -986,7 +986,7 @@ const Scene = memo(function Scene() {
 
 export function ThreeBackground() {
   const { interactive, setInteractive } = use3DInteractive();
-  const [levaHidden, setLevaHidden] = useState(false);
+  const [levaHidden, setLevaHidden] = useState(true);
   const [editMode, setEditMode] = useState(false);
 
   // Listen for edit mode changes from Scene
@@ -1000,6 +1000,13 @@ export function ThreeBackground() {
     return () => window.removeEventListener("camera-edit", onEdit);
   }, [setInteractive]);
 
+  // Listen for leva toggle from Footer
+  useEffect(() => {
+    const onToggle = () => setLevaHidden((h) => !h);
+    window.addEventListener("toggle-leva", onToggle);
+    return () => window.removeEventListener("toggle-leva", onToggle);
+  }, []);
+
   const handleCapture = useCallback(() => {
     window.dispatchEvent(new Event("capture-camera"));
   }, []);
@@ -1012,17 +1019,6 @@ export function ThreeBackground() {
     <>
       {/* Leva panel — hidden in edit mode */}
       {!editMode && <Leva hidden={levaHidden} />}
-
-      {/* Controls toggle — hidden in edit mode */}
-      {!editMode && (
-        <button
-          onClick={() => setLevaHidden((h) => !h)}
-          className="fixed top-2 right-2 z-50 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/80"
-          style={{ pointerEvents: "auto" }}
-        >
-          {levaHidden ? "Show Controls" : "Hide Controls"}
-        </button>
-      )}
 
       {/* Capture + Exit buttons — only in edit mode */}
       {editMode && (

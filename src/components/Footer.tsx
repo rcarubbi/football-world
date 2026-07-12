@@ -1,4 +1,6 @@
-import { Trophy } from "lucide-react";
+"use client";
+
+import { Trophy, Bug } from "lucide-react";
 import Link from "next/link";
 
 export function Footer() {
@@ -66,9 +68,18 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             Football World Portal &copy; {new Date().getFullYear()}
           </p>
-          <p className="text-xs text-muted-foreground">
-            Data auto-updated
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">
+              Data auto-updated
+            </p>
+            <button
+              onClick={() => window.dispatchEvent(new Event("toggle-leva"))}
+              className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              aria-label="Toggle debug panel"
+            >
+              <Bug className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </footer>

@@ -49,9 +49,9 @@ const Football = memo(function Football() {
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
   const { pos, rot, scl } = useControls("Football", {
-    pos: { value: [0, -2.1, 0], step: 0.1 },
+    pos: { value: [0, -2.1, 0], step: 0.01 },
     rot: { value: [0, 0, 0], step: 0.01 },
-    scl: { value: 1.2, min: 0.1, max: 5, step: 0.05 },
+    scl: { value: 1.2, min: 0.1, max: 5, step: 0.01 },
   });
 
   useFrame((_, delta) => {
@@ -228,23 +228,19 @@ const PITCH_MESH_NAMES = new Set([
 function Stadium() {
   const { scene } = useGLTF("/stadium.glb");
   const { isDark } = useTheme();
-  const pathname = usePathname();
 
-  const baseControls = useControls("Stadium", {
-    scl: { value: 0.24, min: 0.01, max: 1, step: 0.001 },
+  const { posX, posY, posZ, rotX, rotY, rotZ, scl } = useControls("Stadium", {
+    posX: { value: 0, min: -20, max: 20, step: 0.01 },
+    posY: { value: -5, min: -20, max: 20, step: 0.01 },
+    posZ: { value: -4, min: -20, max: 20, step: 0.01 },
+    rotX: { value: -Math.PI / 2, min: -Math.PI, max: Math.PI, step: 0.01 },
     rotY: { value: 3.15, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    scl: { value: 0.24, min: 0.01, max: 2, step: 0.001 },
   });
 
-  // Route-dependent position offsets
-  const routePos = useMemo(() => {
-    if (pathname.startsWith("/leagues")) return [-0.5, -5.0, -1.0] as [number, number, number];
-    if (pathname.startsWith("/teams")) return [2.5, -3.7, 0.4] as [number, number, number];
-    return [0, -5, -4] as [number, number, number];
-  }, [pathname]);
-
-  const pos = routePos;
-  const rot: [number, number, number] = [-Math.PI / 2, baseControls.rotY, 0];
-  const scl = baseControls.scl;
+  const position: [number, number, number] = [posX, posY, posZ];
+  const rotation: [number, number, number] = [rotX, rotY, rotZ];
 
   const stadium = useMemo(() => {
     const g = scene.clone();
@@ -277,13 +273,13 @@ function Stadium() {
   return (
     <>
       {/* Rotate Z-up → Y-up, scale to match pitch dimensions */}
-      <group rotation={rot as [number, number, number]} scale={scl} position={pos as [number, number, number]}>
+      <group rotation={rotation} scale={scl} position={position}>
         <primitive object={stadium} />
       </group>
 
       {/* Stadium overhead light */}
       <pointLight
-        position={[0, 18 * scl + pos[1], 0]}
+        position={[0, 18 * scl + posY, 0]}
         intensity={isDark ? 3 : 2}
         color={isDark ? "#ffddaa" : "#ffffff"}
         distance={30}

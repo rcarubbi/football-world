@@ -649,6 +649,9 @@ const Scene = memo(function Scene() {
     if (pathname === "/") {
       targetPos.current.set(0.02, 0.992, -2.441);
       targetLookAt.current.set(0, -0.3, 0);
+    } else if (pathname.startsWith("/leagues/")) {
+      targetPos.current.set(-2.533, 0.788, -2.013);
+      targetLookAt.current.set(0, -0.3, 0);
     } else if (pathname.startsWith("/leagues")) {
       targetPos.current.set(-2, 2.5, -2);
       targetLookAt.current.set(0, -1, 0);

@@ -49,9 +49,9 @@ const Football = memo(function Football() {
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
   const { pos, rot, scl } = useControls("Football", {
-    pos: { value: [0, -2.1, 0], step: 0.01 },
+    pos: { value: [0, 0.06, 0], step: 0.01 },
     rot: { value: [0, 0, 0], step: 0.01 },
-    scl: { value: 1.2, min: 0.1, max: 5, step: 0.01 },
+    scl: { value: 0.46, min: 0.1, max: 5, step: 0.01 },
   });
 
   useFrame((_, delta) => {
@@ -87,10 +87,10 @@ const GrassPitch = memo(function GrassPitch() {
   const { colors } = useTheme();
 
   const { pos, rot, width, height } = useControls("Pitch", {
-    pos: { value: [0, -2.2, 0], step: 0.1 },
-    rot: { value: [-Math.PI / 2, 0, 0], step: 0.01 },
-    width: { value: 16, min: 5, max: 30, step: 0.1 },
-    height: { value: 10.5, min: 3, max: 20, step: 0.1 },
+    pos: { value: [0, 0, 0], step: 0.01 },
+    rot: { value: [-1.5, 0, 0], step: 0.01 },
+    width: { value: 5, min: 5, max: 30, step: 0.01 },
+    height: { value: 3, min: 3, max: 20, step: 0.01 },
   });
 
   const tex = useMemo(() => {
@@ -231,12 +231,12 @@ function Stadium() {
 
   const { posX, posY, posZ, rotX, rotY, rotZ, scl } = useControls("Stadium", {
     posX: { value: 0, min: -20, max: 20, step: 0.01 },
-    posY: { value: -5, min: -20, max: 20, step: 0.01 },
-    posZ: { value: -4, min: -20, max: 20, step: 0.01 },
-    rotX: { value: -Math.PI / 2, min: -Math.PI, max: Math.PI, step: 0.01 },
-    rotY: { value: 3.15, min: -Math.PI, max: Math.PI, step: 0.01 },
+    posY: { value: 0, min: -20, max: 20, step: 0.01 },
+    posZ: { value: 0, min: -20, max: 20, step: 0.01 },
+    rotX: { value: 0.06, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotY: { value: 3.14, min: -Math.PI, max: Math.PI, step: 0.01 },
     rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    scl: { value: 0.24, min: 0.01, max: 2, step: 0.001 },
+    scl: { value: 0.04, min: 0.01, max: 2, step: 0.001 },
   });
 
   const position: [number, number, number] = [posX, posY, posZ];
@@ -341,6 +341,16 @@ const Scene = memo(function Scene() {
   const { colors, isDark } = useTheme();
   const pathname = usePathname();
 
+  const { camX, camY, camZ, lookX, lookY, lookZ, override } = useControls("Camera", {
+    camX: { value: 0, min: -20, max: 20, step: 0.01 },
+    camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
+    camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
+    lookX: { value: 0, min: -20, max: 20, step: 0.01 },
+    lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
+    lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
+    override: false,
+  });
+
   const targetPos = useRef(new THREE.Vector3(0, 1.5, 5.5));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
 
@@ -375,9 +385,14 @@ const Scene = memo(function Scene() {
 
   // Smooth camera lerp in useFrame (delta-safe)
   useFrame((_, delta) => {
-    const t = 1 - Math.pow(0.01, delta); // frame-rate independent lerp
-    camera.position.lerp(targetPos.current, t);
-    camera.lookAt(targetLookAt.current);
+    if (override) {
+      camera.position.set(camX, camY, camZ);
+      camera.lookAt(lookX, lookY, lookZ);
+    } else {
+      const t = 1 - Math.pow(0.01, delta);
+      camera.position.lerp(targetPos.current, t);
+      camera.lookAt(targetLookAt.current);
+    }
   });
 
   return (

@@ -437,6 +437,8 @@ function LightHelper({
   size?: number;
 }) {
   const { scene } = useThree();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const helperRef = useRef<any>(null);
   useEffect(() => {
     if (!visible || !target) return;
     const helper =
@@ -444,11 +446,16 @@ function LightHelper({
         ? new DirectionalLightHelper(target as THREE.DirectionalLight, size)
         : new PointLightHelper(target as THREE.PointLight, size);
     scene.add(helper);
+    helperRef.current = helper;
     return () => {
       scene.remove(helper);
       helper.dispose();
+      helperRef.current = null;
     };
   }, [visible, target, scene, type, size]);
+  useFrame(() => {
+    if (helperRef.current) helperRef.current.update();
+  });
   return null;
 }
 

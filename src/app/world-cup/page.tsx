@@ -12,7 +12,8 @@ import { getWorldCupEdition } from "@/lib/world-cup-data";
 import { getFlagUrl } from "@/lib/flags";
 import type { Metadata } from "next";
 
-function FlagImg({ team, size = 20 }: { team: string; size?: number }) {
+function FlagImg({ team, size = 20 }: { team: string | null; size?: number }) {
+  if (!team) return null;
   const flagUrl = getFlagUrl(team);
   if (!flagUrl) return null;
   return <img src={flagUrl} alt="" width={size} height={Math.round(size * 0.67)} className="rounded-[2px] shrink-0" loading="lazy" />;

@@ -36,6 +36,7 @@ const COUNTRY_TO_CODE: Record<string, string> = {
 };
 
 export function getCountryCode(nationality: string): string | null {
+  if (!nationality) return null;
   const lower = nationality.toLowerCase().trim();
   if (COUNTRY_TO_CODE[lower]) return COUNTRY_TO_CODE[lower];
   for (const [key, code] of Object.entries(COUNTRY_TO_CODE)) {

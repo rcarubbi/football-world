@@ -8,6 +8,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import { Globe, Trophy } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { WorldCupYearSelector } from "@/components/WorldCupYearSelector";
+import { getWorldCupEdition } from "@/lib/world-cup-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -247,22 +248,49 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
 
   const hasKnockout = last32.length + last16.length + quarterFinals.length + semiFinals.length + thirdPlace.length + finalMatch.length > 0;
 
+  const edition = getWorldCupEdition(currentYear);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <GlassPanel className="flex items-start gap-6 p-6 mb-8">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Globe className="w-8 h-8 text-success shrink-0" />
-            <h1 className="text-3xl sm:text-4xl font-bold flex-1">World Cup</h1>
-            <ShareButton title={`World Cup ${currentYear}`} />
+      <GlassPanel className="p-6 mb-8">
+        <div className="flex items-start gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-3xl sm:text-4xl font-bold flex-1">World Cup {currentYear}</h1>
+              <ShareButton title={`World Cup ${currentYear}`} />
+            </div>
+            {edition && (
+              <div className="mt-2 text-muted-foreground">
+                Hosted in <span className="text-foreground font-medium">{edition.host}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              <Suspense>
+                <WorldCupYearSelector years={years} currentYear={currentYear} />
+              </Suspense>
+            </div>
           </div>
-          <div className="flex items-center gap-4 mt-3 flex-wrap">
-            <Suspense>
-              <WorldCupYearSelector years={years} currentYear={currentYear} />
-            </Suspense>
-          </div>
+          {edition && (
+            <img
+              src={edition.logoUrl}
+              alt={`World Cup ${currentYear} logo`}
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0"
+            />
+          )}
         </div>
-        <Trophy className="w-16 h-16 text-accent shrink-0" />
+        {edition?.mascot && (
+          <div className="flex items-center gap-4 mt-5 pt-5 border-t border-border">
+            <img
+              src={edition.mascot.imageUrl}
+              alt={edition.mascot.name}
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-lg bg-muted/50 p-1 shrink-0"
+            />
+            <div className="min-w-0">
+              <div className="font-semibold text-sm">{edition.mascot.name}</div>
+              <div className="text-xs text-muted-foreground leading-relaxed">{edition.mascot.description}</div>
+            </div>
+          </div>
+        )}
       </GlassPanel>
 
       {/* Podium */}

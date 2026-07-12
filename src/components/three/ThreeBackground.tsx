@@ -362,7 +362,7 @@ function Goals() {
         child.receiveShadow = false;
         if (child.material) {
           const oldMat = child.material as THREE.MeshStandardMaterial;
-          const dimColor = oldMat.color.clone().multiplyScalar(0.4);
+          const dimColor = oldMat.color.clone().multiplyScalar(0.1);
           child.material = new THREE.MeshBasicMaterial({
             color: dimColor,
             map: oldMat.map,
@@ -445,7 +445,7 @@ function LightHelper({
     const helper =
       type === "directional"
         ? new DirectionalLightHelper(target as THREE.DirectionalLight, size)
-        : new SpotLightHelper(target as THREE.SpotLight, size);
+        : new SpotLightHelper(target as THREE.SpotLight, new THREE.Color("#FFFFFF"));
     scene.add(helper);
     helperRef.current = helper;
     return () => {
@@ -487,7 +487,7 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, spotAngle, spotPenumbra, spotDistance, spotRotX, spotRotY, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
+  const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, spotAngle, spotPenumbra, spotDistance, spot1RotX, spot1RotY, spot2RotX, spot2RotY, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
     Lights: folder({
       sunX: { value: 13.6, min: -20, max: 20, step: 0.1 },
       sunY: { value: 3.3, min: 0, max: 20, step: 0.1 },
@@ -507,8 +507,10 @@ const Scene = memo(function Scene() {
       spotAngle: { value: 0.6, min: 0, max: Math.PI / 2, step: 0.01 },
       spotPenumbra: { value: 0.4, min: 0, max: 1, step: 0.01 },
       spotDistance: { value: 20, min: 1, max: 50, step: 0.1 },
-      spotRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      spotRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot1RotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot1RotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot2RotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot2RotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
       showSunHelper: false,
       showPost1Helper: false,
       showPost2Helper: false,
@@ -619,16 +621,16 @@ const Scene = memo(function Scene() {
     const onCapture = () => {
       const p = camera as THREE.PerspectiveCamera;
       setCamera({
-          camX: +camera.position.x.toFixed(3),
-          camY: +camera.position.y.toFixed(3),
-          camZ: +camera.position.z.toFixed(3),
-          rotX: +camera.rotation.x.toFixed(3),
-          rotY: +camera.rotation.y.toFixed(3),
-          rotZ: +camera.rotation.z.toFixed(3),
-          fov: +("fov" in p ? p.fov : 50).toFixed(1),
-          useRotation: true,
-          override: true,
-          editMode: false,
+        camX: +camera.position.x.toFixed(3),
+        camY: +camera.position.y.toFixed(3),
+        camZ: +camera.position.z.toFixed(3),
+        rotX: +camera.rotation.x.toFixed(3),
+        rotY: +camera.rotation.y.toFixed(3),
+        rotZ: +camera.rotation.z.toFixed(3),
+        fov: +("fov" in p ? p.fov : 50).toFixed(1),
+        useRotation: true,
+        override: true,
+        editMode: false,
       });
     };
     window.addEventListener("capture-camera", onCapture);
@@ -771,8 +773,8 @@ const Scene = memo(function Scene() {
         castShadow
         shadow-mapSize={1024}
       />
-      <primitive object={spot1TargetRef.current} position={[light1X + 5 * Math.sin(spotRotY), 0, light1Z + 5 * Math.cos(spotRotY)]} />
-      <primitive object={spot2TargetRef.current} position={[light2X + 5 * Math.sin(spotRotY), 0, light2Z + 5 * Math.cos(spotRotY)]} />
+      <primitive object={spot1TargetRef.current} position={[light1X + 5 * Math.sin(spot1RotY), light1Y - 5 * Math.sin(spot1RotX), light1Z + 5 * Math.cos(spot1RotY)]} />
+      <primitive object={spot2TargetRef.current} position={[light2X + 5 * Math.sin(spot2RotY), light2Y - 5 * Math.sin(spot2RotX), light2Z + 5 * Math.cos(spot2RotY)]} />
       <spotLight ref={spot1Ref} position={[light1X, light1Y, light1Z]} target={spot1TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
       <spotLight ref={spot2Ref} position={[light2X, light2Y, light2Z]} target={spot2TargetRef.current} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" angle={spotAngle} penumbra={spotPenumbra} distance={spotDistance} castShadow />
 

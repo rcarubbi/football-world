@@ -8,6 +8,7 @@ import { Leva } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
+import { PointLightHelper, DirectionalLightHelper } from "three";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { use3DInteractive } from "./InteractiveContext";
@@ -279,14 +280,6 @@ function Stadium() {
       <group rotation={rotation} scale={scl} position={position}>
         <primitive object={stadium} />
       </group>
-
-      {/* Stadium overhead light */}
-      <pointLight
-        position={[0, 18 * scl + posY, 0]}
-        intensity={isDark ? 3 : 2}
-        color={isDark ? "#ffddaa" : "#ffffff"}
-        distance={30}
-      />
     </>
   );
 }
@@ -412,6 +405,37 @@ function Goals() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   LIGHT HELPER — visual debug for light positions
+   ═══════════════════════════════════════════════════════════════════ */
+
+function LightHelper({
+  type,
+  target,
+  visible,
+  size = 1,
+}: {
+  type: "directional" | "point";
+  target: THREE.Light;
+  visible: boolean;
+  size?: number;
+}) {
+  const { scene } = useThree();
+  useEffect(() => {
+    if (!visible || !target) return;
+    const helper =
+      type === "directional"
+        ? new DirectionalLightHelper(target as THREE.DirectionalLight, size)
+        : new PointLightHelper(target as THREE.PointLight, size);
+    scene.add(helper);
+    return () => {
+      scene.remove(helper);
+      helper.dispose();
+    };
+  }, [visible, target, scene, type, size]);
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    SCENE — Orchestrator
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -438,7 +462,7 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity } = useControls("Lights", {
+  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
     light1X: { value: 2.6, min: -5, max: 5, step: 0.01 },
     light1Y: { value: 1.61, min: -5, max: 5, step: 0.01 },
     light1Z: { value: 2.34, min: -5, max: 5, step: 0.01 },
@@ -446,6 +470,9 @@ const Scene = memo(function Scene() {
     light2Y: { value: 1.65, min: -5, max: 5, step: 0.01 },
     light2Z: { value: 2.25, min: -5, max: 5, step: 0.01 },
     lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
+    showSunHelper: false,
+    showPost1Helper: false,
+    showPost2Helper: false,
   });
 
   const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
@@ -458,6 +485,11 @@ const Scene = memo(function Scene() {
 
   const targetPos = useRef(new THREE.Vector3(0.02, 0.992, -2.441));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
+
+  // Light refs for helpers
+  const dirLightRef = useRef<THREE.DirectionalLight>(null);
+  const pointLight1Ref = useRef<THREE.PointLight>(null);
+  const pointLight2Ref = useRef<THREE.PointLight>(null);
 
   // Edit mode state refs
   const editModeRef = useRef(false);
@@ -671,14 +703,20 @@ const Scene = memo(function Scene() {
       {/* Lighting — sun in light mode, spotlights in dark mode */}
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
       <directionalLight
+        ref={dirLightRef}
         position={[5, 8, 3]}
         intensity={isDark ? 0 : 1.5}
         color="#FFF5E6"
         castShadow
         shadow-mapSize={1024}
       />
-      <pointLight position={[light1X, light1Y, light1Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
-      <pointLight position={[light2X, light2Y, light2Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
+      <pointLight ref={pointLight1Ref} position={[light1X, light1Y, light1Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
+      <pointLight ref={pointLight2Ref} position={[light2X, light2Y, light2Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
+
+      {/* Light helpers */}
+      <LightHelper type="directional" target={dirLightRef.current!} visible={showSunHelper} />
+      <LightHelper type="point" target={pointLight1Ref.current!} visible={showPost1Helper} size={0.3} />
+      <LightHelper type="point" target={pointLight2Ref.current!} visible={showPost2Helper} size={0.3} />
 
       {/* Scene objects */}
       <Football />

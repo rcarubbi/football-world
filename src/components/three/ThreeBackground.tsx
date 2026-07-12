@@ -770,9 +770,12 @@ const Scene = memo(function Scene() {
     } else if (pathname === "/teams") {
       targetPos.current.set(-2.864, 0.377, 0.805);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 95 });
-    } else if (pathname.startsWith("/players")) {
-      targetPos.current.set(0, 3, -3);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
+    } else if (pathname.startsWith("/players/")) {
+      targetPos.current.set(-0.26, 0.086, 0.105);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 45 });
+    } else if (pathname === "/players") {
+      targetPos.current.set(1.881, 0.184, 0.96);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 60 });
     } else if (pathname.startsWith("/world-cup")) {
       targetPos.current.set(-1.5, 1, -2);
       setCamera({ lookX: 0, lookY: -0.5, lookZ: 0 });

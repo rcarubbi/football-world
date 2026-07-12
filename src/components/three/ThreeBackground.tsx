@@ -52,9 +52,9 @@ const Football = memo(function Football() {
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
   const { pos, rot, scl } = useControls("Football", {
-    pos: { value: [0, 0.2, 0], step: 0.01 },
+    pos: { value: [0, 0.1, 0], step: 0.01 },
     rot: { value: [1, 1, 1], step: 0.01 },
-    scl: { value: 2.02, min: 0.1, max: 5, step: 0.01 },
+    scl: { value: 0.2, min: 0.1, max: 5, step: 0.01 },
   });
 
   useFrame((_, delta) => {

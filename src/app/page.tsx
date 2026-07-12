@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { HeroInteractive } from "@/components/three/HeroInteractive";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Trophy, Users, Star, Video, ChevronRight, Calendar, TrendingUp } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 
 async function getHomeData() {
   const client = getTursoClient();
@@ -65,6 +66,7 @@ export default async function HomePage() {
               Teams, players, leagues, results, videos and much more.
               Explore the universe of world football.
             </p>
+            <ShareButton title="Football World" text="Explore the universe of world football" />
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/leagues"

@@ -7,6 +7,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { VideoSection } from "@/components/VideoSection";
 import { Users, MapPin, Calendar, Video, Trophy, ArrowLeft } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -16,12 +17,17 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const client = getTursoClient();
-  const result = await client.execute({ sql: "SELECT name FROM teams WHERE slug = ?", args: [slug] });
+  const result = await client.execute({ sql: "SELECT name, badge_url FROM teams WHERE slug = ?", args: [slug] });
   const team = result.rows[0];
   if (!team) return { title: "Team not found" };
   return {
     title: `${team.name} | Football World`,
     description: `Squad, formation, results and videos of ${team.name}`,
+    openGraph: {
+      title: `${team.name} | Football World`,
+      description: `Squad, formation, results and videos of ${team.name}`,
+      images: team.badge_url ? [{ url: team.badge_url as string, width: 200, height: 200 }] : undefined,
+    },
   };
 }
 
@@ -145,7 +151,10 @@ export default async function TeamDetailPage({ params }: PageProps) {
           <img src={team.badge_url as string} alt={team.name as string} className="w-24 h-24 object-contain" />
         ) : null}
         <div className="flex-1">
-          <h1 className="text-3xl sm:text-4xl font-bold">{team.name as string}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl font-bold flex-1">{team.name as string}</h1>
+            <ShareButton title={team.name as string} image={team.badge_url as string | undefined} />
+          </div>
           <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
             <Link href={`/leagues/${leagueSlug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
               <LeagueIcon slug={leagueSlug} className="w-5 h-5 text-[10px]" />

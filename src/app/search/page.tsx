@@ -6,11 +6,16 @@ import { Badge } from "@/components/ui/Badge";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Search, Users, Star, Trophy } from "lucide-react";
 import { stripAccents, sqlStripAccents } from "@/lib/utils";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Search | Football World",
   description: "Search teams, players and leagues",
+  openGraph: {
+    title: "Search | Football World",
+    description: "Search teams, players and leagues",
+  },
 };
 
 async function searchAll(q: string) {
@@ -50,10 +55,13 @@ export default async function BuscaPage({
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <GlassPanel className="p-6 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-          <Search className="w-8 h-8 inline-block mr-2 text-primary" />
-          Search
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex-1">
+            <Search className="w-8 h-8 inline-block mr-2 text-primary" />
+            Search
+          </h1>
+          {query && <ShareButton title={`Search: ${query} | Football World`} />}
+        </div>
         {query && (
           <p className="text-muted-foreground">
             Results for &quot;{query}&quot;

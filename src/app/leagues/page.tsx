@@ -4,21 +4,29 @@ import { LeagueIcon } from "@/components/LeagueIcon";
 import { Card } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Trophy } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Leagues | Football World",
   description: "Explore the world's top football leagues",
+  openGraph: {
+    title: "Leagues | Football World",
+    description: "Explore the world's top football leagues",
+  },
 };
 
 export default function LigasPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <GlassPanel className="p-6 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-          <Trophy className="w-8 h-8 inline-block mr-2 text-primary" />
-          Leagues
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex-1">
+            <Trophy className="w-8 h-8 inline-block mr-2 text-primary" />
+            Leagues
+          </h1>
+          <ShareButton title="Leagues | Football World" />
+        </div>
         <p className="text-muted-foreground">
           Explore the world&apos;s top football leagues
         </p>

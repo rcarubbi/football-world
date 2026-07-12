@@ -21,6 +21,15 @@ const chakraPetch = Chakra_Petch({
 export const metadata: Metadata = {
   title: "Football World",
   description: "Your complete guide to world football — leagues, teams, players and much more",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Football World",
+    description: "Your complete guide to world football — leagues, teams, players and much more",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

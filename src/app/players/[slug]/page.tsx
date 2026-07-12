@@ -6,6 +6,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, Star, Trophy, Calendar, Ruler, Weight } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -15,12 +16,17 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const client = getTursoClient();
-  const result = await client.execute({ sql: "SELECT name FROM players WHERE slug = ?", args: [slug] });
+  const result = await client.execute({ sql: "SELECT name, photo_url FROM players WHERE slug = ?", args: [slug] });
   const player = result.rows[0];
   if (!player) return { title: "Player not found" };
   return {
     title: `${player.name} | Football World`,
     description: `Full profile of ${player.name}`,
+    openGraph: {
+      title: `${player.name} | Football World`,
+      description: `Full profile of ${player.name}`,
+      images: player.photo_url ? [{ url: player.photo_url as string, width: 400, height: 400 }] : undefined,
+    },
   };
 }
 
@@ -60,6 +66,11 @@ export default async function PlayerDetailPage({ params }: PageProps) {
         <ArrowLeft className="w-4 h-4" /> Back to Players
       </Link>
 
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-3xl sm:text-4xl font-bold flex-1">{player.name as string}</h1>
+        <ShareButton title={player.name as string} image={player.photo_url as string | undefined} />
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
         {player.photo_url ? (
           <img
@@ -73,7 +84,6 @@ export default async function PlayerDetailPage({ params }: PageProps) {
           </div>
         )}
         <div className="flex-1">
-          <h1 className="text-3xl sm:text-4xl font-bold">{player.name as string}</h1>
           <div className="flex flex-wrap items-center gap-3 mt-2">
             {player.position ? <Badge variant="accent">{player.position as string}</Badge> : null}
             {player.nationality ? (

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, Trophy, Globe } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -16,6 +17,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `World Cup ${year} | Football World`,
     description: `Bracket and results of the FIFA World Cup ${year}`,
+    openGraph: {
+      title: `World Cup ${year} | Football World`,
+      description: `Bracket and results of the FIFA World Cup ${year}`,
+    },
   };
 }
 
@@ -98,8 +103,11 @@ export default async function WorldCupYearPage({ params }: PageProps) {
       </Link>
 
       <GlassPanel className="flex items-start gap-6 p-6 mb-8">
-        <div>
-          <h1 className="text-4xl sm:text-5xl font-bold">{cup.year as number}</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl sm:text-5xl font-bold flex-1">{cup.year as number}</h1>
+            <ShareButton title={`World Cup ${cup.year as number}`} />
+          </div>
           <p className="text-lg text-muted-foreground mt-1">{cup.host_country as string}</p>
         </div>
         <Trophy className="w-16 h-16 text-accent" />

@@ -6,11 +6,16 @@ import { LeagueIcon } from "@/components/LeagueIcon";
 import { Users, Search } from "lucide-react";
 import { stripAccents } from "@/lib/utils";
 import { LEAGUES } from "@/lib/leagues";
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Teams | Football World",
   description: "Explore all football teams",
+  openGraph: {
+    title: "Teams | Football World",
+    description: "Explore all football teams",
+  },
 };
 
 async function getAllTeams() {
@@ -55,10 +60,13 @@ export default async function TimesPage({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <GlassPanel className="p-6 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-          <Users className="w-8 h-8 inline-block mr-2 text-primary" />
-          Teams
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex-1">
+            <Users className="w-8 h-8 inline-block mr-2 text-primary" />
+            Teams
+          </h1>
+          <ShareButton title="Teams | Football World" />
+        </div>
         <p className="text-muted-foreground">
           {teams.length} teams available
         </p>

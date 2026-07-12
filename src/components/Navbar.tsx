@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { Trophy, Users, Home, Search, Star, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
@@ -18,12 +20,15 @@ export function Navbar() {
     { href: "/players", label: "Players", icon: Star },
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
-    }
-  };
+  const handleSearch = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const trimmed = value.trim();
+    if (trimmed.length < 2) return;
+    debounceRef.current = setTimeout(() => {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    }, 400);
+  }, [router]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card/80 backdrop-blur-md border-b border-border">
@@ -39,18 +44,18 @@ export function Navbar() {
             </span>
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+          <div className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search teams, players..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
               />
             </div>
-          </form>
+          </div>
 
           <nav className="hidden md:flex items-center space-x-1">
             {navLinks.map((link) => {
@@ -95,18 +100,18 @@ export function Navbar() {
           }}
         >
           <div className="pb-4 border-t border-border mt-2 pt-4">
-            <form onSubmit={handleSearch} className="mb-4">
+            <div className="mb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search teams, players..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
-            </form>
+            </div>
             <nav className="flex flex-col space-y-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;

@@ -232,6 +232,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
   const { cup, matches, teams } = data;
 
   const groupMatches = matches.filter((m) => m.stage === "GROUP_STAGE");
+  const last32 = matches.filter((m) => m.stage === "LAST_32");
   const last16 = matches.filter((m) => m.stage === "LAST_16");
   const quarterFinals = matches.filter((m) => m.stage === "QUARTER_FINALS");
   const semiFinals = matches.filter((m) => m.stage === "SEMI_FINALS");
@@ -244,7 +245,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
     groupedMatches[gn] = groupMatches.filter((m) => m.group_name === gn);
   }
 
-  const hasKnockout = last16.length + quarterFinals.length + semiFinals.length + thirdPlace.length + finalMatch.length > 0;
+  const hasKnockout = last32.length + last16.length + quarterFinals.length + semiFinals.length + thirdPlace.length + finalMatch.length > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -336,7 +337,8 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
             <Trophy className="w-6 h-6 text-accent" />
             Knockout Stage
           </h2>
-          <KnockoutRound title="Round of 16" matches={last16} icon={<Badge>1/8</Badge>} />
+          <KnockoutRound title="Round of 32" matches={last32} icon={<Badge>1/32</Badge>} />
+          <KnockoutRound title="Round of 16" matches={last16} icon={<Badge>1/16</Badge>} />
           <KnockoutRound title="Quarter-Finals" matches={quarterFinals} icon={<Badge>1/4</Badge>} />
           <KnockoutRound title="Semi-Finals" matches={semiFinals} icon={<Badge>1/2</Badge>} />
           {thirdPlace.length > 0 && (

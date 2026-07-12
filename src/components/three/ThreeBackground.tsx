@@ -357,6 +357,10 @@ function Goals() {
   const goal1 = useMemo(() => {
     const g = group.clone();
     g.traverse((child) => {
+      if (child instanceof THREE.Light || child instanceof THREE.Camera) {
+        child.removeFromParent();
+        return;
+      }
       if (child instanceof THREE.Mesh) {
         child.castShadow = false;
         child.receiveShadow = false;
@@ -498,19 +502,19 @@ const Scene = memo(function Scene() {
       sunLength: { value: 15.7, min: 1, max: 50, step: 0.1 },
       sunIntensity: { value: isDark ? 0 : 5.3, min: 0, max: 20, step: 0.1 },
       light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
-      light1Y: { value: 1.61, min: -10, max: 10, step: 0.1 },
-      light1Z: { value: 2.34, min: -10, max: 10, step: 0.1 },
-      light2X: { value: -2.61, min: -10, max: 10, step: 0.1 },
-      light2Y: { value: 1.65, min: -10, max: 10, step: 0.1 },
-      light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
+      light1Y: { value: 1.75, min: -10, max: 10, step: 0.1 },
+      light1Z: { value: 2.44, min: -10, max: 10, step: 0.1 },
+      light2X: { value: -2.6, min: -10, max: 10, step: 0.1 },
+      light2Y: { value: 1.75, min: -10, max: 10, step: 0.1 },
+      light2Z: { value: 2.44, min: -10, max: 10, step: 0.1 },
       lightIntensity: { value: isDark ? 20 : 0, min: 0, max: 20, step: 0.1 },
-      spotAngle: { value: 0.6, min: 0, max: Math.PI / 2, step: 0.01 },
-      spotPenumbra: { value: 0.4, min: 0, max: 1, step: 0.01 },
-      spotDistance: { value: 20, min: 1, max: 50, step: 0.1 },
-      spot1RotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      spot1RotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      spot2RotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      spot2RotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spotAngle: { value: 1.53, min: 0, max: Math.PI / 2, step: 0.01 },
+      spotPenumbra: { value: 0.22, min: 0, max: 1, step: 0.01 },
+      spotDistance: { value: 18.9, min: 1, max: 50, step: 0.1 },
+      spot1RotX: { value: 0.59, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot1RotY: { value: -2.58, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot2RotX: { value: 0.59, min: -Math.PI, max: Math.PI, step: 0.01 },
+      spot2RotY: { value: 2.58, min: -Math.PI, max: Math.PI, step: 0.01 },
       showSunHelper: false,
       showPost1Helper: false,
       showPost2Helper: false,

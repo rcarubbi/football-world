@@ -1,69 +1,92 @@
+import { LEAGUES } from "../../src/lib/leagues";
 import { getTursoClient } from "../../src/lib/turso/client";
 
-interface TheSportsDBTeam {
-  idTeam: string;
-  strTeam: string;
-  strTeamShort: string;
-  strAlternate: string;
-  intFormedYear: string;
-  strStadium: string;
-  strDescriptionEN: string;
-  strBadge: string;
-  strKit: string;
-  strCountry: string;
+interface FootballDataStanding {
+  stage: string;
+  table: Array<{
+    position: number;
+    team: { id: number; name: string; tla: string; crest: string };
+  }>;
 }
 
 export async function fetchWorldCupTeams(): Promise<void> {
   const client = getTursoClient();
+  const worldCupLeague = LEAGUES.find((l) => l.slug === "fifa-world-cup");
 
-  console.log("  Fetching World Cup teams from TheSportsDB...");
+  if (!worldCupLeague) {
+    console.log("  World Cup league not found in config");
+    return;
+  }
+
+  console.log("  Fetching World Cup teams from football-data.org...");
 
   try {
     const response = await fetch(
-      `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=World%20Cup`
+      `https://api.football-data.org/v4/competitions/${worldCupLeague.footballDataCode}/standings`,
+      {
+        headers: {
+          "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY || "",
+        },
+      }
     );
 
     if (!response.ok) {
-      console.error(`  TheSportsDB API error: ${response.status}`);
+      console.error(`  Football-data.org API error: ${response.status}`);
       return;
     }
 
     const data = await response.json();
-    const teams = data.teams as TheSportsDBTeam[] | null;
+    const standings = data.standings as FootballDataStanding[];
 
-    if (!teams || teams.length === 0) {
-      console.log("  No World Cup teams found");
+    if (!standings || standings.length === 0) {
+      console.log("  No World Cup standings returned");
       return;
     }
 
-    let count = 0;
-    for (const team of teams.slice(0, 50)) {
-      await client.execute({
-        sql: `INSERT INTO world_cup_teams (
-          thesportsdb_id, name, short_name, formed_year, stadium,
-          description, badge_url, kit_url, country
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(thesportsdb_id) DO UPDATE SET
-          name = excluded.name,
-          short_name = excluded.short_name,
-          badge_url = COALESCE(excluded.badge_url, world_cup_teams.badge_url),
-          kit_url = COALESCE(excluded.kit_url, world_cup_teams.kit_url)`,
-        args: [
-          team.idTeam,
-          team.strTeam,
-          team.strTeamShort || team.strAlternate,
-          team.intFormedYear ? parseInt(team.intFormedYear) : null,
-          team.strStadium,
-          team.strDescriptionEN,
-          team.strBadge,
-          team.strKit,
-          team.strCountry,
-        ],
+    // Find or create world_cups record for the current year
+    const now = new Date();
+    const wcYear = now.getFullYear();
+
+    const existing = await client.execute({
+      sql: "SELECT id FROM world_cups WHERE year = ?",
+      args: [wcYear],
+    });
+
+    let worldCupId: number;
+    if (existing.rows.length > 0) {
+      worldCupId = existing.rows[0].id as number;
+    } else {
+      const insertResult = await client.execute({
+        sql: `INSERT INTO world_cups (year, host_country) VALUES (?, ?)`,
+        args: [wcYear, "International"],
       });
-      count++;
+      worldCupId = Number(insertResult.lastInsertRowid);
     }
 
-    console.log(`  Fetched ${count} World Cup teams`);
+    let count = 0;
+    for (const standing of standings) {
+      const groupName = standing.stage || "GROUP_STAGE";
+
+      for (const entry of standing.table) {
+        await client.execute({
+          sql: `INSERT INTO world_cup_teams (
+            world_cup_id, team_name, fifa_code, badge_url, group_name
+          ) VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            badge_url = COALESCE(excluded.badge_url, world_cup_teams.badge_url)`,
+          args: [
+            worldCupId,
+            entry.team.name,
+            entry.team.tla,
+            entry.team.crest,
+            groupName,
+          ],
+        });
+        count++;
+      }
+    }
+
+    console.log(`  Fetched ${count} World Cup teams for ${wcYear}`);
   } catch (error) {
     console.error("  Error fetching World Cup teams:", error);
   }

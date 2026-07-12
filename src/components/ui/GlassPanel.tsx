@@ -11,10 +11,10 @@ export function GlassPanel({
 }) {
   const bg =
     intensity === "sm"
-      ? "bg-background/50"
+      ? "bg-background/10"
       : intensity === "lg"
-        ? "bg-background/70"
-        : "bg-background/60";
+        ? "bg-background/10"
+        : "bg-background/10";
 
   return (
     <div

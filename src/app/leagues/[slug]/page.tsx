@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { LEAGUES, getLeagueBySlug } from "@/lib/leagues";
 import { getTursoClient } from "@/lib/turso/client";
 import { LeagueIcon } from "@/components/LeagueIcon";
@@ -10,10 +11,12 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import { VideoSection } from "@/components/VideoSection";
 import { Trophy, TrendingUp, Calendar, Video, ArrowRight, Star } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
+import { SeasonSelector } from "@/components/SeasonSelector";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ season?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -35,12 +38,16 @@ export function generateStaticParams() {
   return LEAGUES.map((l) => ({ slug: l.slug }));
 }
 
-async function getLeagueData(slug: string) {
+async function getLeagueData(slug: string, season: string) {
   const client = getTursoClient();
 
-  const [standings, topScorers, upcomingMatches, recentMatches, videos, transfers] = await Promise.all([
+  const [standingsResult, seasonsResult, topScorers, upcomingMatches, recentMatches, videos, transfers] = await Promise.all([
     client.execute({
-      sql: `SELECT ls.*, t.slug as team_slug, t.badge_url as team_badge FROM league_standings ls LEFT JOIN teams t ON ls.team_name = t.name WHERE ls.league_slug = ? ORDER BY ls.position`,
+      sql: `SELECT ls.*, t.slug as team_slug, t.badge_url as team_badge FROM league_standings ls LEFT JOIN teams t ON ls.team_name = t.name WHERE ls.league_slug = ? AND ls.season = ? ORDER BY ls.position`,
+      args: [slug, season],
+    }),
+    client.execute({
+      sql: `SELECT DISTINCT season FROM league_standings WHERE league_slug = ? ORDER BY season DESC`,
       args: [slug],
     }),
     client.execute({
@@ -66,7 +73,8 @@ async function getLeagueData(slug: string) {
   ]);
 
   return {
-    standings: standings.rows,
+    standings: standingsResult.rows,
+    seasons: seasonsResult.rows.map((r) => r.season as string),
     topScorers: topScorers.rows,
     upcomingMatches: upcomingMatches.rows,
     recentMatches: recentMatches.rows,
@@ -75,12 +83,14 @@ async function getLeagueData(slug: string) {
   };
 }
 
-export default async function LigaDetailPage({ params }: PageProps) {
+export default async function LigaDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { season: requestedSeason } = await searchParams;
   const league = getLeagueBySlug(slug);
   if (!league) notFound();
 
-  const data = await getLeagueData(slug);
+  const season = requestedSeason || new Date().getFullYear().toString();
+  const data = await getLeagueData(slug, season);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -98,10 +108,18 @@ export default async function LigaDetailPage({ params }: PageProps) {
           {data.standings.length > 0 && (
             <Card>
               <CardHeader>
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-primary" />
-                  Standings
-                </h2>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                    Standings
+                  </h2>
+                  <Suspense>
+                    <SeasonSelector
+                      seasons={data.seasons}
+                      currentSeason={season}
+                    />
+                  </Suspense>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -163,7 +181,7 @@ export default async function LigaDetailPage({ params }: PageProps) {
               <CardHeader>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Calendar className="w-6 h-6 text-primary" />
-                  Resultados Recentes
+                  Recent Results
                 </h2>
               </CardHeader>
               <CardContent>
@@ -193,7 +211,7 @@ export default async function LigaDetailPage({ params }: PageProps) {
               <CardHeader>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Calendar className="w-6 h-6 text-accent" />
-                  Proximos Jogos
+                  Upcoming Matches
                 </h2>
               </CardHeader>
               <CardContent>
@@ -225,7 +243,7 @@ export default async function LigaDetailPage({ params }: PageProps) {
               <CardHeader>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Star className="w-6 h-6 text-accent" />
-                  Artilheiros
+                  Top Scorers
                 </h2>
               </CardHeader>
               <CardContent>
@@ -273,7 +291,7 @@ export default async function LigaDetailPage({ params }: PageProps) {
               <CardHeader>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <ArrowRight className="w-6 h-6 text-primary" />
-                  Transferencias
+                  Transfers
                 </h2>
               </CardHeader>
               <CardContent>

@@ -51,7 +51,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <section className="relative h-screen w-full overflow-hidden">
+      <section className="relative min-h-[65vh] w-full overflow-hidden">
         <HeroInteractive />
         <div className="absolute inset-0 z-10 bg-gradient-to-b from-background via-background/30 to-transparent pointer-events-none" />
         <div className="relative z-20 h-full flex flex-col justify-start max-w-7xl mx-auto px-4 sm:px-6 pt-16 md:pt-24">

@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/leagues/fifa-world-cup",
+        destination: "/world-cup",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -229,7 +229,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
               <CardHeader>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Trophy className="w-6 h-6 text-accent" />
-                  Resultados
+                  Results
                 </h2>
               </CardHeader>
               <CardContent>

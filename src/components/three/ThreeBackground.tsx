@@ -355,19 +355,18 @@ function Goals() {
   const group = useLoader(FBXLoader, "/goalpost.fbx");
 
   const goal1 = useMemo(() => {
-    const g = group.clone();
-    g.traverse((child) => {
-      if (child instanceof THREE.Light || child instanceof THREE.Camera) {
-        child.removeFromParent();
-        return;
-      }
+    if (!group) return new THREE.Group();
+    const g = new THREE.Group();
+    group.traverse((child) => {
+      if (child instanceof THREE.Light || child instanceof THREE.Camera) return;
       if (child instanceof THREE.Mesh) {
-        child.castShadow = false;
-        child.receiveShadow = false;
+        const mesh = new THREE.Mesh(child.geometry.clone());
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
         if (child.material) {
           const oldMat = child.material as THREE.MeshStandardMaterial;
           const dimColor = oldMat.color.clone().multiplyScalar(0.1);
-          child.material = new THREE.MeshBasicMaterial({
+          mesh.material = new THREE.MeshBasicMaterial({
             color: dimColor,
             map: oldMat.map,
             transparent: oldMat.transparent,
@@ -375,12 +374,28 @@ function Goals() {
             side: oldMat.side,
           });
         }
+        mesh.position.copy(child.position);
+        mesh.rotation.copy(child.rotation);
+        mesh.scale.copy(child.scale);
+        g.add(mesh);
       }
     });
     return g;
   }, [group]);
 
-  const goal2 = useMemo(() => goal1.clone(), [goal1]);
+  const goal2 = useMemo(() => {
+    const g2 = new THREE.Group();
+    goal1.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const mesh = new THREE.Mesh(child.geometry.clone(), child.material.clone());
+        mesh.position.copy(child.position);
+        mesh.rotation.copy(child.rotation);
+        mesh.scale.copy(child.scale);
+        g2.add(mesh);
+      }
+    });
+    return g2;
+  }, [goal1]);
 
   const { pos1X, pos1Y, pos1Z, rot1X, rot1Y, rot1Z, scl1, showGoal1 } = useControls("Goal 1", {
     showGoal1: true,

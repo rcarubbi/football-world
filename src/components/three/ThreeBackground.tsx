@@ -759,11 +759,11 @@ const Scene = memo(function Scene() {
       targetPos.current.set(0.02, 0.992, -2.441);
       setCamera({ lookX: 0, lookY: -0.3, lookZ: 0 });
     } else if (pathname.startsWith("/leagues/")) {
+      targetPos.current.set(-2.533, 0.788, -2.013);
+      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0, fov: 85 });
+    } else if (pathname === "/leagues") {
       targetPos.current.set(2.8, 0.692, -1.813);
-      setCamera({ lookX: -1.12, lookY: -0.49, lookZ: 1.24 });
-    } else if (pathname.startsWith("/leagues")) {
-      targetPos.current.set(-2, 2.5, -2);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
+      setCamera({ lookX: -1.12, lookY: -0.49, lookZ: 1.24, fov: 85.5 });
     } else if (pathname.startsWith("/teams")) {
       targetPos.current.set(2, 2, -2);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0 });

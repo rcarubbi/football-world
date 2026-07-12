@@ -49,9 +49,9 @@ const Football = memo(function Football() {
   const { nodes, materials } = useGLTF("/ballLime.glb");
 
   const { pos, rot, scl } = useControls("Football", {
-    pos: { value: [0, 0.06, 0], step: 0.01 },
-    rot: { value: [0, 0, 0], step: 0.01 },
-    scl: { value: 0.46, min: 0.1, max: 5, step: 0.01 },
+    pos: { value: [0, 0.2, 0], step: 0.01 },
+    rot: { value: [1, 1, 1], step: 0.01 },
+    scl: { value: 2.02, min: 0.1, max: 5, step: 0.01 },
   });
 
   useFrame((_, delta) => {
@@ -87,8 +87,8 @@ const GrassPitch = memo(function GrassPitch() {
   const { colors } = useTheme();
 
   const { pos, rot, width, height } = useControls("Pitch", {
-    pos: { value: [0, 0, 0], step: 0.01 },
-    rot: { value: [-1.5, 0, 0], step: 0.01 },
+    pos: { value: [0, 0.01, -0.1], step: 0.01 },
+    rot: { value: [4.77, 0, 0], step: 0.01 },
     width: { value: 5, min: 5, max: 30, step: 0.01 },
     height: { value: 3, min: 3, max: 20, step: 0.01 },
   });
@@ -343,16 +343,16 @@ const Scene = memo(function Scene() {
 
   const [cam, setCamera] = useControls(() => ({
     Camera: folder({
-      camX: { value: 0, min: -20, max: 20, step: 0.01 },
-      camY: { value: 1.5, min: -20, max: 20, step: 0.01 },
-      camZ: { value: 5.5, min: -20, max: 20, step: 0.01 },
+      camX: { value: 0.02, min: -20, max: 20, step: 0.01 },
+      camY: { value: 0.992, min: -20, max: 20, step: 0.01 },
+      camZ: { value: -2.441, min: -20, max: 20, step: 0.01 },
       lookX: { value: 0, min: -20, max: 20, step: 0.01 },
       lookY: { value: -0.3, min: -20, max: 20, step: 0.01 },
       lookZ: { value: 0, min: -20, max: 20, step: 0.01 },
-      rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      fov: { value: 50, min: 10, max: 120, step: 0.1 },
+      rotX: { value: -2.802, min: -Math.PI, max: Math.PI, step: 0.01 },
+      rotY: { value: 0.008, min: -Math.PI, max: Math.PI, step: 0.01 },
+      rotZ: { value: 3.138, min: -Math.PI, max: Math.PI, step: 0.01 },
+      fov: { value: 110, min: 10, max: 120, step: 0.1 },
       useRotation: false,
       editMode: false,
       override: false,
@@ -360,16 +360,16 @@ const Scene = memo(function Scene() {
   }));
 
   const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity } = useControls("Lights", {
-    light1X: { value: -0.3, min: -5, max: 5, step: 0.01 },
-    light1Y: { value: 0.3, min: -5, max: 5, step: 0.01 },
-    light1Z: { value: 0, min: -5, max: 5, step: 0.01 },
-    light2X: { value: 0.3, min: -5, max: 5, step: 0.01 },
-    light2Y: { value: 0.3, min: -5, max: 5, step: 0.01 },
-    light2Z: { value: 0, min: -5, max: 5, step: 0.01 },
-    lightIntensity: { value: 5, min: 0, max: 20, step: 0.1 },
+    light1X: { value: 2.6, min: -5, max: 5, step: 0.01 },
+    light1Y: { value: 1.61, min: -5, max: 5, step: 0.01 },
+    light1Z: { value: 2.34, min: -5, max: 5, step: 0.01 },
+    light2X: { value: -2.61, min: -5, max: 5, step: 0.01 },
+    light2Y: { value: 1.65, min: -5, max: 5, step: 0.01 },
+    light2Z: { value: 2.25, min: -5, max: 5, step: 0.01 },
+    lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
   });
 
-  const targetPos = useRef(new THREE.Vector3(0, 1.5, 5.5));
+  const targetPos = useRef(new THREE.Vector3(0.02, 0.992, -2.441));
   const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
 
   // Edit mode state refs
@@ -487,22 +487,22 @@ const Scene = memo(function Scene() {
   // Camera targets per route
   useEffect(() => {
     if (pathname === "/") {
-      targetPos.current.set(0, 1.5, 5.5);
+      targetPos.current.set(0.02, 0.992, -2.441);
       targetLookAt.current.set(0, -0.3, 0);
     } else if (pathname.startsWith("/leagues")) {
-      targetPos.current.set(-2, 2.5, 4);
+      targetPos.current.set(-2, 2.5, -2);
       targetLookAt.current.set(0, -1, 0);
     } else if (pathname.startsWith("/teams")) {
-      targetPos.current.set(2, 2, 4.5);
+      targetPos.current.set(2, 2, -2);
       targetLookAt.current.set(0, -1, 0);
     } else if (pathname.startsWith("/players")) {
-      targetPos.current.set(0, 3, 3.5);
+      targetPos.current.set(0, 3, -3);
       targetLookAt.current.set(0, -1, 0);
     } else if (pathname.startsWith("/world-cup")) {
-      targetPos.current.set(-1.5, 1, 5);
+      targetPos.current.set(-1.5, 1, -2);
       targetLookAt.current.set(0, -0.5, 0);
     } else {
-      targetPos.current.set(0, 1.5, 5.5);
+      targetPos.current.set(0.02, 0.992, -2.441);
       targetLookAt.current.set(0, -0.3, 0);
     }
   }, [pathname]);
@@ -688,7 +688,7 @@ export function ThreeBackground() {
         }}
       >
         <Canvas
-          camera={{ position: [0, 1.5, 5.5], fov: 42 }}
+          camera={{ position: [0.02, 0.992, -2.441], fov: 110 }}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
           dpr={[1, 2]}
           shadows="percentage"

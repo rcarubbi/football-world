@@ -351,12 +351,15 @@ function Goals() {
     const g = scene.clone();
     g.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
+        child.castShadow = false;
+        child.receiveShadow = false;
         if (child.material) {
           const mat = child.material as THREE.MeshStandardMaterial;
           mat.metalness = 0;
           mat.roughness = 1;
+          mat.emissive.setRGB(0, 0, 0);
+          mat.emissiveIntensity = 0;
+          mat.envMapIntensity = 0;
           mat.needsUpdate = true;
         }
       }

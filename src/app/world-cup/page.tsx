@@ -292,17 +292,41 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
             </div>
           </div>
           {edition && (
-            <img
-              src={edition.logoUrl}
-              alt={`World Cup ${currentYear} logo`}
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0"
-            />
+            <div className="relative group shrink-0">
+              <div className="absolute -inset-2 bg-gradient-to-br from-primary/20 via-accent/20 to-success/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+              <img
+                src={edition.logoUrl}
+                alt={`World Cup ${currentYear} logo`}
+                className="relative w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"
+              />
+            </div>
           )}
         </div>
         {edition?.mascot && (
-          <div className="mt-5 pt-5 border-t border-border">
-            <div className="font-semibold text-sm">{edition.mascot.name}</div>
-            <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">{edition.mascot.description}</div>
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              {edition.mascot.imageUrl && (
+                <div className="relative group">
+                  <div className="absolute -inset-2 bg-gradient-to-br from-accent/20 via-success/20 to-primary/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+                  <img
+                    src={edition.mascot.imageUrl}
+                    alt={edition.mascot.name}
+                    className="relative w-32 h-32 sm:w-44 sm:h-44 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
+              <div className="flex-1 text-center sm:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-2">
+                  <span className="text-xs font-bold text-accent uppercase tracking-wider">Official Mascot</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                  {edition.mascot.name}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-md">
+                  {edition.mascot.description}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </GlassPanel>
@@ -364,7 +388,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
             <Badge>Group Stage</Badge>
             <span className="text-muted-foreground text-sm font-normal">({groupMatches.length} matches)</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {groupNames.map((gn) => (
               <GroupTable key={gn} groupName={gn} matches={groupedMatches[gn]} />
             ))}

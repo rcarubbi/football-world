@@ -460,7 +460,7 @@ function StripLight() {
   const { isDark } = useTheme();
   const lightRef = useRef<THREE.RectAreaLight>(null);
 
-  const [{ stripX, stripY, stripZ, stripRotX, stripRotY, stripRotZ, stripWidth, stripHeight, stripIntensity, stripColor }, setStrip] = useControls(() => ({
+  const [{ stripX, stripY, stripZ, stripRotX, stripRotY, stripRotZ, stripWidth, stripHeight, stripIntensity, stripColor, showStripHelper }, setStrip] = useControls(() => ({
     "Strip Light": folder({
       stripX: { value: 0, min: -10, max: 10, step: 0.1 },
       stripY: { value: 1.6, min: -10, max: 10, step: 0.1 },
@@ -472,6 +472,7 @@ function StripLight() {
       stripHeight: { value: 0.3, min: 0.05, max: 2, step: 0.05 },
       stripIntensity: { value: isDark ? 5 : 0, min: 0, max: 30, step: 0.1 },
       stripColor: "#FFFFFF",
+      showStripHelper: false,
     })
   }), []);
 
@@ -480,15 +481,21 @@ function StripLight() {
   }, [isDark, setStrip]);
 
   return (
-    <rectAreaLight
-      ref={lightRef}
-      position={[stripX, stripY, stripZ]}
-      rotation={[stripRotX, stripRotY, stripRotZ]}
-      width={stripWidth}
-      height={stripHeight}
-      intensity={stripIntensity}
-      color={stripColor}
-    />
+    <group position={[stripX, stripY, stripZ]} rotation={[stripRotX, stripRotY, stripRotZ]}>
+      <rectAreaLight
+        ref={lightRef}
+        width={stripWidth}
+        height={stripHeight}
+        intensity={stripIntensity}
+        color={stripColor}
+      />
+      {showStripHelper && (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.PlaneGeometry(stripWidth, stripHeight)]} />
+          <lineBasicMaterial color="#00ff00" />
+        </lineSegments>
+      )}
+    </group>
   );
 }
 

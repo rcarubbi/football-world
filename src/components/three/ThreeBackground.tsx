@@ -91,11 +91,11 @@ const GrassPitch = memo(function GrassPitch() {
 
   const { posX, posY, posZ, rot, width, height } = useControls("Pitch", {
     posX: { value: 0, min: -10, max: 10, step: 0.01 },
-    posY: { value: 0.01, min: -10, max: 10, step: 0.01 },
-    posZ: { value: -0.1, min: -10, max: 10, step: 0.01 },
+    posY: { value: 0, min: -10, max: 10, step: 0.01 },
+    posZ: { value: 0, min: -10, max: 10, step: 0.01 },
     rot: { value: [4.77, 0, 0], step: 0.01 },
-    width: { value: 5, min: 1, max: 30, step: 0.01 },
-    height: { value: 3, min: 1, max: 20, step: 0.01 },
+    width: { value: 4.58, min: 1, max: 30, step: 0.01 },
+    height: { value: 3.04, min: 1, max: 20, step: 0.01 },
   });
 
   const tex = useMemo(() => {
@@ -409,7 +409,7 @@ function Goals() {
       g1RotX: { value: 0.17, min: -Math.PI, max: Math.PI, step: 0.01 },
       g1RotY: { value: -1.35, min: -Math.PI, max: Math.PI, step: 0.01 },
       g1RotZ: { value: 3.08, min: -Math.PI, max: Math.PI, step: 0.01 },
-      g1Scl: { value: 0.001, min: 0.0001, max: 0.1, step: 0.0001 },
+      g1Scl: { value: 0.001, min: 0.001, max: 0.1, step: 0.001 },
     })
   }), []);
 
@@ -422,7 +422,7 @@ function Goals() {
       g2RotX: { value: 0.36, min: -Math.PI, max: Math.PI, step: 0.01 },
       g2RotY: { value: 0.91, min: -Math.PI, max: Math.PI, step: 0.01 },
       g2RotZ: { value: -0.41, min: -Math.PI, max: Math.PI, step: 0.01 },
-      g2Scl: { value: 0.001, min: 0.0001, max: 0.1, step: 0.0001 },
+      g2Scl: { value: 0.001, min: 0.001, max: 0.1, step: 0.001 },
     })
   }), []);
 

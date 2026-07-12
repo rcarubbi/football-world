@@ -354,13 +354,14 @@ function Goals() {
         child.castShadow = false;
         child.receiveShadow = false;
         if (child.material) {
-          const mat = child.material as THREE.MeshStandardMaterial;
-          mat.metalness = 0;
-          mat.roughness = 1;
-          mat.emissive.setRGB(0, 0, 0);
-          mat.emissiveIntensity = 0;
-          mat.envMapIntensity = 0;
-          mat.needsUpdate = true;
+          const oldMat = child.material as THREE.MeshStandardMaterial;
+          child.material = new THREE.MeshBasicMaterial({
+            color: oldMat.color,
+            map: oldMat.map,
+            transparent: oldMat.transparent,
+            opacity: oldMat.opacity,
+            side: oldMat.side,
+          });
         }
       }
     });

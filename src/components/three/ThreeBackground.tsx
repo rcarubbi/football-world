@@ -716,7 +716,7 @@ const Scene = memo(function Scene() {
       <directionalLight
         ref={dirLightRef}
         position={[5, 8, 3]}
-        intensity={isDark ? 0 : sunIntensity}
+        intensity={sunIntensity}
         color="#FFF5E6"
         castShadow
         shadow-mapSize={1024}

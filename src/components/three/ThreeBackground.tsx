@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useEffect, memo, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF, useFBX } from "@react-three/drei";
 import { useControls, folder } from "leva";
 import { Leva } from "leva";
 
@@ -333,6 +333,64 @@ function SkyDome() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   GOALS — FBX model, two instances at each end of the pitch
+   ═══════════════════════════════════════════════════════════════════ */
+
+function Goals() {
+  const group = useFBX("/goalpost.fbx");
+
+  const goal1 = useMemo(() => {
+    const g = group.clone();
+    g.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    return g;
+  }, [group]);
+
+  const goal2 = useMemo(() => goal1.clone(), [goal1]);
+
+  const { pos1X, pos1Y, pos1Z, rot1X, rot1Y, rot1Z, scl1 } = useControls("Goal 1", {
+    pos1X: { value: 0, min: -10, max: 10, step: 0.01 },
+    pos1Y: { value: 0.01, min: -10, max: 10, step: 0.01 },
+    pos1Z: { value: -1.5, min: -10, max: 10, step: 0.01 },
+    rot1X: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rot1Y: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rot1Z: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    scl1: { value: 0.003, min: 0.001, max: 0.1, step: 0.0001 },
+  });
+
+  const { pos2X, pos2Y, pos2Z, rot2X, rot2Y, rot2Z, scl2 } = useControls("Goal 2", {
+    pos2X: { value: 0, min: -10, max: 10, step: 0.01 },
+    pos2Y: { value: 0.01, min: -10, max: 10, step: 0.01 },
+    pos2Z: { value: 1.5, min: -10, max: 10, step: 0.01 },
+    rot2X: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rot2Y: { value: 3.14, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rot2Z: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    scl2: { value: 0.003, min: 0.001, max: 0.1, step: 0.0001 },
+  });
+
+  return (
+    <>
+      <primitive
+        object={goal1}
+        position={[pos1X, pos1Y, pos1Z]}
+        rotation={[rot1X, rot1Y, rot1Z]}
+        scale={scl1}
+      />
+      <primitive
+        object={goal2}
+        position={[pos2X, pos2Y, pos2Z]}
+        rotation={[rot2X, rot2Y, rot2Z]}
+        scale={scl2}
+      />
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    SCENE — Orchestrator
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -590,6 +648,7 @@ const Scene = memo(function Scene() {
       <Football />
       <GrassPitch />
       <Stadium />
+      <Goals />
 
       {/* Camera controls — disabled in edit mode */}
       <OrbitControls

@@ -100,7 +100,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
               <div className="text-center p-3 rounded-xl bg-muted/30">
                 <Ruler className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
                 <div className="text-sm font-medium">{player.height as string}</div>
-                <div className="text-xs text-muted-foreground">Altura</div>
+                <div className="text-xs text-muted-foreground">Height</div>
               </div>
             ) : null}
             {player.weight ? (
@@ -193,7 +193,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
         {player.description ? (
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-bold">Biografia</h2>
+              <h2 className="text-xl font-bold">Biography</h2>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground leading-relaxed">{player.description as string}</p>

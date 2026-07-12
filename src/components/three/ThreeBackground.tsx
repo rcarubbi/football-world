@@ -500,6 +500,53 @@ function StripLight() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   STRIP LIGHT 2 — Second RectAreaLight on ceiling
+   ═══════════════════════════════════════════════════════════════════ */
+
+function StripLight2() {
+  const { isDark } = useTheme();
+  const lightRef = useRef<THREE.RectAreaLight>(null);
+
+  const [{ strip2X, strip2Y, strip2Z, strip2RotX, strip2RotY, strip2RotZ, strip2Width, strip2Height, strip2Intensity, strip2Color, showStrip2Helper }, setStrip2] = useControls(() => ({
+    "Strip Light 2": folder({
+      strip2X: { value: 0, min: -10, max: 10, step: 0.01 },
+      strip2Y: { value: 1.44, min: -10, max: 10, step: 0.01 },
+      strip2Z: { value: -2, min: -10, max: 10, step: 0.01 },
+      strip2RotX: { value: 0.32, min: -Math.PI, max: Math.PI, step: 0.01 },
+      strip2RotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      strip2RotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      strip2Width: { value: 4.4, min: 0.5, max: 20, step: 0.01 },
+      strip2Height: { value: 0.05, min: 0.05, max: 2, step: 0.01 },
+      strip2Intensity: { value: 13, min: 0, max: 30, step: 0.01 },
+      strip2Color: "#FFFFFF",
+      showStrip2Helper: false,
+    })
+  }), []);
+
+  useEffect(() => {
+    setStrip2({ strip2Intensity: isDark ? 13 : 0 });
+  }, [isDark, setStrip2]);
+
+  return (
+    <group position={[strip2X, strip2Y, strip2Z]} rotation={[strip2RotX, strip2RotY, strip2RotZ]}>
+      <rectAreaLight
+        ref={lightRef}
+        width={strip2Width}
+        height={strip2Height}
+        intensity={strip2Intensity}
+        color={strip2Color}
+      />
+      {showStrip2Helper && (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.PlaneGeometry(strip2Width, strip2Height)]} />
+          <lineBasicMaterial color="#00ff00" />
+        </lineSegments>
+      )}
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    LIGHT HELPER — visual debug for light positions
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -907,6 +954,7 @@ const Scene = memo(function Scene() {
       <Stadium />
       <Goals />
       <StripLight />
+      <StripLight2 />
 
       {/* Camera controls — disabled in edit mode */}
       <OrbitControls

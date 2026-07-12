@@ -332,6 +332,7 @@ function SkyDome() {
       scale={scl}
       position={[posX, posY, posZ]}
       rotation={[rotX, rotY, rotZ]}
+      renderOrder={-999}
     >
       <sphereGeometry args={[1, 64, 32]} />
       <meshBasicMaterial

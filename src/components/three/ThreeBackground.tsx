@@ -370,7 +370,8 @@ function Goals() {
 
   const goal2 = useMemo(() => goal1.clone(), [goal1]);
 
-  const { pos1X, pos1Y, pos1Z, rot1X, rot1Y, rot1Z, scl1 } = useControls("Goal 1", {
+  const { pos1X, pos1Y, pos1Z, rot1X, rot1Y, rot1Z, scl1, showGoal1 } = useControls("Goal 1", {
+    showGoal1: true,
     pos1X: { value: 2.24, min: -10, max: 10, step: 0.01 },
     pos1Y: { value: 0.12, min: -10, max: 10, step: 0.01 },
     pos1Z: { value: -0.37, min: -10, max: 10, step: 0.01 },
@@ -380,7 +381,8 @@ function Goals() {
     scl1: { value: 0.05, min: 0.001, max: 0.1, step: 0.001 },
   });
 
-  const { pos2X, pos2Y, pos2Z, rot2X, rot2Y, rot2Z, scl2 } = useControls("Goal 2", {
+  const { pos2X, pos2Y, pos2Z, rot2X, rot2Y, rot2Z, scl2, showGoal2 } = useControls("Goal 2", {
+    showGoal2: true,
     pos2X: { value: -2.24, min: -10, max: 10, step: 0.01 },
     pos2Y: { value: 0.12, min: -10, max: 10, step: 0.01 },
     pos2Z: { value: -0.37, min: -10, max: 10, step: 0.01 },
@@ -392,18 +394,22 @@ function Goals() {
 
   return (
     <>
-      <primitive
-        object={goal1}
-        position={[pos1X, pos1Y, pos1Z]}
-        rotation={[rot1X, rot1Y, rot1Z]}
-        scale={scl1}
-      />
-      <primitive
-        object={goal2}
-        position={[pos2X, pos2Y, pos2Z]}
-        rotation={[rot2X, rot2Y, rot2Z]}
-        scale={scl2}
-      />
+      {showGoal1 && (
+        <primitive
+          object={goal1}
+          position={[pos1X, pos1Y, pos1Z]}
+          rotation={[rot1X, rot1Y, rot1Z]}
+          scale={scl1}
+        />
+      )}
+      {showGoal2 && (
+        <primitive
+          object={goal2}
+          position={[pos2X, pos2Y, pos2Z]}
+          rotation={[rot2X, rot2Y, rot2Z]}
+          scale={scl2}
+        />
+      )}
     </>
   );
 }

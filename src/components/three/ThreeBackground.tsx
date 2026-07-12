@@ -416,7 +416,7 @@ function Goals() {
   const [{ g2PosX, g2PosY, g2PosZ, g2RotX, g2RotY, g2RotZ, g2Scl, showGoal2 }, setGoal2] = useControls(() => ({
     "Goal 2": folder({
       showGoal2: true,
-      g2PosX: { value: -2.17, min: -10, max: 10, step: 0.01 },
+      g2PosX: { value: -2.21, min: -10, max: 10, step: 0.01 },
       g2PosY: { value: 0.12, min: -10, max: 10, step: 0.01 },
       g2PosZ: { value: 0, min: -10, max: 10, step: 0.01 },
       g2RotX: { value: 0.15, min: -Math.PI, max: Math.PI, step: 0.01 },

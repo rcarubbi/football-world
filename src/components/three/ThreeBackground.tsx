@@ -360,6 +360,12 @@ function Goals() {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
+        if (child.material) {
+          const mat = child.material as THREE.MeshStandardMaterial;
+          mat.metalness = 0;
+          mat.roughness = 1;
+          mat.needsUpdate = true;
+        }
       }
     });
     return g;

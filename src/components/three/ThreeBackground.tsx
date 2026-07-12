@@ -488,13 +488,13 @@ const Scene = memo(function Scene() {
 
   const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
     Lights: folder({
-      sunX: { value: 5, min: -20, max: 20, step: 0.1 },
-      sunY: { value: 8, min: 0, max: 20, step: 0.1 },
-      sunZ: { value: 3, min: -20, max: 20, step: 0.1 },
-      sunRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      sunRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      sunRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      sunLength: { value: 10, min: 1, max: 50, step: 0.1 },
+      sunX: { value: 13.6, min: -20, max: 20, step: 0.1 },
+      sunY: { value: 3.3, min: 0, max: 20, step: 0.1 },
+      sunZ: { value: 8.1, min: -20, max: 20, step: 0.1 },
+      sunRotX: { value: -0.22, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunRotY: { value: -2.6, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunRotZ: { value: -0.34, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunLength: { value: 15.7, min: 1, max: 50, step: 0.1 },
       sunIntensity: { value: isDark ? 0 : 5.3, min: 0, max: 20, step: 0.1 },
       light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
       light1Y: { value: 1.61, min: 0, max: 10, step: 0.1 },

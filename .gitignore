@@ -45,7 +45,6 @@ next-env.d.ts
 # large 3D models
 stadium3dmodels/
 sky3dModels/
-public/goalpost.*
 
 # local database
 local.db

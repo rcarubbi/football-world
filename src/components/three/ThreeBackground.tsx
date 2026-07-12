@@ -462,14 +462,15 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
-    light1X: { value: 2.6, min: -5, max: 5, step: 0.01 },
-    light1Y: { value: 1.61, min: -5, max: 5, step: 0.01 },
-    light1Z: { value: 2.34, min: -5, max: 5, step: 0.01 },
-    light2X: { value: -2.61, min: -5, max: 5, step: 0.01 },
-    light2Y: { value: 1.65, min: -5, max: 5, step: 0.01 },
-    light2Z: { value: 2.25, min: -5, max: 5, step: 0.01 },
+  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
+    light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
+    light1Y: { value: 1.61, min: 0, max: 10, step: 0.1 },
+    light1Z: { value: 2.34, min: -10, max: 10, step: 0.1 },
+    light2X: { value: -2.61, min: -10, max: 10, step: 0.1 },
+    light2Y: { value: 1.65, min: 0, max: 10, step: 0.1 },
+    light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
     lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
+    sunIntensity: { value: 1.5, min: 0, max: 20, step: 0.1 },
     showSunHelper: false,
     showPost1Helper: false,
     showPost2Helper: false,
@@ -705,7 +706,7 @@ const Scene = memo(function Scene() {
       <directionalLight
         ref={dirLightRef}
         position={[5, 8, 3]}
-        intensity={isDark ? 0 : 1.5}
+        intensity={isDark ? 0 : sunIntensity}
         color="#FFF5E6"
         castShadow
         shadow-mapSize={1024}

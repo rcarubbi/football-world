@@ -462,22 +462,22 @@ function StripLight() {
 
   const [{ stripX, stripY, stripZ, stripRotX, stripRotY, stripRotZ, stripWidth, stripHeight, stripIntensity, stripColor, showStripHelper }, setStrip] = useControls(() => ({
     "Strip Light": folder({
-      stripX: { value: 0, min: -10, max: 10, step: 0.1 },
-      stripY: { value: 1.6, min: -10, max: 10, step: 0.1 },
-      stripZ: { value: -2.2, min: -10, max: 10, step: 0.1 },
-      stripRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      stripX: { value: 0, min: -10, max: 10, step: 0.01 },
+      stripY: { value: 1.44, min: -10, max: 10, step: 0.01 },
+      stripZ: { value: -2, min: -10, max: 10, step: 0.01 },
+      stripRotX: { value: -2.59, min: -Math.PI, max: Math.PI, step: 0.01 },
       stripRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
       stripRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-      stripWidth: { value: 6, min: 0.5, max: 20, step: 0.1 },
-      stripHeight: { value: 0.3, min: 0.05, max: 2, step: 0.05 },
-      stripIntensity: { value: isDark ? 5 : 0, min: 0, max: 30, step: 0.1 },
+      stripWidth: { value: 4.4, min: 0.5, max: 20, step: 0.01 },
+      stripHeight: { value: 0.05, min: 0.05, max: 2, step: 0.01 },
+      stripIntensity: { value: 30, min: 0, max: 30, step: 0.01 },
       stripColor: "#FFFFFF",
       showStripHelper: false,
     })
   }), []);
 
   useEffect(() => {
-    setStrip({ stripIntensity: isDark ? 5 : 0 });
+    setStrip({ stripIntensity: isDark ? 30 : 0 });
   }, [isDark, setStrip]);
 
   return (

@@ -89,8 +89,10 @@ const Football = memo(function Football() {
 const GrassPitch = memo(function GrassPitch() {
   const { colors } = useTheme();
 
-  const { pos, rot, width, height } = useControls("Pitch", {
-    pos: { value: [0, 0.01, -0.1], step: 0.01 },
+  const { posX, posY, posZ, rot, width, height } = useControls("Pitch", {
+    posX: { value: 0, min: -10, max: 10, step: 0.01 },
+    posY: { value: 0.01, min: -10, max: 10, step: 0.01 },
+    posZ: { value: -0.1, min: -10, max: 10, step: 0.01 },
     rot: { value: [4.77, 0, 0], step: 0.01 },
     width: { value: 5, min: 5, max: 30, step: 0.01 },
     height: { value: 3, min: 3, max: 20, step: 0.01 },
@@ -134,17 +136,18 @@ const GrassPitch = memo(function GrassPitch() {
     const fill = (fn: () => void) => { fn(); ctx.fill(); };
 
     // All proportions based on 105×68m pitch, scaled to canvas
-    const pad = 20;
-    const pW = W - pad * 2;
-    const pH = H - pad * 2;
+    const padX = 80;
+    const padY = 40;
+    const pW = W - padX * 2;
+    const pH = H - padY * 2;
     const sx = pW / 105; // pixels per meter (length)
     const sy = pH / 68;  // pixels per meter (width)
 
     // Pitch border
-    stroke(() => ctx.strokeRect(pad, pad, pW, pH));
+    stroke(() => ctx.strokeRect(padX, padY, pW, pH));
 
     // Halfway line
-    stroke(() => { ctx.beginPath(); ctx.moveTo(W / 2, pad); ctx.lineTo(W / 2, H - pad); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.moveTo(W / 2, padY); ctx.lineTo(W / 2, H - padY); ctx.stroke(); });
 
     // Center circle (9.15m radius)
     const centerR = 9.15 * sx;
@@ -158,19 +161,19 @@ const GrassPitch = memo(function GrassPitch() {
     const paW = 16.5 * sx;
     const paH = 40.32 * sy;
     const paY = (H - paH) / 2;
-    stroke(() => { ctx.beginPath(); ctx.rect(pad, paY, paW, paH); ctx.stroke(); });
-    stroke(() => { ctx.beginPath(); ctx.rect(W - pad - paW, paY, paW, paH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(padX, paY, paW, paH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(W - padX - paW, paY, paW, paH); ctx.stroke(); });
 
     // Goal areas (5.5m deep × 18.32m wide)
     const gaW = 5.5 * sx;
     const gaH = 18.32 * sy;
     const gaY = (H - gaH) / 2;
-    stroke(() => { ctx.beginPath(); ctx.rect(pad, gaY, gaW, gaH); ctx.stroke(); });
-    stroke(() => { ctx.beginPath(); ctx.rect(W - pad - gaW, gaY, gaW, gaH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(padX, gaY, gaW, gaH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(W - padX - gaW, gaY, gaW, gaH); ctx.stroke(); });
 
     // Penalty spots (11m from goal line)
-    const penX1 = pad + 11 * sx;
-    const penX2 = W - pad - 11 * sx;
+    const penX1 = padX + 11 * sx;
+    const penX2 = W - padX - 11 * sx;
     fill(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, 3, 0, Math.PI * 2); ctx.fill(); });
     fill(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, 3, 0, Math.PI * 2); ctx.fill(); });
 
@@ -178,14 +181,14 @@ const GrassPitch = memo(function GrassPitch() {
     const arcR = 9.15 * sx;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(pad + paW, pad, pW - paW * 2, pH);
+    ctx.rect(padX + paW, padY, pW - paW * 2, pH);
     ctx.clip();
     stroke(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
     ctx.restore();
 
     ctx.save();
     ctx.beginPath();
-    ctx.rect(pad, pad, pW - paW * 2, pH);
+    ctx.rect(padX, padY, pW - paW * 2, pH);
     ctx.clip();
     stroke(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
     ctx.restore();
@@ -193,10 +196,10 @@ const GrassPitch = memo(function GrassPitch() {
     // Corner arcs (1m radius)
     const cornerR = 1 * sx;
     const corners = [
-      [pad, pad, 0, Math.PI / 2],
-      [W - pad, pad, Math.PI / 2, Math.PI],
-      [W - pad, H - pad, Math.PI, Math.PI * 1.5],
-      [pad, H - pad, -Math.PI / 2, 0],
+      [padX, padY, 0, Math.PI / 2],
+      [W - padX, padY, Math.PI / 2, Math.PI],
+      [W - padX, H - padY, Math.PI, Math.PI * 1.5],
+      [padX, H - padY, -Math.PI / 2, 0],
     ] as const;
     for (const [cx, cy, a1, a2] of corners) {
       stroke(() => { ctx.beginPath(); ctx.arc(cx, cy, cornerR, a1, a2); ctx.stroke(); });
@@ -208,7 +211,7 @@ const GrassPitch = memo(function GrassPitch() {
   }, [colors]); // rebuild on theme change
 
   return (
-    <mesh rotation={rot as [number, number, number]} position={pos as [number, number, number]} receiveShadow>
+    <mesh rotation={rot as [number, number, number]} position={[posX, posY, posZ]} receiveShadow>
       <planeGeometry args={[width, height]} />
       <meshStandardMaterial map={tex} roughness={0.85} metalness={0} />
     </mesh>

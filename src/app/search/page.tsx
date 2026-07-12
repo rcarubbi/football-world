@@ -84,20 +84,20 @@ export default async function BuscaPage({
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {results.teams.map((team) => (
-                  <Link key={team.slug as string} href={`/teams/${team.slug}`}>
+                  <Link key={team.slug as string} href={`/teams/${team.slug}?from=/search?q=${encodeURIComponent(query)}`}>
                     <Card hover className="p-4">
                       <div className="flex items-center gap-3">
                         {team.badge_url ? (
-                          <img src={team.badge_url as string} alt="" className="w-10 h-10 object-contain" />
+                          <img src={team.badge_url as string} alt="" className="w-12 h-12 object-contain shrink-0" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                            <Users className="w-4 h-4 text-red-400 dark:text-red-300" />
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <Users className="w-5 h-5 text-red-400 dark:text-red-300" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
                           <div className="font-medium text-sm">{team.name as string}</div>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <LeagueIcon slug={team.league_slug as string} className="w-4 h-4 text-[8px]" />
+                            <LeagueIcon slug={team.league_slug as string} className="w-3.5 h-3.5 text-[8px]" />
                             <span className="text-xs text-red-400 dark:text-red-300">{team.league_slug as string}</span>
                           </div>
                         </div>
@@ -117,14 +117,14 @@ export default async function BuscaPage({
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {results.players.map((player) => (
-                  <Link key={player.slug as string} href={`/players/${player.slug}`}>
+                  <Link key={player.slug as string} href={`/players/${player.slug}?from=/search?q=${encodeURIComponent(query)}`}>
                     <Card hover className="p-4">
                       <div className="flex items-center gap-3">
                         {player.photo_url ? (
-                          <img src={player.photo_url as string} alt="" className="w-10 h-10 rounded-full object-cover" />
+                          <img src={player.photo_url as string} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                            {(player.name as string).split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <Star className="w-4 h-4 text-red-400/40 dark:text-red-300/40" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">

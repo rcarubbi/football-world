@@ -949,7 +949,16 @@ const Scene = memo(function Scene() {
       }
     } else {
       const t = 1 - Math.pow(0.01, delta);
-      camera.position.lerp(targetPos.current, t);
+      // Smooth hand-cam sway applied to target so lerp follows naturally
+      const time = performance.now() * 0.001;
+      const swayX = Math.sin(time * 0.3) * 0.006;
+      const swayY = Math.sin(time * 0.2) * 0.004;
+      const swayZ = Math.cos(time * 0.25) * 0.003;
+      camera.position.set(
+        camera.position.x + (targetPos.current.x + swayX - camera.position.x) * t,
+        camera.position.y + (targetPos.current.y + swayY - camera.position.y) * t,
+        camera.position.z + (targetPos.current.z + swayZ - camera.position.z) * t,
+      );
       if (cam.useRotation) {
         camera.rotation.set(cam.rotX, cam.rotY, cam.rotZ);
       } else {
@@ -1010,17 +1019,14 @@ const Scene = memo(function Scene() {
       <StripLight />
       <StripLight2 />
 
-      {/* Camera controls — disabled in edit mode */}
+      {/* Camera controls — disabled, hand-cam movement in useFrame */}
       <OrbitControls
-        enabled={!cam.editMode}
+        enabled={false}
         enableZoom={false}
         enablePan={false}
-        autoRotate={!cam.editMode}
-        autoRotateSpeed={0.2}
+        autoRotate={false}
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 2.2}
-        dampingFactor={0.05}
-        enableDamping
         target={[0, -0.3, 0]}
       />
 

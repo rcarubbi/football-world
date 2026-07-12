@@ -77,7 +77,7 @@ export function PlayersGrid({
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {players.map((player) => (
-          <Link key={`${player.slug}-${player.id}`} href={`/players/${player.slug}`}>
+          <Link key={`${player.slug}-${player.id}`} href={`/players/${player.slug}?from=/players`}>
             <Card hover className="p-4 text-center h-full">
               {player.photo_url ? (
                 <img
@@ -87,8 +87,8 @@ export function PlayersGrid({
                   loading="lazy"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-primary/20 mx-auto mb-3 flex items-center justify-center text-xl font-bold text-primary">
-                  {player.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-3 flex items-center justify-center">
+                  <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none"><circle cx="50" cy="35" r="14" className="fill-muted-foreground/30" /><path d="M25 85c0-13.8 11.2-25 25-25s25 11.2 25 25" className="fill-muted-foreground/30" /></svg>
                 </div>
               )}
               <div className="font-medium text-sm leading-tight">{player.name}</div>

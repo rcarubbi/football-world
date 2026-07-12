@@ -5,12 +5,15 @@ import { getFlagUrl } from "@/lib/flags";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
-import { ArrowLeft, Star, Trophy, Calendar, Ruler, Weight } from "lucide-react";
+import { Star, Trophy, Calendar, Ruler, Weight } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { PlayerSilhouette } from "@/components/PlayerSilhouette";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -53,18 +56,19 @@ async function getPlayerData(slug: string) {
   };
 }
 
-export default async function PlayerDetailPage({ params }: PageProps) {
+export default async function PlayerDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const data = await getPlayerData(slug);
   if (!data) notFound();
 
   const { player, honours, formerTeams, currentTeam } = data;
+  const backHref = from || "/players";
+  const backLabel = from ? "Back" : "Back to Players";
 
   return (
     <GlassPanel className="max-w-4xl mx-auto px-4 sm:px-6 py-8 m-4">
-      <Link href="/players" className="inline-flex items-center gap-1 text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back to Players
-      </Link>
+      <Breadcrumb backHref={backHref} backLabel={backLabel} />
 
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-3xl sm:text-4xl font-bold flex-1">{player.name as string}</h1>
@@ -79,9 +83,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
             className="w-32 h-32 rounded-2xl object-cover border-2 border-border"
           />
         ) : (
-          <div className="w-32 h-32 rounded-2xl bg-primary/20 flex items-center justify-center text-4xl font-bold text-primary">
-            {(player.name as string).split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-          </div>
+          <PlayerSilhouette className="w-32 h-32 rounded-2xl border-2 border-border" />
         )}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3 mt-2">

@@ -12,11 +12,12 @@ import { VideoSection } from "@/components/VideoSection";
 import { Trophy, TrendingUp, Calendar, Video, ArrowRight, Star } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { SeasonSelector } from "@/components/SeasonSelector";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ season?: string }>;
+  searchParams: Promise<{ season?: string; from?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -43,7 +44,34 @@ async function getLeagueData(slug: string, season: string) {
 
   const [standingsResult, seasonsResult, topScorers, upcomingMatches, recentMatches, videos, transfers] = await Promise.all([
     client.execute({
-      sql: `SELECT ls.*, t.slug as team_slug, t.badge_url as team_badge FROM league_standings ls LEFT JOIN teams t ON ls.team_name = t.name WHERE ls.league_slug = ? AND ls.season = ? ORDER BY ls.position`,
+      sql: `SELECT ls.*,
+            COALESCE(t.slug, t2.slug) as team_slug,
+            COALESCE(ls.team_badge, t.badge_url, t2.badge_url) as team_badge_resolved
+            FROM league_standings ls
+            LEFT JOIN teams t ON ls.team_id = t.id
+            LEFT JOIN teams t2 ON t.id IS NULL AND (
+              t2.name = ls.team_name
+              OR t2.name = ls.team_name || ' FC'
+              OR t2.name || ' FC' = ls.team_name
+              OR t2.name = 'Manchester United FC' AND ls.team_name IN ('Man Utd', 'Manchester United')
+              OR t2.name = 'Manchester City FC' AND ls.team_name IN ('Man City', 'Manchester City')
+              OR t2.name = 'Tottenham Hotspur FC' AND ls.team_name IN ('Tottenham', 'Tottenham Hotspur', 'Spurs')
+              OR t2.name = 'Newcastle United FC' AND ls.team_name IN ('Newcastle', 'Newcastle Utd')
+              OR t2.name = 'Nottingham Forest FC' AND ls.team_name IN ('Nottm Forest', 'Nottingham Forest')
+              OR t2.name = 'Wolverhampton Wanderers FC' AND ls.team_name IN ('Wolves', 'Wolverhampton')
+              OR t2.name = 'Brighton & Hove Albion FC' AND ls.team_name IN ('Brighton')
+              OR t2.name = 'West Ham United FC' AND ls.team_name IN ('West Ham')
+              OR t2.name = 'Real Madrid CF' AND ls.team_name IN ('Real Madrid')
+              OR t2.name = 'FC Barcelona' AND ls.team_name IN ('Barcelona')
+              OR t2.name = 'FC Bayern München' AND ls.team_name IN ('Bayern Munich', 'Bayern München')
+              OR t2.name = 'Borussia Dortmund' AND ls.team_name IN ('Dortmund')
+              OR t2.name = 'Paris Saint-Germain FC' AND ls.team_name IN ('PSG', 'Paris Saint-Germain')
+              OR t2.name = 'Inter Milan' AND ls.team_name IN ('Inter')
+              OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan')
+              OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
+              OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
+            )
+            WHERE ls.league_slug = ? AND ls.season = ? ORDER BY ls.position`,
       args: [slug, season],
     }),
     client.execute({
@@ -51,15 +79,33 @@ async function getLeagueData(slug: string, season: string) {
       args: [slug],
     }),
     client.execute({
-      sql: `SELECT * FROM top_scorers WHERE league_slug = ? ORDER BY goals DESC LIMIT 10`,
+      sql: `SELECT ts.*, 
+            COALESCE(p.name, ts.player_name) as player_name,
+            p.photo_url, p.slug as player_slug, t.slug as team_slug 
+            FROM top_scorers ts 
+            LEFT JOIN players p ON ts.player_slug = p.slug 
+              OR p.slug LIKE ts.player_slug || '%'
+              OR ts.player_slug || '-%' = p.slug
+            LEFT JOIN teams t ON ts.team_name = t.name
+              OR t.name = ts.team_name || ' FC'
+              OR t.name || ' FC' = ts.team_name
+              OR t.name = 'Manchester City FC' AND ts.team_name IN ('Manchester City')
+              OR t.name = 'Manchester United FC' AND ts.team_name IN ('Manchester United')
+              OR t.name = 'Tottenham Hotspur FC' AND ts.team_name IN ('Tottenham Hotspur')
+              OR t.name = 'Newcastle United FC' AND ts.team_name IN ('Newcastle')
+              OR t.name = 'Nottingham Forest FC' AND ts.team_name IN ('Nottingham Forest')
+              OR t.name = 'Wolverhampton Wanderers FC' AND ts.team_name IN ('Wolverhampton')
+              OR t.name = 'West Ham United FC' AND ts.team_name IN ('West Ham')
+              OR t.name = 'Brighton & Hove Albion FC' AND ts.team_name IN ('Brighton')
+            WHERE ts.league_slug = ? AND ts.season = ? ORDER BY ts.goals DESC LIMIT 10`,
+      args: [slug, season],
+    }),
+    client.execute({
+      sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date < date('now') ORDER BY m.match_date DESC LIMIT 10`,
       args: [slug],
     }),
     client.execute({
-      sql: `SELECT m.*, t1.badge_url as home_badge, t2.badge_url as away_badge FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date < date('now') ORDER BY m.match_date DESC LIMIT 10`,
-      args: [slug],
-    }),
-    client.execute({
-      sql: `SELECT m.*, t1.badge_url as home_badge, t2.badge_url as away_badge FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date >= date('now') ORDER BY m.match_date ASC LIMIT 10`,
+      sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date >= date('now') ORDER BY m.match_date ASC LIMIT 10`,
       args: [slug],
     }),
     client.execute({
@@ -85,15 +131,18 @@ async function getLeagueData(slug: string, season: string) {
 
 export default async function LigaDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { season: requestedSeason } = await searchParams;
+  const { season: requestedSeason, from } = await searchParams;
   const league = getLeagueBySlug(slug);
   if (!league) notFound();
 
   const season = requestedSeason || new Date().getFullYear().toString();
   const data = await getLeagueData(slug, season);
+  const backHref = from || "/leagues";
+  const backLabel = from ? "Back" : "Back to Leagues";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <Breadcrumb backHref={backHref} backLabel={backLabel} />
       <GlassPanel className="flex items-center gap-4 p-6 mb-8">
         <LeagueIcon slug={slug} className="w-16 h-16 text-xl" />
         <div className="flex-1">
@@ -140,11 +189,11 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                       <TableRow key={row.id as number}>
                         <TableCell className="font-medium px-2">{row.position as number}</TableCell>
                         <TableCell className="px-2">
-                          <Link href={`/teams/${row.team_slug}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                          <Link href={`/teams/${row.team_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             {(row.team_badge_resolved || row.team_badge) ? (
-                              <img src={(row.team_badge_resolved || row.team_badge) as string} alt="" className="w-6 h-6 object-contain shrink-0" />
+                              <img src={(row.team_badge_resolved || row.team_badge) as string} alt="" className="w-7 h-7 object-contain shrink-0" />
                             ) : null}
-                            <span className="font-medium text-sm truncate max-w-[120px]">{row.team_name as string}</span>
+                            <span className="font-medium text-sm truncate max-w-[180px]">{row.team_name as string}</span>
                           </Link>
                         </TableCell>
                         <TableCell className="text-center text-red-400 dark:text-red-300 px-2 hidden sm:table-cell">{row.played as number}</TableCell>
@@ -189,15 +238,23 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                   {data.recentMatches.map((match: Record<string, unknown>) => (
                     <div key={match.id as number} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}
-                        <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                        {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-7 h-7 object-contain shrink-0" /> : null}
+                        {match.home_team_slug ? (
+                          <Link href={`/teams/${match.home_team_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-medium truncate hover:opacity-80 transition-opacity">{match.home_team_name as string}</Link>
+                        ) : (
+                          <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                        )}
                       </div>
                       <div className="px-4 font-bold shrink-0">
                         {match.home_score as number ?? "-"} - {match.away_score as number ?? "-"}
                       </div>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
-                        {match.away_badge ? <img src={match.away_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}
+                        {match.away_team_slug ? (
+                          <Link href={`/teams/${match.away_team_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-medium truncate text-right hover:opacity-80 transition-opacity">{match.away_team_name as string}</Link>
+                        ) : (
+                          <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
+                        )}
+                        {match.away_badge ? <img src={match.away_badge as string} alt="" className="w-7 h-7 object-contain shrink-0" /> : null}
                       </div>
                     </div>
                   ))}
@@ -219,15 +276,23 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                   {data.upcomingMatches.map((match: Record<string, unknown>) => (
                     <div key={match.id as number} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}
-                        <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                        {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-7 h-7 object-contain shrink-0" /> : null}
+                        {match.home_team_slug ? (
+                          <Link href={`/teams/${match.home_team_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-medium truncate hover:opacity-80 transition-opacity">{match.home_team_name as string}</Link>
+                        ) : (
+                          <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                        )}
                       </div>
                       <div className="px-4 text-sm text-red-400 dark:text-red-300 shrink-0">
                         {match.match_date as string} {match.match_time ? `${match.match_time}` : ""}
                       </div>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
-                        {match.away_badge ? <img src={match.away_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}
+                        {match.away_team_slug ? (
+                          <Link href={`/teams/${match.away_team_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-medium truncate text-right hover:opacity-80 transition-opacity">{match.away_team_name as string}</Link>
+                        ) : (
+                          <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
+                        )}
+                        {match.away_badge ? <img src={match.away_badge as string} alt="" className="w-7 h-7 object-contain shrink-0" /> : null}
                       </div>
                     </div>
                   ))}
@@ -249,13 +314,30 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
               <CardContent>
                 <div className="space-y-3">
                   {data.topScorers.map((scorer: Record<string, unknown>, i: number) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                      <span className="text-sm font-bold text-red-400 dark:text-red-300 w-6 text-center">{i + 1}</span>
+                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                      <span className="text-base font-bold text-red-400 dark:text-red-300 w-7 text-center shrink-0">{i + 1}</span>
+                      {scorer.player_slug ? (
+                        <Link href={`/players/${scorer.player_slug}?from=/leagues/${slug}%3Fseason%3D${season}`}>
+                          {scorer.photo_url ? (
+                            <img src={scorer.photo_url as string} alt="" className="w-12 h-12 rounded-full object-cover shrink-0 hover:ring-2 hover:ring-primary/50 transition-all" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-muted shrink-0 hover:ring-2 hover:ring-primary/50 transition-all" />
+                          )}
+                        </Link>
+                      ) : scorer.photo_url ? (
+                        <img src={scorer.photo_url as string} alt="" className="w-12 h-12 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-muted shrink-0" />
+                      )}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{scorer.player_name as string}</div>
+                        {scorer.player_slug ? (
+                          <Link href={`/players/${scorer.player_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-semibold truncate hover:opacity-80 transition-opacity block">{scorer.player_name as string}</Link>
+                        ) : (
+                          <div className="text-sm font-semibold truncate">{scorer.player_name as string}</div>
+                        )}
                         <div className="text-xs text-red-400 dark:text-red-300">{scorer.team_name as string}</div>
                       </div>
-                      <Badge variant="accent">{scorer.goals as number} G</Badge>
+                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-yellow-400/30 text-yellow-600 dark:text-yellow-400 shrink-0">{scorer.goals as number} G</span>
                     </div>
                   ))}
                 </div>

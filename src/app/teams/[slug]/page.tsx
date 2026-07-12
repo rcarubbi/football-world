@@ -6,12 +6,14 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { VideoSection } from "@/components/VideoSection";
-import { Users, MapPin, Calendar, Video, Trophy, ArrowLeft } from "lucide-react";
+import { Users, MapPin, Calendar, Video, Trophy } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -130,21 +132,22 @@ function FormationPitch({ players }: { players: Record<string, unknown>[] }) {
   );
 }
 
-export default async function TeamDetailPage({ params }: PageProps) {
+export default async function TeamDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const data = await getTeamData(slug);
   if (!data) notFound();
 
   const { team, players, matches, videos, lineups } = data;
   const leagueSlug = team.league_slug as string;
+  const backHref = from || "/teams";
+  const backLabel = from ? "Back" : "Back to Teams";
 
   const starters = lineups.filter((l: Record<string, unknown>) => l.starter === 1);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/teams" className="inline-flex items-center gap-1 text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back to Teams
-      </Link>
+      <Breadcrumb backHref={backHref} backLabel={backLabel} />
 
       <GlassPanel className="flex flex-col sm:flex-row items-start gap-6 p-6 mb-8">
         {team.badge_url ? (
@@ -203,7 +206,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                   {players.map((player) => (
                     <Link
                       key={player.slug as string}
-                      href={`/players/${player.slug}`}
+                      href={`/players/${player.slug}?from=/teams/${slug}`}
                       className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
                       {player.photo_url ? (

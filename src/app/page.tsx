@@ -17,7 +17,7 @@ async function getHomeData() {
     client.execute("SELECT COUNT(*) as n FROM matches"),
     client.execute("SELECT COUNT(*) as n FROM videos"),
     client.execute(`
-      SELECT m.*, t1.badge_url as home_badge, t2.badge_url as away_badge
+      SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug
       FROM matches m
       LEFT JOIN teams t1 ON m.home_team_name = t1.name
       LEFT JOIN teams t2 ON m.away_team_name = t2.name
@@ -150,13 +150,21 @@ export default async function HomePage() {
                     {match.home_badge ? (
                       <img src={match.home_badge as string} alt="" className="w-6 h-6 object-contain" loading="lazy" />
                     ) : null}
-                    <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                    {match.home_team_slug ? (
+                      <Link href={`/teams/${match.home_team_slug}`} className="text-sm font-medium truncate hover:opacity-80 transition-opacity">{match.home_team_name as string}</Link>
+                    ) : (
+                      <span className="text-sm font-medium truncate">{match.home_team_name as string}</span>
+                    )}
                   </div>
                   <div className="px-3 font-bold text-lg shrink-0">
                     {match.home_score as number} - {match.away_score as number}
                   </div>
                   <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
-                    <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
+                    {match.away_team_slug ? (
+                      <Link href={`/teams/${match.away_team_slug}`} className="text-sm font-medium truncate text-right hover:opacity-80 transition-opacity">{match.away_team_name as string}</Link>
+                    ) : (
+                      <span className="text-sm font-medium truncate text-right">{match.away_team_name as string}</span>
+                    )}
                     {match.away_badge ? (
                       <img src={match.away_badge as string} alt="" className="w-6 h-6 object-contain" loading="lazy" />
                     ) : null}
@@ -178,7 +186,7 @@ export default async function HomePage() {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {data.topTeams.map((team: Record<string, unknown>) => (
-              <Link key={team.slug as string} href={`/teams/${team.slug}`}>
+              <Link key={team.slug as string} href={`/teams/${team.slug}?from=/`}>
                 <Card hover className="p-4 text-center">
                   {team.badge_url ? (
                     <img

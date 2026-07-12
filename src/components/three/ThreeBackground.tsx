@@ -11,9 +11,13 @@ import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { SpotLightHelper, DirectionalLightHelper, PointLightHelper } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { use3DInteractive } from "./InteractiveContext";
+
+// Initialize RectAreaLight uniforms (required once)
+RectAreaLightUniformsLib.init();
 
 /* ═══════════════════════════════════════════════════════════════════
    CONSTANTS
@@ -449,6 +453,46 @@ function Goals() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   STRIP LIGHT — RectAreaLight on ceiling opposite spotlights
+   ═══════════════════════════════════════════════════════════════════ */
+
+function StripLight() {
+  const { isDark } = useTheme();
+  const lightRef = useRef<THREE.RectAreaLight>(null);
+
+  const [{ stripX, stripY, stripZ, stripRotX, stripRotY, stripRotZ, stripWidth, stripHeight, stripIntensity, stripColor }, setStrip] = useControls(() => ({
+    "Strip Light": folder({
+      stripX: { value: 0, min: -10, max: 10, step: 0.1 },
+      stripY: { value: 1.6, min: -10, max: 10, step: 0.1 },
+      stripZ: { value: -2.2, min: -10, max: 10, step: 0.1 },
+      stripRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      stripRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      stripRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      stripWidth: { value: 6, min: 0.5, max: 20, step: 0.1 },
+      stripHeight: { value: 0.3, min: 0.05, max: 2, step: 0.05 },
+      stripIntensity: { value: isDark ? 5 : 0, min: 0, max: 30, step: 0.1 },
+      stripColor: "#FFFFFF",
+    })
+  }), []);
+
+  useEffect(() => {
+    setStrip({ stripIntensity: isDark ? 5 : 0 });
+  }, [isDark, setStrip]);
+
+  return (
+    <rectAreaLight
+      ref={lightRef}
+      position={[stripX, stripY, stripZ]}
+      rotation={[stripRotX, stripRotY, stripRotZ]}
+      width={stripWidth}
+      height={stripHeight}
+      intensity={stripIntensity}
+      color={stripColor}
+    />
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    LIGHT HELPER — visual debug for light positions
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -573,8 +617,8 @@ const Scene = memo(function Scene() {
 
   useEffect(() => {
     setSun({ sunIntensity: isDark ? 0 : 5.3 });
-    setSpot1({ spot1Intensity: isDark ? 20 : 0 });
-    setSpot2({ spot2Intensity: isDark ? 20 : 0 });
+    setSpot1({ spot1Intensity: isDark ? 20 : 0, point1Intensity: isDark ? 8.7 : 0 });
+    setSpot2({ spot2Intensity: isDark ? 20 : 0, point2Intensity: isDark ? 8.7 : 0 });
   }, [isDark, setSun, setSpot1, setSpot2]);
 
   const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
@@ -586,7 +630,6 @@ const Scene = memo(function Scene() {
   });
 
   const targetPos = useRef(new THREE.Vector3(0.02, 0.992, -2.441));
-  const targetLookAt = useRef(new THREE.Vector3(0, -0.3, 0));
 
   // Light refs for helpers
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
@@ -714,27 +757,27 @@ const Scene = memo(function Scene() {
   useEffect(() => {
     if (pathname === "/") {
       targetPos.current.set(0.02, 0.992, -2.441);
-      targetLookAt.current.set(0, -0.3, 0);
+      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0 });
     } else if (pathname.startsWith("/leagues/")) {
-      targetPos.current.set(-2.533, 0.788, -2.013);
-      targetLookAt.current.set(0, -0.3, 0);
+      targetPos.current.set(2.8, 0.692, -1.813);
+      setCamera({ lookX: -1.12, lookY: -0.49, lookZ: 1.24 });
     } else if (pathname.startsWith("/leagues")) {
       targetPos.current.set(-2, 2.5, -2);
-      targetLookAt.current.set(0, -1, 0);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
     } else if (pathname.startsWith("/teams")) {
       targetPos.current.set(2, 2, -2);
-      targetLookAt.current.set(0, -1, 0);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
     } else if (pathname.startsWith("/players")) {
       targetPos.current.set(0, 3, -3);
-      targetLookAt.current.set(0, -1, 0);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
     } else if (pathname.startsWith("/world-cup")) {
       targetPos.current.set(-1.5, 1, -2);
-      targetLookAt.current.set(0, -0.5, 0);
+      setCamera({ lookX: 0, lookY: -0.5, lookZ: 0 });
     } else {
       targetPos.current.set(0.02, 0.992, -2.441);
-      targetLookAt.current.set(0, -0.3, 0);
+      setCamera({ lookX: 0, lookY: -0.3, lookZ: 0 });
     }
-  }, [pathname]);
+  }, [pathname, setCamera]);
 
   // Camera update
   useFrame((_, delta) => {
@@ -801,7 +844,7 @@ const Scene = memo(function Scene() {
     } else {
       const t = 1 - Math.pow(0.01, delta);
       camera.position.lerp(targetPos.current, t);
-      camera.lookAt(targetLookAt.current);
+      camera.lookAt(cam.lookX, cam.lookY, cam.lookZ);
     }
 
     // Update sun target from rotation + length
@@ -850,6 +893,7 @@ const Scene = memo(function Scene() {
       <GrassPitch />
       <Stadium />
       <Goals />
+      <StripLight />
 
       {/* Camera controls — disabled in edit mode */}
       <OrbitControls

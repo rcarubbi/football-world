@@ -33,7 +33,7 @@ export default async function CopaDoMundoPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {worldCups.map((cup) => (
-          <Link key={cup.id as number} href={`/copa-do-mundo/${cup.year}`}>
+          <Link key={cup.id as number} href={`/world-cup/${cup.year}`}>
             <Card hover className="p-6 h-full">
               <div className="flex items-start justify-between mb-4">
                 <div>

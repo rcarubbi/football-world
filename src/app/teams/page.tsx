@@ -64,7 +64,7 @@ export default async function TimesPage({
 
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
-          href="/times"
+          href="/teams"
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
             !leagueFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
@@ -74,7 +74,7 @@ export default async function TimesPage({
         {LEAGUES.filter((l) => leagueCounts[l.slug]).map((league) => (
           <Link
             key={league.slug}
-            href={`/times?league=${league.slug}`}
+            href={`/teams?league=${league.slug}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
               leagueFilter === league.slug ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
@@ -87,7 +87,7 @@ export default async function TimesPage({
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {teams.map((team) => (
-          <Link key={team.slug as string} href={`/times/${team.slug}`}>
+          <Link key={team.slug as string} href={`/teams/${team.slug}`}>
             <Card hover className="p-4 text-center h-full">
               {team.badge_url ? (
                 <img

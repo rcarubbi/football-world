@@ -270,16 +270,16 @@ const Scene = memo(function Scene() {
     if (pathname === "/") {
       targetPos.current.set(0, 1.5, 5.5);
       targetLookAt.current.set(0, -0.3, 0);
-    } else if (pathname.startsWith("/ligas")) {
+    } else if (pathname.startsWith("/leagues")) {
       targetPos.current.set(-2, 2.5, 4);
       targetLookAt.current.set(0, -1, 0);
-    } else if (pathname.startsWith("/times")) {
+    } else if (pathname.startsWith("/teams")) {
       targetPos.current.set(2, 2, 4.5);
       targetLookAt.current.set(0, -1, 0);
-    } else if (pathname.startsWith("/jogadores")) {
+    } else if (pathname.startsWith("/players")) {
       targetPos.current.set(0, 3, 3.5);
       targetLookAt.current.set(0, -1, 0);
-    } else if (pathname.startsWith("/copa-do-mundo")) {
+    } else if (pathname.startsWith("/world-cup")) {
       targetPos.current.set(-1.5, 1, 5);
       targetLookAt.current.set(0, -0.5, 0);
     } else {

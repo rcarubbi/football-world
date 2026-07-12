@@ -25,7 +25,7 @@ export default function LigasPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {LEAGUES.map((league) => (
-          <Link key={league.slug} href={`/ligas/${league.slug}`}>
+          <Link key={league.slug} href={`/leagues/${league.slug}`}>
             <Card hover className="p-8 h-full">
               <div className="flex items-center gap-5">
                 <LeagueIcon slug={league.slug} className="w-20 h-20" />

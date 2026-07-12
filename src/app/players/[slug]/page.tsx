@@ -55,7 +55,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/jogadores" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+      <Link href="/players" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Players
       </Link>
 
@@ -110,7 +110,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
               </div>
             ) : null}
             {currentTeam && (
-              <Link href={`/times/${currentTeam.slug}`} className="text-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <Link href={`/teams/${currentTeam.slug}`} className="text-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                 {currentTeam.badge_url ? (
                   <img src={currentTeam.badge_url as string} alt="" className="w-8 h-8 mx-auto mb-1 object-contain" />
                 ) : null}

@@ -26,16 +26,16 @@ export function Footer() {
               Navigation
             </h3>
             <nav className="flex flex-col space-y-2">
-              <Link href="/ligas" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/leagues" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Leagues
               </Link>
-              <Link href="/times" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/teams" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Teams
               </Link>
-              <Link href="/jogadores" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/players" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Players
               </Link>
-              <Link href="/copa-do-mundo" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/world-cup" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 World Cup
               </Link>
             </nav>

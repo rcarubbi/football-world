@@ -135,7 +135,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/times" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+      <Link href="/teams" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Teams
       </Link>
 
@@ -146,7 +146,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
         <div className="flex-1">
           <h1 className="text-3xl sm:text-4xl font-bold">{team.name as string}</h1>
           <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
-            <Link href={`/ligas/${leagueSlug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+            <Link href={`/leagues/${leagueSlug}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
               <LeagueIcon slug={leagueSlug} className="w-5 h-5 text-[10px]" />
               {leagueSlug}
             </Link>
@@ -193,7 +193,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                   {players.map((player) => (
                     <Link
                       key={player.slug as string}
-                      href={`/jogadores/${player.slug}`}
+                      href={`/players/${player.slug}`}
                       className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
                       {player.photo_url ? (

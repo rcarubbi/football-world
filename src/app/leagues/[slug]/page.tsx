@@ -114,7 +114,7 @@ export default async function LigaDetailPage({ params }: PageProps) {
                       <TableRow key={row.id as number}>
                         <TableCell className="font-medium px-2">{row.position as number}</TableCell>
                         <TableCell className="px-2">
-                          <Link href={`/times/${row.team_slug}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                          <Link href={`/teams/${row.team_slug}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             {row.team_badge ? (
                               <img src={row.team_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" />
                             ) : null}

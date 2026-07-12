@@ -67,14 +67,14 @@ export default async function HomePage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/ligas"
+                href="/leagues"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all"
               >
                 Explore Leagues
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Link>
               <Link
-                href="/times"
+                href="/teams"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all"
               >
                 View Teams
@@ -109,13 +109,13 @@ export default async function HomePage() {
             <TrendingUp className="w-6 h-6 inline-block mr-2 text-primary" />
             Available Leagues
           </h2>
-          <Link href="/ligas" className="text-sm text-primary hover:underline flex items-center gap-1">
+          <Link href="/leagues" className="text-sm text-primary hover:underline flex items-center gap-1">
             View all <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {LEAGUES.map((league) => (
-            <Link key={league.slug} href={`/ligas/${league.slug}`}>
+            <Link key={league.slug} href={`/leagues/${league.slug}`}>
               <Card hover className="p-4">
                 <div className="flex items-center gap-3">
                   <LeagueIcon slug={league.slug} />
@@ -177,7 +177,7 @@ export default async function HomePage() {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {data.topTeams.map((team: Record<string, unknown>) => (
-              <Link key={team.slug as string} href={`/times/${team.slug}`}>
+              <Link key={team.slug as string} href={`/teams/${team.slug}`}>
                 <Card hover className="p-4 text-center">
                   {team.badge_url ? (
                     <img

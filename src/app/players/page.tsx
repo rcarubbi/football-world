@@ -69,7 +69,7 @@ export default async function JogadoresPage({
 
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
-          href="/jogadores"
+          href="/players"
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
             !positionFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
@@ -79,7 +79,7 @@ export default async function JogadoresPage({
         {positions.map((pos) => (
           <Link
             key={pos}
-            href={`/jogadores?position=${pos}`}
+            href={`/players?position=${pos}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               positionFilter === pos ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}

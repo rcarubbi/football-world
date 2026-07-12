@@ -92,7 +92,7 @@ export default async function WorldCupYearPage({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/copa-do-mundo" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+      <Link href="/world-cup" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to World Cups
       </Link>
 

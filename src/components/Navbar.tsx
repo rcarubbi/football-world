@@ -13,15 +13,15 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/ligas", label: "Leagues", icon: Trophy },
-    { href: "/times", label: "Teams", icon: Users },
-    { href: "/jogadores", label: "Players", icon: Star },
+    { href: "/leagues", label: "Leagues", icon: Trophy },
+    { href: "/teams", label: "Teams", icon: Users },
+    { href: "/players", label: "Players", icon: Star },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/busca?q=${encodeURIComponent(searchQuery.trim())}`;
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
     }
   };
 

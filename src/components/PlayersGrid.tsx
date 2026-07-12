@@ -77,7 +77,7 @@ export function PlayersGrid({
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {players.map((player) => (
-          <Link key={`${player.slug}-${player.id}`} href={`/jogadores/${player.slug}`}>
+          <Link key={`${player.slug}-${player.id}`} href={`/players/${player.slug}`}>
             <Card hover className="p-4 text-center h-full">
               {player.photo_url ? (
                 <img

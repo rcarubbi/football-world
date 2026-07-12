@@ -74,7 +74,7 @@ export default async function BuscaPage({
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {results.teams.map((team) => (
-                  <Link key={team.slug as string} href={`/times/${team.slug}`}>
+                  <Link key={team.slug as string} href={`/teams/${team.slug}`}>
                     <Card hover className="p-4">
                       <div className="flex items-center gap-3">
                         {team.badge_url ? (
@@ -107,7 +107,7 @@ export default async function BuscaPage({
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {results.players.map((player) => (
-                  <Link key={player.slug as string} href={`/jogadores/${player.slug}`}>
+                  <Link key={player.slug as string} href={`/players/${player.slug}`}>
                     <Card hover className="p-4">
                       <div className="flex items-center gap-3">
                         {player.photo_url ? (

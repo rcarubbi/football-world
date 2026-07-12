@@ -124,13 +124,16 @@ export default async function PlayerDetailPage({ params }: PageProps) {
       </div>
 
       <div className="space-y-6">
-        {player.career_summary ? (
+        {(player.career_summary || player.description) ? (
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-bold">Career</h2>
+              <h2 className="text-xl font-bold">Biography</h2>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">{player.career_summary as string}</p>
+              <div className="text-sm text-muted-foreground leading-relaxed space-y-4">
+                {player.career_summary ? <p>{player.career_summary as string}</p> : null}
+                {player.description ? <p>{player.description as string}</p> : null}
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -190,16 +193,6 @@ export default async function PlayerDetailPage({ params }: PageProps) {
           </Card>
         )}
 
-        {player.description ? (
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-bold">Biography</h2>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">{player.description as string}</p>
-            </CardContent>
-          </Card>
-        ) : null}
       </div>
     </GlassPanel>
   );

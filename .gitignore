@@ -45,9 +45,8 @@ next-env.d.ts
 # large 3D models
 stadium3dmodels/
 sky3dModels/
-public/ballLime.glb
 public/goalpost.*
-public/stadium.*
+public/stadium.mtl
 
 # local database
 local.db

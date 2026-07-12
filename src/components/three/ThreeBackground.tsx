@@ -767,9 +767,9 @@ const Scene = memo(function Scene() {
     } else if (pathname.startsWith("/teams/")) {
       targetPos.current.set(1.992, -0.012, 1.759);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 60 });
-    } else if (pathname.startsWith("/teams")) {
-      targetPos.current.set(2, 2, -2);
-      setCamera({ lookX: 0, lookY: -1, lookZ: 0 });
+    } else if (pathname === "/teams") {
+      targetPos.current.set(-2.864, 0.377, 0.805);
+      setCamera({ lookX: 0, lookY: -1, lookZ: 0, fov: 95 });
     } else if (pathname.startsWith("/players")) {
       targetPos.current.set(0, 3, -3);
       setCamera({ lookX: 0, lookY: -1, lookZ: 0 });

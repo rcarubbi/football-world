@@ -302,9 +302,17 @@ useGLTF.preload("/goal.glb");
 function SkyDome() {
   const { scenes } = useGLTF("/sky.glb");
 
-  const { scl, posY } = useControls("Sky", {
-    scl: { value: 200, min: 10, max: 500, step: 1 },
+  const { posX, posY, posZ, rotX, rotY, rotZ, scl, tintR, tintG, tintB } = useControls("Sky", {
+    posX: { value: 0, min: -50, max: 50, step: 0.1 },
     posY: { value: -2.2, min: -50, max: 50, step: 0.1 },
+    posZ: { value: 0, min: -50, max: 50, step: 0.1 },
+    rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+    scl: { value: 200, min: 10, max: 500, step: 1 },
+    tintR: { value: 1, min: 0, max: 2, step: 0.01 },
+    tintG: { value: 1, min: 0, max: 2, step: 0.01 },
+    tintB: { value: 1, min: 0, max: 2, step: 0.01 },
   });
 
   const tex = useMemo(() => {
@@ -320,10 +328,15 @@ function SkyDome() {
   }, [scenes]);
 
   return (
-    <mesh scale={scl} position={[0, posY, 0]}>
+    <mesh
+      scale={scl}
+      position={[posX, posY, posZ]}
+      rotation={[rotX, rotY, rotZ]}
+    >
       <sphereGeometry args={[1, 64, 32]} />
       <meshBasicMaterial
         map={tex}
+        color={new THREE.Color(tintR, tintG, tintB)}
         side={THREE.BackSide}
         fog={false}
         depthWrite={false}
@@ -426,6 +439,14 @@ const Scene = memo(function Scene() {
     light2Y: { value: 1.65, min: -5, max: 5, step: 0.01 },
     light2Z: { value: 2.25, min: -5, max: 5, step: 0.01 },
     lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
+  });
+
+  const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
+    bloomThreshold: { value: 0.4, min: 0, max: 2, step: 0.01 },
+    bloomIntensity: { value: 0.5, min: 0, max: 3, step: 0.01 },
+    bloomSmoothing: { value: 0.9, min: 0, max: 1, step: 0.01 },
+    vignetteOffset: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    vignetteDarkness: { value: 0.5, min: 0, max: 1, step: 0.01 },
   });
 
   const targetPos = useRef(new THREE.Vector3(0.02, 0.992, -2.441));
@@ -640,10 +661,17 @@ const Scene = memo(function Scene() {
       {/* Sky behind everything */}
       <SkyDome />
 
-      {/* Lighting — stadium post lights */}
+      {/* Lighting — sun in light mode, spotlights in dark mode */}
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
-      <pointLight position={[light1X, light1Y, light1Z]} intensity={lightIntensity} color="#FFFFFF" />
-      <pointLight position={[light2X, light2Y, light2Z]} intensity={lightIntensity} color="#FFFFFF" />
+      <directionalLight
+        position={[5, 8, 3]}
+        intensity={isDark ? 0 : 1.5}
+        color="#FFF5E6"
+        castShadow
+        shadow-mapSize={1024}
+      />
+      <pointLight position={[light1X, light1Y, light1Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
+      <pointLight position={[light2X, light2Y, light2Z]} intensity={isDark ? lightIntensity : 0} color="#FFFFFF" />
 
       {/* Scene objects */}
       <Football />
@@ -667,8 +695,8 @@ const Scene = memo(function Scene() {
 
       {/* Post-processing */}
       <EffectComposer>
-        <Bloom luminanceThreshold={isDark ? 0.4 : 0.7} luminanceSmoothing={0.9} intensity={isDark ? 0.5 : 0.2} />
-        <Vignette offset={0.3} darkness={isDark ? 0.5 : 0.3} />
+        <Bloom luminanceThreshold={bloomThreshold} luminanceSmoothing={bloomSmoothing} intensity={bloomIntensity} />
+        <Vignette offset={vignetteOffset} darkness={vignetteDarkness} />
       </EffectComposer>
     </>
   );

@@ -332,7 +332,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
 
       {/* Knockout Stage */}
       {hasKnockout && (
-        <div className="space-y-10">
+        <GlassPanel className="p-6 mb-10 space-y-10">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Trophy className="w-6 h-6 text-accent" />
             Knockout Stage
@@ -347,7 +347,7 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
           {finalMatch.length > 0 && (
             <KnockoutRound title="Final" matches={finalMatch} icon={<Trophy className="w-5 h-5 text-accent" />} />
           )}
-        </div>
+        </GlassPanel>
       )}
 
       {matches.length === 0 && (

@@ -294,19 +294,26 @@ useGLTF.preload("/goal.glb");
 
 function SkyDome() {
   const { scenes } = useGLTF("/sky.glb");
+  const { isDark } = useTheme();
 
-  const { skyPosX, skyPosY, skyPosZ, skyRotX, skyRotY, skyRotZ, skyScl, tintR, tintG, tintB } = useControls("Sky", {
-    skyPosX: { value: 0, min: -50, max: 50, step: 0.1 },
-    skyPosY: { value: -2.2, min: -50, max: 50, step: 0.1 },
-    skyPosZ: { value: 0, min: -50, max: 50, step: 0.1 },
-    skyRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    skyRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    skyRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-    skyScl: { value: 200, min: 10, max: 500, step: 1 },
-    tintR: { value: 1, min: 0, max: 2, step: 0.01 },
-    tintG: { value: 1, min: 0, max: 2, step: 0.01 },
-    tintB: { value: 1, min: 0, max: 2, step: 0.01 },
-  });
+  const [{ skyPosX, skyPosY, skyPosZ, skyRotX, skyRotY, skyRotZ, skyScl, tintR, tintG, tintB }, setSky] = useControls(() => ({
+    Sky: folder({
+      skyPosX: { value: 0, min: -50, max: 50, step: 0.1 },
+      skyPosY: { value: -13.5, min: -50, max: 50, step: 0.1 },
+      skyPosZ: { value: 8.5, min: -50, max: 50, step: 0.1 },
+      skyRotX: { value: 0.06, min: -Math.PI, max: Math.PI, step: 0.01 },
+      skyRotY: { value: -1.23, min: -Math.PI, max: Math.PI, step: 0.01 },
+      skyRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      skyScl: { value: 74, min: 10, max: 500, step: 1 },
+      tintR: { value: isDark ? 0 : 1, min: 0, max: 2, step: 0.01 },
+      tintG: { value: isDark ? 0 : 1, min: 0, max: 2, step: 0.01 },
+      tintB: { value: isDark ? 0.02 : 1, min: 0, max: 2, step: 0.01 },
+    })
+  }), []);
+
+  useEffect(() => {
+    setSky({ tintR: isDark ? 0 : 1, tintG: isDark ? 0 : 1, tintB: isDark ? 0.02 : 1 });
+  }, [isDark, setSky]);
 
   const tex = useMemo(() => {
     let found: THREE.Texture | null = null;
@@ -472,22 +479,32 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
-    sunX: { value: 5, min: -20, max: 20, step: 0.1 },
-    sunY: { value: 8, min: 0, max: 20, step: 0.1 },
-    sunZ: { value: 3, min: -20, max: 20, step: 0.1 },
-    sunIntensity: { value: 1.5, min: 0, max: 20, step: 0.1 },
-    light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
-    light1Y: { value: 1.61, min: 0, max: 10, step: 0.1 },
-    light1Z: { value: 2.34, min: -10, max: 10, step: 0.1 },
-    light2X: { value: -2.61, min: -10, max: 10, step: 0.1 },
-    light2Y: { value: 1.65, min: 0, max: 10, step: 0.1 },
-    light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
-    lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
-    showSunHelper: false,
-    showPost1Helper: false,
-    showPost2Helper: false,
-  });
+  const [{ light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, sunRotX, sunRotY, sunRotZ, sunLength, showSunHelper, showPost1Helper, showPost2Helper }, setLights] = useControls(() => ({
+    Lights: folder({
+      sunX: { value: 5, min: -20, max: 20, step: 0.1 },
+      sunY: { value: 8, min: 0, max: 20, step: 0.1 },
+      sunZ: { value: 3, min: -20, max: 20, step: 0.1 },
+      sunRotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunRotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunRotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
+      sunLength: { value: 10, min: 1, max: 50, step: 0.1 },
+      sunIntensity: { value: isDark ? 0 : 5.3, min: 0, max: 20, step: 0.1 },
+      light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
+      light1Y: { value: 1.61, min: 0, max: 10, step: 0.1 },
+      light1Z: { value: 2.34, min: -10, max: 10, step: 0.1 },
+      light2X: { value: -2.61, min: -10, max: 10, step: 0.1 },
+      light2Y: { value: 1.65, min: 0, max: 10, step: 0.1 },
+      light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
+      lightIntensity: { value: isDark ? 20 : 0, min: 0, max: 20, step: 0.1 },
+      showSunHelper: false,
+      showPost1Helper: false,
+      showPost2Helper: false,
+    })
+  }), []);
+
+  useEffect(() => {
+    setLights({ sunIntensity: isDark ? 0 : 5.3, lightIntensity: isDark ? 20 : 0 });
+  }, [isDark, setLights]);
 
   const { bloomThreshold, bloomIntensity, bloomSmoothing, vignetteOffset, vignetteDarkness } = useControls("PostProcessing", {
     bloomThreshold: { value: 0.4, min: 0, max: 2, step: 0.01 },
@@ -502,6 +519,7 @@ const Scene = memo(function Scene() {
 
   // Light refs for helpers
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
+  const sunTargetRef = useRef<THREE.Object3D>(new THREE.Object3D());
   const pointLight1Ref = useRef<THREE.PointLight>(null);
   const pointLight2Ref = useRef<THREE.PointLight>(null);
 
@@ -707,6 +725,16 @@ const Scene = memo(function Scene() {
       camera.position.lerp(targetPos.current, t);
       camera.lookAt(targetLookAt.current);
     }
+
+    // Update sun target from rotation + length
+    if (dirLightRef.current) {
+      sunTargetRef.current.position.set(
+        sunX + sunLength * Math.cos(sunRotY) * Math.cos(sunRotX),
+        sunY + sunLength * Math.sin(sunRotX),
+        sunZ + sunLength * Math.sin(sunRotY) * Math.cos(sunRotX),
+      );
+      dirLightRef.current.target = sunTargetRef.current;
+    }
   });
 
   return (
@@ -716,6 +744,7 @@ const Scene = memo(function Scene() {
 
       {/* Lighting — sun in light mode, spotlights in dark mode */}
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
+      <primitive object={sunTargetRef.current} />
       <directionalLight
         ref={dirLightRef}
         position={[sunX, sunY, sunZ]}

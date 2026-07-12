@@ -121,71 +121,74 @@ const GrassPitch = memo(function GrassPitch() {
     ctx.putImageData(imgData, 0, 0);
 
     // -- White lines helper --
-    const lw = 6;
+    const lw = 3;
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.lineWidth = lw;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    const line = (fn: () => void) => { fn(); ctx.stroke(); };
+    const stroke = (fn: () => void) => { fn(); ctx.stroke(); };
     const fill = (fn: () => void) => { fn(); ctx.fill(); };
 
-    const pad = 40; // padding from edge
+    // All proportions based on 105×68m pitch, scaled to canvas
+    const pad = 20;
     const pW = W - pad * 2;
     const pH = H - pad * 2;
+    const sx = pW / 105; // pixels per meter (length)
+    const sy = pH / 68;  // pixels per meter (width)
 
     // Pitch border
-    line(() => ctx.strokeRect(pad, pad, pW, pH));
+    stroke(() => ctx.strokeRect(pad, pad, pW, pH));
 
     // Halfway line
-    line(() => { ctx.beginPath(); ctx.moveTo(W / 2, pad); ctx.lineTo(W / 2, H - pad); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.moveTo(W / 2, pad); ctx.lineTo(W / 2, H - pad); ctx.stroke(); });
 
-    // Center circle (9.15m radius on 105m pitch → 9.15/105 * pW)
-    const centerR = (9.15 / 105) * pW;
-    line(() => { ctx.beginPath(); ctx.arc(W / 2, H / 2, centerR, 0, Math.PI * 2); ctx.stroke(); });
+    // Center circle (9.15m radius)
+    const centerR = 9.15 * sx;
+    stroke(() => { ctx.beginPath(); ctx.arc(W / 2, H / 2, centerR, 0, Math.PI * 2); ctx.stroke(); });
 
     // Center spot
     ctx.fillStyle = "rgba(255,255,255,0.9)";
-    fill(() => { ctx.beginPath(); ctx.arc(W / 2, H / 2, 6, 0, Math.PI * 2); ctx.fill(); });
+    fill(() => { ctx.beginPath(); ctx.arc(W / 2, H / 2, 3, 0, Math.PI * 2); ctx.fill(); });
 
-    // Penalty areas (16.5m × 40.32m)
-    const paW = (16.5 / 105) * pW;
-    const paH = (40.32 / 68) * pH;
+    // Penalty areas (16.5m deep × 40.32m wide)
+    const paW = 16.5 * sx;
+    const paH = 40.32 * sy;
     const paY = (H - paH) / 2;
-    line(() => { ctx.beginPath(); ctx.rect(pad, paY, paW, paH); ctx.stroke(); });
-    line(() => { ctx.beginPath(); ctx.rect(W - pad - paW, paY, paW, paH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(pad, paY, paW, paH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(W - pad - paW, paY, paW, paH); ctx.stroke(); });
 
-    // Goal areas (5.5m × 18.32m)
-    const gaW = (5.5 / 105) * pW;
-    const gaH = (18.32 / 68) * pH;
+    // Goal areas (5.5m deep × 18.32m wide)
+    const gaW = 5.5 * sx;
+    const gaH = 18.32 * sy;
     const gaY = (H - gaH) / 2;
-    line(() => { ctx.beginPath(); ctx.rect(pad, gaY, gaW, gaH); ctx.stroke(); });
-    line(() => { ctx.beginPath(); ctx.rect(W - pad - gaW, gaY, gaW, gaH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(pad, gaY, gaW, gaH); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.rect(W - pad - gaW, gaY, gaW, gaH); ctx.stroke(); });
 
     // Penalty spots (11m from goal line)
-    const penX1 = pad + (11 / 105) * pW;
-    const penX2 = W - pad - (11 / 105) * pW;
-    fill(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, 5, 0, Math.PI * 2); ctx.fill(); });
-    fill(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, 5, 0, Math.PI * 2); ctx.fill(); });
+    const penX1 = pad + 11 * sx;
+    const penX2 = W - pad - 11 * sx;
+    fill(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, 3, 0, Math.PI * 2); ctx.fill(); });
+    fill(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, 3, 0, Math.PI * 2); ctx.fill(); });
 
-    // Penalty arcs (outside penalty area, 9.15m radius)
-    const arcR = centerR;
+    // Penalty arcs (9.15m radius, outside penalty area)
+    const arcR = 9.15 * sx;
     ctx.save();
     ctx.beginPath();
     ctx.rect(pad + paW, pad, pW - paW * 2, pH);
     ctx.clip();
-    line(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.arc(penX1, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
     ctx.restore();
 
     ctx.save();
     ctx.beginPath();
     ctx.rect(pad, pad, pW - paW * 2, pH);
     ctx.clip();
-    line(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
+    stroke(() => { ctx.beginPath(); ctx.arc(penX2, H / 2, arcR, 0, Math.PI * 2); ctx.stroke(); });
     ctx.restore();
 
-    // Corner arcs (1m radius → 1/105 * pW)
-    const cornerR = (1 / 105) * pW;
+    // Corner arcs (1m radius)
+    const cornerR = 1 * sx;
     const corners = [
       [pad, pad, 0, Math.PI / 2],
       [W - pad, pad, Math.PI / 2, Math.PI],
@@ -193,7 +196,7 @@ const GrassPitch = memo(function GrassPitch() {
       [pad, H - pad, -Math.PI / 2, 0],
     ] as const;
     for (const [cx, cy, a1, a2] of corners) {
-      line(() => { ctx.beginPath(); ctx.arc(cx, cy, cornerR, a1, a2); ctx.stroke(); });
+      stroke(() => { ctx.beginPath(); ctx.arc(cx, cy, cornerR, a1, a2); ctx.stroke(); });
     }
 
     const t = new THREE.CanvasTexture(c);

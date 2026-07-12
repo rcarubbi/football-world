@@ -102,7 +102,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 relative z-20 -mt-32">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 relative z-20 -mt-48">
         <GlassPanel className="p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">

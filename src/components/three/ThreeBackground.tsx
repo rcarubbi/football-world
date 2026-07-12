@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useEffect, memo, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, useFBX } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import { useControls, folder } from "leva";
 import { Leva } from "leva";
 
@@ -297,41 +297,39 @@ function Stadium() {
 
 useGLTF.preload("/sky.glb");
 
+useGLTF.preload("/goal.glb");
+
 function SkyDome() {
-  const { scene } = useGLTF("/sky.glb");
+  const { scenes } = useGLTF("/sky.glb");
 
   const { scl, posY } = useControls("Sky", {
     scl: { value: 200, min: 10, max: 500, step: 1 },
     posY: { value: -2.2, min: -50, max: 50, step: 0.1 },
   });
 
-  const sky = useMemo(() => {
-    const g = scene.clone();
-
-    g.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.renderOrder = -1;
-        child.frustumCulled = false;
-
-        if (child.material) {
-          const oldMat = child.material as THREE.MeshStandardMaterial;
-          const tex = oldMat.emissiveMap || oldMat.map;
-          child.material = new THREE.MeshBasicMaterial({
-            map: tex,
-            side: THREE.BackSide,
-            fog: false,
-            depthWrite: false,
-            depthTest: false,
-          });
-        }
+  const tex = useMemo(() => {
+    let found: THREE.Texture | null = null;
+    scenes[0].traverse((child) => {
+      if (found) return;
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = child.material as THREE.MeshStandardMaterial;
+        found = mat.emissiveMap || mat.map || null;
       }
     });
-
-    return g;
-  }, [scene]);
+    return found;
+  }, [scenes]);
 
   return (
-    <primitive object={sky} scale={scl} position={[0, posY, 0]} />
+    <mesh scale={scl} position={[0, posY, 0]}>
+      <sphereGeometry args={[1, 64, 32]} />
+      <meshBasicMaterial
+        map={tex}
+        side={THREE.BackSide}
+        fog={false}
+        depthWrite={false}
+        depthTest={false}
+      />
+    </mesh>
   );
 }
 
@@ -340,10 +338,10 @@ function SkyDome() {
    ═══════════════════════════════════════════════════════════════════ */
 
 function Goals() {
-  const group = useFBX("/goalpost.fbx");
+  const { scene } = useGLTF("/goal.glb");
 
   const goal1 = useMemo(() => {
-    const g = group.clone();
+    const g = scene.clone();
     g.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
@@ -351,7 +349,7 @@ function Goals() {
       }
     });
     return g;
-  }, [group]);
+  }, [scene]);
 
   const goal2 = useMemo(() => goal1.clone(), [goal1]);
 

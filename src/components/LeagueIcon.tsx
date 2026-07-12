@@ -1,56 +1,32 @@
-"use client";
-
-import { useState } from "react";
-import { getLeagueIconUrl, getLeagueIconFallback } from "@/lib/league-icons";
+import { LEAGUES } from "@/lib/leagues";
 
 interface LeagueIconProps {
   slug: string;
-  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-const sizeClasses = {
-  sm: "w-6 h-6 text-xs",
-  md: "w-12 h-12 text-sm",
-  lg: "w-24 h-24 text-lg",
-};
+export function LeagueIcon({ slug, className = "" }: LeagueIconProps) {
+  const league = LEAGUES.find((l) => l.slug === slug);
 
-const LEAGUE_INITIALS: Record<string, string> = {
-  "premier-league": "PL",
-  "la-liga": "LL",
-  "bundesliga": "BL",
-  "serie-a": "SA",
-  "ligue-1": "L1",
-  "champions-league": "CL",
-  "fifa-world-cup": "WC",
-  "brasileirao-serie-a": "BRA",
-};
-
-export function LeagueIcon({ slug, size = "md", className = "" }: LeagueIconProps) {
-  const [imgSrc, setImgSrc] = useState(getLeagueIconUrl(slug));
-  const [hasError, setHasError] = useState(false);
-
-  const handleError = () => {
-    if (!hasError) {
-      setImgSrc(getLeagueIconFallback(slug));
-      setHasError(true);
-    }
-  };
-
-  if (!imgSrc) {
+  if (league?.logoUrl) {
     return (
-      <div className={`${sizeClasses[size]} flex items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 font-bold text-gray-500 ${className}`}>
-        {LEAGUE_INITIALS[slug] || slug.substring(0, 2).toUpperCase()}
+      <div
+        className={`w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden border border-border ${className}`}
+      >
+        <img
+          src={league.logoUrl}
+          alt={league.name}
+          className="w-8 h-8 object-contain"
+        />
       </div>
     );
   }
 
   return (
-    <img
-      src={imgSrc}
-      alt={`League icon`}
-      className={`${sizeClasses[size]} object-contain ${className}`}
-      onError={handleError}
-    />
+    <div
+      className={`w-12 h-12 rounded-xl bg-gray-600 text-white flex items-center justify-center text-sm font-bold shrink-0 ${className}`}
+    >
+      ?
+    </div>
   );
 }

@@ -1,47 +1,29 @@
-import { HTMLAttributes, forwardRef } from "react";
+import { ReactNode } from "react";
 
-type CardProps = HTMLAttributes<HTMLDivElement>;
+interface CardProps {
+  children: ReactNode;
+  className?: string;
+  hover?: boolean;
+  onClick?: () => void;
+}
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={`rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm ${className}`}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
+export function Card({ children, className = "", hover = false, onClick }: CardProps) {
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-2xl bg-card border border-border overflow-hidden ${
+        hover ? "transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-0.5" : ""
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
-Card.displayName = "Card";
+export function CardHeader({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`p-4 sm:p-6 ${className}`}>{children}</div>;
+}
 
-export const CardHeader = forwardRef<HTMLDivElement, CardProps>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={`px-6 py-4 border-b border-gray-200 dark:border-gray-800 ${className}`}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
-
-CardHeader.displayName = "CardHeader";
-
-export const CardContent = forwardRef<HTMLDivElement, CardProps>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <div ref={ref} className={`px-6 py-4 ${className}`} {...props}>
-        {children}
-      </div>
-    );
-  }
-);
-
-CardContent.displayName = "CardContent";
+export function CardContent({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`px-4 sm:px-6 pb-4 sm:pb-6 ${className}`}>{children}</div>;
+}

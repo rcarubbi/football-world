@@ -1,28 +1,26 @@
-import { HTMLAttributes, forwardRef } from "react";
+import { ReactNode } from "react";
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "success" | "warning" | "error";
+interface BadgeProps {
+  children: ReactNode;
+  variant?: "default" | "success" | "warning" | "error" | "accent" | "outline";
+  className?: string;
 }
 
-export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className = "", variant = "default", children, ...props }, ref) => {
-    const variantClasses = {
-      default: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-      success: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      warning: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-      error: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    };
+const variants = {
+  default: "bg-muted text-muted-foreground",
+  success: "bg-success/15 text-success",
+  warning: "bg-warning/15 text-warning",
+  error: "bg-destructive/15 text-destructive",
+  accent: "bg-accent/15 text-accent-foreground",
+  outline: "border border-border text-muted-foreground",
+};
 
-    return (
-      <span
-        ref={ref}
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}
-        {...props}
-      >
-        {children}
-      </span>
-    );
-  }
-);
-
-Badge.displayName = "Badge";
+export function Badge({ children, variant = "default", className = "" }: BadgeProps) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+    >
+      {children}
+    </span>
+  );
+}

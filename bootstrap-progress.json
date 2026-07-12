@@ -6,11 +6,12 @@
   "videos": true,
   "squads": true,
   "teamDetails": true,
-  "squadsSportsDB": true,
+  "squadsSportsDB": false,
   "transfers": true,
   "lineups": true,
   "playerEnrichment": true,
   "playerSupplement": true,
   "worldCup": true,
-  "worldCupTeams": true
+  "worldCupTeams": true,
+  "squadsSportsAPIPro": true
 }

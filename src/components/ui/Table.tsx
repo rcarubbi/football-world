@@ -1,77 +1,25 @@
-import { TableHTMLAttributes, HTMLAttributes, forwardRef } from "react";
+import { ReactNode } from "react";
 
-type TableProps = TableHTMLAttributes<HTMLTableElement>;
+export function Table({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border">
+      <table className={`w-full text-sm ${className}`}>{children}</table>
+    </div>
+  );
+}
 
-export const Table = forwardRef<HTMLTableElement, TableProps>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <div className="w-full overflow-x-auto">
-        <table
-          ref={ref}
-          className={`w-full text-sm text-left ${className}`}
-          {...props}
-        >
-          {children}
-        </table>
-      </div>
-    );
-  }
-);
+export function TableHeader({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <thead className={`bg-muted/50 ${className}`}>{children}</thead>;
+}
 
-Table.displayName = "Table";
+export function TableBody({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <tbody className={`divide-y divide-border ${className}`}>{children}</tbody>;
+}
 
-export const TableHeader = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <thead
-        ref={ref}
-        className={`text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400 ${className}`}
-        {...props}
-      >
-        {children}
-      </thead>
-    );
-  }
-);
+export function TableRow({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <tr className={`hover:bg-muted/30 transition-colors ${className}`}>{children}</tr>;
+}
 
-TableHeader.displayName = "TableHeader";
-
-export const TableBody = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <tbody ref={ref} className={className} {...props}>
-        {children}
-      </tbody>
-    );
-  }
-);
-
-TableBody.displayName = "TableBody";
-
-export const TableRow = forwardRef<HTMLTableRowElement, HTMLAttributes<HTMLTableRowElement>>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <tr
-        ref={ref}
-        className={`border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${className}`}
-        {...props}
-      >
-        {children}
-      </tr>
-    );
-  }
-);
-
-TableRow.displayName = "TableRow";
-
-export const TableCell = forwardRef<HTMLTableCellElement, HTMLAttributes<HTMLTableCellElement>>(
-  ({ className = "", children, ...props }, ref) => {
-    return (
-      <td ref={ref} className={`px-6 py-4 ${className}`} {...props}>
-        {children}
-      </td>
-    );
-  }
-);
-
-TableCell.displayName = "TableCell";
+export function TableCell({ children, className = "" }: { children?: ReactNode; className?: string }) {
+  return <td className={`px-2 py-3 ${className}`}>{children}</td>;
+}

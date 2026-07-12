@@ -8,6 +8,7 @@ export interface Standing {
   team_id: number | null;
   team_name: string | null;
   team_badge: string | null;
+  team_slug: string | null;
   played: number;
   won: number;
   drawn: number;
@@ -67,7 +68,11 @@ export async function findStandingsByLeague(
 ): Promise<Standing[]> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: "SELECT * FROM league_standings WHERE league_slug = ? ORDER BY position",
+    sql: `SELECT ls.*, t.slug as team_slug
+          FROM league_standings ls
+          LEFT JOIN teams t ON ls.team_id = t.id
+          WHERE ls.league_slug = ?
+          ORDER BY ls.position`,
     args: [leagueSlug],
   });
   return result.rows as unknown as Standing[];

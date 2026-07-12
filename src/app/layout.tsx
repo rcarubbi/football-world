@@ -1,25 +1,26 @@
 import type { Metadata } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Russo_One, Chakra_Petch } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ClientLayout } from "@/components/ClientLayout";
 
-const barlow = Barlow({
-  variable: "--font-barlow",
+const russoOne = Russo_One({
+  variable: "--font-russo-one",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const chakraPetch = Chakra_Petch({
+  variable: "--font-chakra-petch",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
 
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
 export const metadata: Metadata = {
-  title: "Football Wiki Portal",
-  description: "Your comprehensive guide to the world's most popular football leagues",
+  title: "Football World",
+  description: "Your complete guide to world football — leagues, teams, players and much more",
 };
 
 export default function RootLayout({
@@ -30,14 +31,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${barlow.variable} ${barlowCondensed.variable} h-full antialiased`}
+      className={`${russoOne.variable} ${chakraPetch.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <body className="min-h-full">
         <ThemeProvider>
-          <Navbar />
-          <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
-          <Footer />
+          <ClientLayout>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </ClientLayout>
         </ThemeProvider>
       </body>
     </html>

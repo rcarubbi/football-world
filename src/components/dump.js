@@ -1,0 +1,1 @@
+const fs = require('fs'); const content = fs.readFileSync(__dirname + '/ThreeBackground.tsx', 'utf-8'); const lines = content.split('\n'); for (let i = 197; i < 248; i++) { console.log(i+1 + ': ' + JSON.stringify(lines[i]) + '  len=' + lines[i].length); }

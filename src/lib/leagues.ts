@@ -5,6 +5,7 @@ export interface LeagueConfig {
   sportsdbId: string;
   footballDataCode: string;
   apiFootballId: number;
+  logoUrl: string;
 }
 
 export const LEAGUES: LeagueConfig[] = [
@@ -15,6 +16,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4328",
     footballDataCode: "PL",
     apiFootballId: 39,
+    logoUrl: "/images/leagues/premier-league.png",
   },
   {
     slug: "la-liga",
@@ -23,6 +25,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4335",
     footballDataCode: "PD",
     apiFootballId: 140,
+    logoUrl: "/images/leagues/la-liga.png",
   },
   {
     slug: "bundesliga",
@@ -31,6 +34,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4331",
     footballDataCode: "BL1",
     apiFootballId: 78,
+    logoUrl: "/images/leagues/bundesliga.png",
   },
   {
     slug: "serie-a",
@@ -39,6 +43,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4332",
     footballDataCode: "SA",
     apiFootballId: 135,
+    logoUrl: "/images/leagues/serie-a.png",
   },
   {
     slug: "ligue-1",
@@ -47,6 +52,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4334",
     footballDataCode: "FL1",
     apiFootballId: 61,
+    logoUrl: "/images/leagues/ligue-1.png",
   },
   {
     slug: "champions-league",
@@ -55,6 +61,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4480",
     footballDataCode: "CL",
     apiFootballId: 2,
+    logoUrl: "/images/leagues/champions-league.png",
   },
   {
     slug: "fifa-world-cup",
@@ -63,6 +70,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4442",
     footballDataCode: "WC",
     apiFootballId: 1,
+    logoUrl: "/images/leagues/fifa-world-cup.png",
   },
   {
     slug: "brasileirao-serie-a",
@@ -71,6 +79,7 @@ export const LEAGUES: LeagueConfig[] = [
     sportsdbId: "4340",
     footballDataCode: "BSA",
     apiFootballId: 71,
+    logoUrl: "/images/leagues/brasileirao-serie-a.png",
   },
 ];
 

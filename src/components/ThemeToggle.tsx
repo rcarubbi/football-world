@@ -18,7 +18,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+      <button className="p-2 rounded-lg bg-muted">
         <div className="w-5 h-5" />
       </button>
     );
@@ -27,13 +27,13 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
       aria-label="Toggle theme"
     >
       {theme === "dark" ? (
-        <Sun className="w-5 h-5 text-amber-500" />
+        <Sun className="w-5 h-5 text-accent" />
       ) : (
-        <Moon className="w-5 h-5 text-blue-900" />
+        <Moon className="w-5 h-5 text-muted-foreground" />
       )}
     </button>
   );

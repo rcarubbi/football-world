@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useMemo, useEffect, memo } from "react";
+import { useRef, useMemo, useEffect, memo, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { useControls } from "leva";
+import { Leva } from "leva";
 
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -431,17 +432,28 @@ const Scene = memo(function Scene() {
 
 export function ThreeBackground() {
   const { interactive } = use3DInteractive();
+  const [levaHidden, setLevaHidden] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-0" style={{ pointerEvents: interactive ? "auto" : "none" }}>
-      <Canvas
-        camera={{ position: [0, 1.5, 5.5], fov: 42 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        dpr={[1, 2]}
-        shadows="percentage"
+    <>
+      <Leva hidden={levaHidden} />
+      <button
+        onClick={() => setLevaHidden((h) => !h)}
+        className="fixed top-2 right-2 z-50 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/80"
+        style={{ pointerEvents: "auto" }}
       >
-        <Scene />
-      </Canvas>
-    </div>
+        {levaHidden ? "Show Controls" : "Hide Controls"}
+      </button>
+      <div className="fixed inset-0 z-0" style={{ pointerEvents: interactive ? "auto" : "none" }}>
+        <Canvas
+          camera={{ position: [0, 1.5, 5.5], fov: 42 }}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          dpr={[1, 2]}
+          shadows="percentage"
+        >
+          <Scene />
+        </Canvas>
+      </div>
+    </>
   );
 }

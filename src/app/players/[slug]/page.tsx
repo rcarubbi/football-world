@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTursoClient } from "@/lib/turso/client";
 import { getFlagUrl } from "@/lib/flags";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, Star, Trophy, Calendar, Ruler, Weight } from "lucide-react";
 import type { Metadata } from "next";
@@ -54,7 +55,7 @@ export default async function PlayerDetailPage({ params }: PageProps) {
   const { player, honours, formerTeams, currentTeam } = data;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <GlassPanel className="max-w-4xl mx-auto px-4 sm:px-6 py-8 m-4">
       <Link href="/players" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Players
       </Link>
@@ -200,6 +201,6 @@ export default async function PlayerDetailPage({ params }: PageProps) {
           </Card>
         ) : null}
       </div>
-    </div>
+    </GlassPanel>
   );
 }

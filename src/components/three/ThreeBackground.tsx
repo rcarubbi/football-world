@@ -694,11 +694,12 @@ const Scene = memo(function Scene() {
         target={[0, -0.3, 0]}
       />
 
-      {/* Post-processing */}
+      {/* Post-processing — temporarily disabled to test stadium textures
       <EffectComposer>
         <Bloom luminanceThreshold={bloomThreshold} luminanceSmoothing={bloomSmoothing} intensity={bloomIntensity} />
         <Vignette offset={vignetteOffset} darkness={vignetteDarkness} />
       </EffectComposer>
+      */}
     </>
   );
 });

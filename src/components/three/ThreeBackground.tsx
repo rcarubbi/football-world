@@ -472,7 +472,11 @@ const Scene = memo(function Scene() {
     }),
   }));
 
-  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
+  const { light1X, light1Y, light1Z, light2X, light2Y, light2Z, lightIntensity, sunIntensity, sunX, sunY, sunZ, showSunHelper, showPost1Helper, showPost2Helper } = useControls("Lights", {
+    sunX: { value: 5, min: -20, max: 20, step: 0.1 },
+    sunY: { value: 8, min: 0, max: 20, step: 0.1 },
+    sunZ: { value: 3, min: -20, max: 20, step: 0.1 },
+    sunIntensity: { value: 1.5, min: 0, max: 20, step: 0.1 },
     light1X: { value: 2.6, min: -10, max: 10, step: 0.1 },
     light1Y: { value: 1.61, min: 0, max: 10, step: 0.1 },
     light1Z: { value: 2.34, min: -10, max: 10, step: 0.1 },
@@ -480,7 +484,6 @@ const Scene = memo(function Scene() {
     light2Y: { value: 1.65, min: 0, max: 10, step: 0.1 },
     light2Z: { value: 2.25, min: -10, max: 10, step: 0.1 },
     lightIntensity: { value: 2.2, min: 0, max: 20, step: 0.1 },
-    sunIntensity: { value: 1.5, min: 0, max: 20, step: 0.1 },
     showSunHelper: false,
     showPost1Helper: false,
     showPost2Helper: false,
@@ -715,7 +718,7 @@ const Scene = memo(function Scene() {
       <ambientLight intensity={isDark ? 0.3 : 0.5} color={colors.ambient} />
       <directionalLight
         ref={dirLightRef}
-        position={[5, 8, 3]}
+        position={[sunX, sunY, sunZ]}
         intensity={sunIntensity}
         color="#FFF5E6"
         castShadow

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PlayerSilhouette } from "./PlayerSilhouette";
+
+const FALLBACK_SRC = "/images/players/placeholder.png";
 
 interface PlayerAvatarProps {
   photoUrl: string | null | undefined;
@@ -10,18 +11,14 @@ interface PlayerAvatarProps {
 }
 
 export function PlayerAvatar({ photoUrl, name, className = "w-12 h-12" }: PlayerAvatarProps) {
-  const [imgFailed, setImgFailed] = useState(false);
-
-  if (!photoUrl || imgFailed) {
-    return <PlayerSilhouette className={className} />;
-  }
+  const [src, setSrc] = useState(photoUrl || FALLBACK_SRC);
 
   return (
     <img
-      src={photoUrl}
+      src={src}
       alt={name}
       className={className}
-      onError={() => setImgFailed(true)}
+      onError={() => setSrc(FALLBACK_SRC)}
     />
   );
 }

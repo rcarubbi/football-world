@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { getTursoClient } from "@/lib/turso/client";
 import { PlayersGrid } from "@/components/PlayersGrid";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Star } from "lucide-react";
-import { stripAccents, sqlStripAccents } from "@/lib/utils";
+
 import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
+import { countPlayersWithFilters, findPlayersFiltered } from "@/lib/db/players";
 
 export const metadata: Metadata = {
   title: "Players | Football World",
@@ -25,40 +25,15 @@ export default async function JogadoresPage({
   const searchQuery = params.q;
   const positionFilter = params.position;
 
-  const client = getTursoClient();
+  const filters = {
+    query: searchQuery,
+    position: positionFilter,
+  };
 
-  const conditions: string[] = [];
-  const args: (string | number)[] = [];
-
-  if (searchQuery) {
-    conditions.push(`${sqlStripAccents("p.name")} LIKE ?`);
-    args.push(`%${stripAccents(searchQuery).toLowerCase()}%`);
-  }
-  if (positionFilter) {
-    conditions.push("LOWER(p.position) = ?");
-    args.push(positionFilter.toLowerCase());
-  }
-
-  const where = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
-
-  const countResult = await client.execute({
-    sql: `SELECT COUNT(*) as n FROM players p ${where}`,
-    args,
-  });
-  const totalCount = countResult.rows[0].n as number;
-
-  const initialResult = await client.execute({
-    sql: `
-      SELECT p.id, p.name, p.slug, p.photo_url, p.position, p.nationality,
-             t.name as team_name, t.badge_url as team_badge
-      FROM players p
-      LEFT JOIN teams t ON p.team_id = t.id
-      ${where}
-      ORDER BY p.name
-      LIMIT 30
-    `,
-    args,
-  });
+  const [totalCount, initialPlayers] = await Promise.all([
+    countPlayersWithFilters(filters),
+    findPlayersFiltered(filters, 30),
+  ]);
 
   const positions = ["Goalkeeper", "Defender", "Midfielder", "Forward", "Attacker"];
 
@@ -101,7 +76,7 @@ export default async function JogadoresPage({
 
       <PlayersGrid
         key={`${searchQuery || ""}-${positionFilter || ""}`}
-        initialPlayers={initialResult.rows.map((r) => ({
+        initialPlayers={initialPlayers.map((r) => ({
           id: r.id as number,
           name: r.name as string,
           slug: r.slug as string,

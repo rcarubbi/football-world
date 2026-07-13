@@ -19,6 +19,12 @@ export interface Match {
   venue: string | null;
 }
 
+export async function countMatches(): Promise<number> {
+  const client = getTursoClient();
+  const result = await client.execute("SELECT COUNT(*) as n FROM matches");
+  return Number(result.rows[0]?.n ?? 0);
+}
+
 export async function upsertMatch(match: Partial<Match>): Promise<number> {
   const client = getTursoClient();
   const result = await client.execute({
@@ -120,4 +126,59 @@ export async function findRecentMatches(
     args: [leagueSlug, limit],
   });
   return result.rows as unknown as Match[];
+}
+
+export async function findRecentFinishedMatchesWithBadges(limit = 6): Promise<Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug
+      FROM matches m
+      LEFT JOIN teams t1 ON m.home_team_name = t1.name
+      LEFT JOIN teams t2 ON m.away_team_name = t2.name
+      WHERE m.status = 'FINISHED'
+      ORDER BY m.match_date DESC LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows as unknown as Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>;
+}
+
+export async function findRecentMatchesWithBadgesByLeague(leagueSlug: string, limit = 10): Promise<Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date < date('now') ORDER BY m.match_date DESC LIMIT ?`,
+    args: [leagueSlug, limit],
+  });
+  return result.rows as unknown as Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>;
+}
+
+export async function findUpcomingMatchesWithBadgesByLeague(leagueSlug: string, limit = 10): Promise<Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date >= date('now') ORDER BY m.match_date ASC LIMIT ?`,
+    args: [leagueSlug, limit],
+  });
+  return result.rows as unknown as Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>;
+}
+
+export async function findMatchesWithBadgesByTeamName(teamName: string, limit = 10): Promise<Array<Match & { home_badge: string | null; away_badge: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT m.*, t1.badge_url as home_badge, t2.badge_url as away_badge
+            FROM matches m
+            LEFT JOIN teams t1 ON m.home_team_name = t1.name
+            LEFT JOIN teams t2 ON m.away_team_name = t2.name
+            WHERE m.home_team_name = ? OR m.away_team_name = ?
+            ORDER BY m.match_date DESC LIMIT ?`,
+    args: [teamName, teamName, limit],
+  });
+  return result.rows as unknown as Array<Match & { home_badge: string | null; away_badge: string | null }>;
+}
+
+export async function findMatchByApifootballId(apifootballId: string): Promise<Match | null> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: "SELECT id FROM matches WHERE apifootball_id = ?",
+    args: [apifootballId],
+  });
+  return (result.rows[0] as unknown as Match) ?? null;
 }

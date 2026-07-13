@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getTursoClient } from "@/lib/turso/client";
 import { Card } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LeagueIcon } from "@/components/LeagueIcon";
@@ -8,6 +7,7 @@ import { stripAccents } from "@/lib/utils";
 import { LEAGUES } from "@/lib/leagues";
 import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
+import { findAllTeamsWithPlayerCount } from "@/lib/db/teams";
 
 export const metadata: Metadata = {
   title: "Teams | Football World",
@@ -18,19 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-async function getAllTeams() {
-  const client = getTursoClient();
-  const result = await client.execute(`
-    SELECT t.id, t.name, t.slug, t.badge_url, t.league_slug, t.stadium,
-           COUNT(p.id) as player_count
-    FROM teams t
-    LEFT JOIN players p ON p.team_id = t.id
-    GROUP BY t.id
-    ORDER BY t.name
-  `);
-  return result.rows;
-}
-
 export default async function TimesPage({
   searchParams,
 }: {
@@ -40,7 +27,7 @@ export default async function TimesPage({
   const leagueFilter = params.league;
   const searchQuery = params.q;
 
-  let teams = await getAllTeams();
+  let teams = await findAllTeamsWithPlayerCount();
 
   const leagueCounts = teams.reduce((acc, t) => {
     const slug = t.league_slug as string;

@@ -74,3 +74,9 @@ export async function findRecentVideos(limit = 20): Promise<Video[]> {
   });
   return result.rows as unknown as Video[];
 }
+
+export async function countVideos(): Promise<number> {
+  const client = getTursoClient();
+  const result = await client.execute("SELECT COUNT(*) as n FROM videos");
+  return Number(result.rows[0]?.n ?? 0);
+}

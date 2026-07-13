@@ -40,8 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
-
 # large 3D models
 stadium3dmodels/
 sky3dModels/
@@ -50,3 +48,6 @@ sky3dModels/
 local.db
 
 football-world.db
+
+# bootstrap progress
+bootstrap-progress.json

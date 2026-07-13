@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTursoClient } from "@/lib/turso/client";
 import { getFlagUrl } from "@/lib/flags";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
-import { Star, Trophy, Calendar, Ruler, Weight } from "lucide-react";
+import { Trophy, Calendar, Ruler, Weight } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { PlayerSilhouette } from "@/components/PlayerSilhouette";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { Metadata } from "next";
+import { findPlayerBySlug } from "@/lib/db/players";
+import { findPlayerHonours, findPlayerFormerTeams } from "@/lib/db/players";
+import { findTeamById } from "@/lib/db/teams";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -18,9 +20,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const client = getTursoClient();
-  const result = await client.execute({ sql: "SELECT name, photo_url FROM players WHERE slug = ?", args: [slug] });
-  const player = result.rows[0];
+  const player = await findPlayerBySlug(slug);
   if (!player) return { title: "Player not found" };
   return {
     title: `${player.name} | Football World`,
@@ -34,25 +34,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 async function getPlayerData(slug: string) {
-  const client = getTursoClient();
-
-  const playerResult = await client.execute({ sql: "SELECT * FROM players WHERE slug = ?", args: [slug] });
-  if (playerResult.rows.length === 0) return null;
-  const player = playerResult.rows[0];
+  const player = await findPlayerBySlug(slug);
+  if (!player) return null;
 
   const [honours, formerTeams, team] = await Promise.all([
-    client.execute({ sql: "SELECT * FROM player_honours WHERE player_id = ? ORDER BY season DESC", args: [player.id as number] }),
-    client.execute({ sql: "SELECT * FROM player_former_teams WHERE player_id = ? ORDER BY joined DESC", args: [player.id as number] }),
-    player.team_id
-      ? client.execute({ sql: "SELECT * FROM teams WHERE id = ?", args: [player.team_id as number] })
-      : Promise.resolve({ rows: [] }),
+    findPlayerHonours(player.id),
+    findPlayerFormerTeams(player.id),
+    player.team_id ? findTeamById(player.team_id as number) : Promise.resolve(null),
   ]);
 
   return {
     player,
-    honours: honours.rows,
-    formerTeams: formerTeams.rows,
-    currentTeam: team.rows[0] || null,
+    honours,
+    formerTeams,
+    currentTeam: team,
   };
 }
 
@@ -76,15 +71,11 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
       </div>
 
       <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-        {player.photo_url ? (
-          <img
-            src={player.photo_url as string}
-            alt={player.name as string}
-            className="w-32 h-32 rounded-2xl object-cover border-2 border-border"
-          />
-        ) : (
-          <PlayerSilhouette className="w-32 h-32 rounded-2xl border-2 border-border" />
-        )}
+        <PlayerAvatar
+          photoUrl={player.photo_url as string}
+          name={player.name as string}
+          className="w-32 h-32 rounded-2xl object-cover border-2 border-border"
+        />
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3 mt-2">
             {player.position ? <Badge variant="accent">{player.position as string}</Badge> : null}

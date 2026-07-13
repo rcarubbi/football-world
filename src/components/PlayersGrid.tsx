@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { getFlagUrl } from "@/lib/flags";
 import { Loader2, Search } from "lucide-react";
 
@@ -79,18 +80,11 @@ export function PlayersGrid({
         {players.map((player) => (
           <Link key={`${player.slug}-${player.id}`} href={`/players/${player.slug}?from=/players`}>
             <Card hover className="p-4 text-center h-full">
-              {player.photo_url ? (
-                <img
-                  src={player.photo_url}
-                  alt={player.name}
-                  className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-2 border-border"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-3 flex items-center justify-center">
-                  <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none"><circle cx="50" cy="35" r="14" className="fill-muted-foreground/30" /><path d="M25 85c0-13.8 11.2-25 25-25s25 11.2 25 25" className="fill-muted-foreground/30" /></svg>
-                </div>
-              )}
+              <PlayerAvatar
+                photoUrl={player.photo_url}
+                name={player.name}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-2 border-border"
+              />
               <div className="font-medium text-sm leading-tight">{player.name}</div>
               <div className="text-xs text-red-400 dark:text-red-300 mt-1">{player.position || "N/A"}</div>
               {player.team_name && (

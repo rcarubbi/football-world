@@ -1,48 +1,37 @@
 import Link from "next/link";
 import { LEAGUES } from "@/lib/leagues";
-import { getTursoClient } from "@/lib/turso/client";
 import { LeagueIcon } from "@/components/LeagueIcon";
 import { Card } from "@/components/ui/Card";
 import { HeroInteractive } from "@/components/three/HeroInteractive";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Trophy, Users, Star, Video, ChevronRight, Calendar, TrendingUp } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
+import { countTeams } from "@/lib/db/teams";
+import { countPlayers } from "@/lib/db/players";
+import { countMatches } from "@/lib/db/matches";
+import { countVideos } from "@/lib/db/videos";
+import { findRecentFinishedMatchesWithBadges } from "@/lib/db/matches";
+import { findTopTeamsWithPlayerCount } from "@/lib/db/teams";
 
 async function getHomeData() {
-  const client = getTursoClient();
-
   const [teamsCount, playersCount, matchesCount, videosCount, recentMatches, topTeams] = await Promise.all([
-    client.execute("SELECT COUNT(*) as n FROM teams"),
-    client.execute("SELECT COUNT(*) as n FROM players"),
-    client.execute("SELECT COUNT(*) as n FROM matches"),
-    client.execute("SELECT COUNT(*) as n FROM videos"),
-    client.execute(`
-      SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug
-      FROM matches m
-      LEFT JOIN teams t1 ON m.home_team_name = t1.name
-      LEFT JOIN teams t2 ON m.away_team_name = t2.name
-      WHERE m.status = 'FINISHED'
-      ORDER BY m.match_date DESC LIMIT 6
-    `),
-    client.execute(`
-      SELECT t.name, t.slug, t.badge_url, t.league_slug,
-             COUNT(p.id) as player_count
-      FROM teams t
-      LEFT JOIN players p ON p.team_id = t.id
-      GROUP BY t.id
-      ORDER BY player_count DESC LIMIT 8
-    `),
+    countTeams(),
+    countPlayers(),
+    countMatches(),
+    countVideos(),
+    findRecentFinishedMatchesWithBadges(6),
+    findTopTeamsWithPlayerCount(8),
   ]);
 
   return {
     stats: {
-      teams: teamsCount.rows[0].n as number,
-      players: playersCount.rows[0].n as number,
-      matches: matchesCount.rows[0].n as number,
-      videos: videosCount.rows[0].n as number,
+      teams: teamsCount,
+      players: playersCount,
+      matches: matchesCount,
+      videos: videosCount,
     },
-    recentMatches: recentMatches.rows,
-    topTeams: topTeams.rows,
+    recentMatches,
+    topTeams,
   };
 }
 
@@ -140,7 +129,7 @@ export default async function HomePage() {
             Recent Results
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.recentMatches.map((match: Record<string, unknown>) => (
+            {data.recentMatches.map((match) => (
               <Card key={match.id as number} hover className="p-4">
                 <div className="text-xs text-red-400 dark:text-red-300 mb-2">
                   {match.league_slug as string} &middot; {match.match_date as string}
@@ -185,7 +174,7 @@ export default async function HomePage() {
             Featured Teams
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {data.topTeams.map((team: Record<string, unknown>) => (
+            {data.topTeams.map((team) => (
               <Link key={team.slug as string} href={`/teams/${team.slug}?from=/`}>
                 <Card hover className="p-4 text-center">
                   {team.badge_url ? (

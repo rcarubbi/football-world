@@ -57,3 +57,33 @@ export async function findTopScorersByLeague(
   });
   return result.rows as unknown as TopScorer[];
 }
+
+export async function findTopScorersByLeagueAndSeason(
+  leagueSlug: string,
+  season: string
+): Promise<Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT ts.*, 
+            COALESCE(p.name, ts.player_name) as player_name,
+            p.photo_url, p.slug as player_slug, t.slug as team_slug 
+            FROM top_scorers ts 
+            LEFT JOIN players p ON ts.player_slug = p.slug 
+              OR p.slug LIKE ts.player_slug || '%'
+              OR ts.player_slug || '-%' = p.slug
+            LEFT JOIN teams t ON ts.team_name = t.name
+              OR t.name = ts.team_name || ' FC'
+              OR t.name || ' FC' = ts.team_name
+              OR t.name = 'Manchester City FC' AND ts.team_name IN ('Manchester City')
+              OR t.name = 'Manchester United FC' AND ts.team_name IN ('Manchester United')
+              OR t.name = 'Tottenham Hotspur FC' AND ts.team_name IN ('Tottenham Hotspur')
+              OR t.name = 'Newcastle United FC' AND ts.team_name IN ('Newcastle')
+              OR t.name = 'Nottingham Forest FC' AND ts.team_name IN ('Nottingham Forest')
+              OR t.name = 'Wolverhampton Wanderers FC' AND ts.team_name IN ('Wolverhampton')
+              OR t.name = 'West Ham United FC' AND ts.team_name IN ('West Ham')
+              OR t.name = 'Brighton & Hove Albion FC' AND ts.team_name IN ('Brighton')
+            WHERE ts.league_slug = ? AND ts.season = ? ORDER BY ts.goals DESC LIMIT 10`,
+    args: [leagueSlug, season],
+  });
+  return result.rows as unknown as Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>;
+}

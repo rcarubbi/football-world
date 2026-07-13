@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { getTursoClient } from "@/lib/turso/client";
 import { Card } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { LeagueIcon } from "@/components/LeagueIcon";
-import { Search, Users, Star, Trophy } from "lucide-react";
-import { stripAccents, sqlStripAccents } from "@/lib/utils";
+import { Search, Users, Star } from "lucide-react";
+import { stripAccents } from "@/lib/utils";
 import { ShareButton } from "@/components/ShareButton";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { Metadata } from "next";
+import { searchTeamsByName } from "@/lib/db/teams";
+import { searchPlayersByName } from "@/lib/db/players";
 
 export const metadata: Metadata = {
   title: "Search | Football World",
@@ -21,25 +23,16 @@ export const metadata: Metadata = {
 async function searchAll(q: string) {
   if (!q || q.length < 2) return { teams: [], players: [] };
 
-  const client = getTursoClient();
   const pattern = `%${stripAccents(q).toLowerCase()}%`;
 
-  const [teamsResult, playersResult] = await Promise.all([
-    client.execute({
-      sql: `SELECT name, slug, badge_url, league_slug FROM teams WHERE ${sqlStripAccents("name")} LIKE ? ORDER BY name LIMIT 10`,
-      args: [pattern],
-    }),
-    client.execute({
-      sql: `SELECT p.name, p.slug, p.photo_url, p.position, t.name as team_name, t.slug as team_slug, t.badge_url as team_badge
-            FROM players p LEFT JOIN teams t ON p.team_id = t.id
-            WHERE ${sqlStripAccents("p.name")} LIKE ? ORDER BY p.name LIMIT 10`,
-      args: [pattern],
-    }),
+  const [teams, players] = await Promise.all([
+    searchTeamsByName(pattern),
+    searchPlayersByName(pattern),
   ]);
 
   return {
-    teams: teamsResult.rows,
-    players: playersResult.rows,
+    teams,
+    players,
   };
 }
 
@@ -120,13 +113,7 @@ export default async function BuscaPage({
                   <Link key={player.slug as string} href={`/players/${player.slug}?from=/search?q=${encodeURIComponent(query)}`}>
                     <Card hover className="p-4">
                       <div className="flex items-center gap-3">
-                        {player.photo_url ? (
-                          <img src={player.photo_url as string} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <Star className="w-4 h-4 text-red-400/40 dark:text-red-300/40" />
-                          </div>
-                        )}
+                        <PlayerAvatar photoUrl={player.photo_url as string} name={player.name as string} className="w-10 h-10 rounded-full object-cover shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="font-medium text-sm">{player.name as string}</div>
                           <div className="flex items-center gap-2 mt-1">

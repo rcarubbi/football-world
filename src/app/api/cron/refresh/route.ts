@@ -19,17 +19,17 @@ import {
 import { searchVideos, parseDuration } from "../../../../lib/api/youtube";
 import { searchTeams, lookupAllPlayers } from "../../../../lib/api/sportsdb";
 import { upsertStanding } from "../../../../lib/db/standings";
-import { upsertMatch } from "../../../../lib/db/matches";
+import { upsertMatch, findMatchByApifootballId } from "../../../../lib/db/matches";
 import { upsertTopScorer } from "../../../../lib/db/top-scorers";
 import { upsertTransfer } from "../../../../lib/db/transfers";
 import { upsertLineup } from "../../../../lib/db/lineups";
 import { upsertVideo } from "../../../../lib/db/videos";
-import { upsertTeam } from "../../../../lib/db/teams";
+import { upsertTeam, countTeamsByLeague, findTeamsWithoutPlayers, updateTeamApifootballId, updateTeamFromSportsDB, updateTeamSportsdbId, findTeamIdByName, normalizeTeamName, findTeamsWithoutVideos } from "../../../../lib/db/teams";
+import { upsertPlayerFromApiFootball, upsertPlayerFromSportsDB, findPlayersWithoutPhotosWithTeam, updatePlayerPhoto, findPlayersWithoutPhotosNoTeam } from "../../../../lib/db/players";
 import { enrichPlayers } from "../../../../../scripts/bootstrap/enrich-players";
 import { fetchWorldCup } from "../../../../../scripts/bootstrap/fetch-world-cup";
 import { fetchWorldCupTeams } from "../../../../../scripts/bootstrap/fetch-world-cup-teams";
 import { slugify } from "../../../../lib/slugify";
-import { getTursoClient } from "../../../../lib/turso/client";
 
 interface FootballDataStanding {
   stage: string;
@@ -140,112 +140,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-const TEAM_NAME_MAP: Record<string, string> = {
-  'Man City': 'Manchester City FC',
-  'Man Utd': 'Manchester United FC',
-  'Manchester United': 'Manchester United FC',
-  'Manchester City': 'Manchester City FC',
-  'Newcastle': 'Newcastle United FC',
-  'Newcastle Utd': 'Newcastle United FC',
-  'Brighton': 'Brighton & Hove Albion FC',
-  'Brighton and Hove Albion': 'Brighton & Hove Albion FC',
-  'Spurs': 'Tottenham Hotspur FC',
-  'Tottenham': 'Tottenham Hotspur FC',
-  'Tottenham Hotspur': 'Tottenham Hotspur FC',
-  'West Ham': 'West Ham United FC',
-  'West Ham United': 'West Ham United FC',
-  'Wolves': 'Wolverhampton Wanderers FC',
-  'Wolverhampton': 'Wolverhampton Wanderers FC',
-  'Nott\'m Forest': 'Nottingham Forest FC',
-  'Nottingham Forest': 'Nottingham Forest FC',
-  'Leeds': 'Leeds United FC',
-  'Leeds United': 'Leeds United FC',
-  'Bournemouth': 'AFC Bournemouth',
-  'Burnley': 'Burnley FC',
-  'Brentford': 'Brentford FC',
-  'Fulham': 'Fulham FC',
-  'Crystal Palace': 'Crystal Palace FC',
-  'Ipswich': 'Ipswich Town FC',
-  'Ipswich Town': 'Ipswich Town FC',
-  'Bayern Munich': 'FC Bayern München',
-  'Dortmund': 'Borussia Dortmund',
-  'Leverkusen': 'Bayer 04 Leverkusen',
-  'Bayer Leverkusen': 'Bayer 04 Leverkusen',
-  'Frankfurt': 'Eintracht Frankfurt',
-  'Wolfsburg': 'VfL Wolfsburg',
-  'Stuttgart': 'VfB Stuttgart',
-  'Barcelona': 'FC Barcelona',
-  'Real Madrid': 'Real Madrid CF',
-  'Atlético Madrid': 'Atlético de Madrid',
-  'Atletico Madrid': 'Atlético de Madrid',
-  'Sevilla': 'Sevilla FC',
-  'Athletic Bilbao': 'Athletic Club',
-  'Real Sociedad': 'Real Sociedad',
-  'Betis': 'Real Betis Balompié',
-  'Real Betis': 'Real Betis Balompié',
-  'Villarreal': 'Villarreal CF',
-  'Girona': 'Girona FC',
-  'Valencia': 'Valencia CF',
-  'Celta Vigo': 'RC Celta de Vigo',
-  'Las Palmas': 'UD Las Palmas',
-  'Mallorca': 'RCD Mallorca',
-  'Osasuna': 'CA Osasuna',
-  'Alavés': 'Deportivo Alavés',
-  'Leganés': 'CD Leganés',
-  'Espanyol': 'RCD Espanyol',
-  'Juventus': 'Juventus FC',
-  'Inter': 'Inter Milan',
-  'Milan': 'AC Milan',
-  'Napoli': 'SSC Napoli',
-  'Roma': 'AS Roma',
-  'Lazio': 'SS Lazio',
-  'Atalanta': 'Atalanta BC',
-  'Fiorentina': 'ACF Fiorentina',
-  'Bologna': 'Bologna FC 1909',
-  'Monza': 'AC Monza',
-  'Torino': 'Torino FC',
-  'Genoa': 'Genoa CFC',
-  'Cagliari': 'Cagliari Calcio',
-  'Udinese': 'Udinese Calcio',
-  'Lecce': 'US Lecce',
-  'Empoli': 'Empoli FC',
-  'Verona': 'Hellas Verona FC',
-  'Parma': 'Parma Calcio 1913',
-  'Como': 'Como 1907',
-  'Venezia': 'Venezia FC',
-  'PSG': 'Paris Saint-Germain FC',
-  'Paris Saint-Germain': 'Paris Saint-Germain FC',
-  'Marseille': 'Olympique de Marseille',
-  'Lyon': 'Olympique Lyonnais',
-  'Monaco': 'AS Monaco FC',
-  'Nice': 'OGC Nice',
-  'Lille': 'LOSC Lille',
-  'Lens': 'RC Lens',
-  'Rennes': 'Stade Rennais FC',
-  'Brest': 'Stade Brestois 29',
-  'Nantes': 'FC Nantes',
-  'Strasbourg': 'RC Strasbourg Alsace',
-  'Reims': 'Stade de Reims',
-  'Montpellier': 'Montpellier HSC',
-  'Le Havre': 'Le Havre AC',
-  'Toulouse': 'Toulouse FC',
-  'Sunderland': 'Sunderland AFC',
-};
-
-function normalizeTeamName(name: string): string {
-  return TEAM_NAME_MAP[name] || name;
-}
-
-async function findTeamIdByName(name: string): Promise<{ id: number; badge_url: string | null; name: string } | null> {
-  const normalized = normalizeTeamName(name);
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: `SELECT id, badge_url, name FROM teams WHERE name = ? OR name = ? OR name = ? OR name = ? OR name = ? OR name = ? LIMIT 1`,
-    args: [normalized, name, name + ' FC', name.replace(' FC', ''), name + ' CF', name.replace(' CF', '')],
-  });
-  return result.rows.length > 0 ? { id: result.rows[0].id as number, badge_url: result.rows[0].badge_url as string | null, name: result.rows[0].name as string } : null;
-}
-
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -272,8 +166,7 @@ export async function GET(request: NextRequest) {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
-  const season = currentMonth >= 7 ? currentYear : currentYear - 1;
-  const client = getTursoClient();
+  const season = currentMonth >= 8 ? currentYear : currentYear - 1;
 
   // ─── PHASE 1: Leagues with missing teams ───────────────────────
   console.log("PHASE 1: Checking for leagues with missing teams...");
@@ -281,12 +174,9 @@ export async function GET(request: NextRequest) {
   for (const league of LEAGUES) {
     if (league.slug === "fifa-world-cup") continue;
 
-    const teamCount = await client.execute({
-      sql: `SELECT COUNT(*) as n FROM teams WHERE league_slug = ?`,
-      args: [league.slug],
-    });
+    const teamCount = await countTeamsByLeague(league.slug);
 
-    if ((teamCount.rows[0].n as number) > 0) continue;
+    if (teamCount > 0) continue;
 
     console.log(`  Fetching teams for ${league.name}...`);
     try {
@@ -325,18 +215,11 @@ export async function GET(request: NextRequest) {
   // ─── PHASE 2: Teams with missing player squads ────────────────
   console.log("PHASE 2: Fetching squads for teams without players...");
 
-  const teamsWithoutPlayers = await client.execute({
-    sql: `SELECT t.id, t.name, t.league_slug, t.thesportsdb_id, t.apifootball_id
-          FROM teams t
-          WHERE NOT EXISTS (SELECT 1 FROM players p WHERE p.team_id = t.id)
-            AND t.league_slug != 'fifa-world-cup'
-          ORDER BY t.league_slug, t.name`,
-    args: [],
-  });
+  const teamsWithoutPlayersRows = await findTeamsWithoutPlayers();
 
-  console.log(`  Found ${teamsWithoutPlayers.rows.length} teams without players`);
+  console.log(`  Found ${teamsWithoutPlayersRows.length} teams without players`);
 
-  for (const team of teamsWithoutPlayers.rows) {
+  for (const team of teamsWithoutPlayersRows) {
     const teamId = team.id as number;
     const teamName = team.name as string;
     const leagueSlug = team.league_slug as string;
@@ -348,7 +231,7 @@ export async function GET(request: NextRequest) {
       if (!apiTeamId) {
         const leagueConfig = LEAGUES.find((l) => l.slug === leagueSlug);
         if (leagueConfig && leagueConfig.apiFootballId !== 1) {
-          const apiTeams = await getTeamsByLeague(leagueConfig.apiFootballId, 2024);
+          const apiTeams = await getTeamsByLeague(leagueConfig.apiFootballId, season);
           const match = apiTeams.find(
             (t: { team: { name: string } }) =>
               t.team.name.toLowerCase() === teamName.toLowerCase() ||
@@ -356,10 +239,7 @@ export async function GET(request: NextRequest) {
           );
           if (match) {
             apiTeamId = match.team.id;
-            await client.execute({
-              sql: `UPDATE teams SET apifootball_id = ? WHERE id = ?`,
-              args: [apiTeamId.toString(), teamId],
-            });
+            await updateTeamApifootballId(teamId, apiTeamId.toString());
           }
         }
       }
@@ -371,31 +251,16 @@ export async function GET(request: NextRequest) {
             ? p.nationality.join(", ")
             : (p.nationality as unknown as string) || null;
 
-          await client.execute({
-            sql: `INSERT INTO players (
-              apifootball_id, name, slug, team_id, position,
-              nationality, height, weight, photo_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(slug) DO UPDATE SET
-              apifootball_id = COALESCE(excluded.apifootball_id, players.apifootball_id),
-              team_id = COALESCE(excluded.team_id, players.team_id),
-              position = COALESCE(excluded.position, players.position),
-              nationality = COALESCE(excluded.nationality, players.nationality),
-              height = COALESCE(excluded.height, players.height),
-              weight = COALESCE(excluded.weight, players.weight),
-              photo_url = COALESCE(excluded.photo_url, players.photo_url),
-              updated_at = datetime('now')`,
-            args: [
-              p.id.toString(),
-              p.name,
-              slugify(p.name),
-              teamId,
-              p.position || null,
-              nationality,
-              p.height || null,
-              p.weight || null,
-              p.photo || null,
-            ],
+          await upsertPlayerFromApiFootball({
+            apifootball_id: p.id.toString(),
+            name: p.name,
+            slug: slugify(p.name),
+            team_id: teamId,
+            position: p.position || null,
+            nationality,
+            height: p.height || null,
+            weight: p.weight || null,
+            photo_url: p.photo || null,
           });
         }
         if (players.length > 0) {
@@ -426,34 +291,20 @@ export async function GET(request: NextRequest) {
           tsdbId = match.idTeam;
 
           // Also enrich team details while we have them
-          await client.execute({
-            sql: `UPDATE teams SET
-              thesportsdb_id = COALESCE(NULLIF(thesportsdb_id, ''), ?),
-              badge_url = COALESCE(NULLIF(badge_url, ''), ?),
-              stadium = COALESCE(NULLIF(stadium, ''), ?),
-              location = COALESCE(NULLIF(location, ''), ?),
-              founded = COALESCE(NULLIF(founded, ''), ?),
-              wikipedia_content = COALESCE(NULLIF(wikipedia_content, ''), ?)
-            WHERE id = ?`,
-            args: [
-              match.idTeam || null,
-              match.strBadge || null,
-              match.strStadium || null,
-              match.strLocation || null,
-              match.intFormedYear || null,
-              match.strDescriptionEN || null,
-              teamId,
-            ],
+          await updateTeamFromSportsDB(teamId, {
+            thesportsdb_id: match.idTeam || null,
+            badge_url: match.strBadge || null,
+            stadium: match.strStadium || null,
+            location: match.strLocation || null,
+            founded: match.intFormedYear || null,
+            wikipedia_content: match.strDescriptionEN || null,
           });
           results.teamDetailsEnriched++;
         }
       }
 
       if (tsdbId) {
-        await client.execute({
-          sql: `UPDATE teams SET thesportsdb_id = ? WHERE id = ?`,
-          args: [tsdbId, teamId],
-        });
+        await updateTeamSportsdbId(teamId, tsdbId);
 
         const players = (await lookupAllPlayers(tsdbId)) as SportsDBPlayer[];
         const activePlayers = players.filter(
@@ -462,34 +313,18 @@ export async function GET(request: NextRequest) {
 
         for (const p of activePlayers) {
           const photo = p.strCutout || p.strThumb || p.strRender || null;
-          await client.execute({
-            sql: `INSERT INTO players (
-              thesportsdb_id, name, slug, team_id, position,
-              nationality, date_of_birth, height, weight, photo_url, description
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(slug) DO UPDATE SET
-              thesportsdb_id = COALESCE(excluded.thesportsdb_id, players.thesportsdb_id),
-              position = COALESCE(excluded.position, players.position),
-              nationality = COALESCE(excluded.nationality, players.nationality),
-              date_of_birth = COALESCE(excluded.date_of_birth, players.date_of_birth),
-              height = COALESCE(excluded.height, players.height),
-              weight = COALESCE(excluded.weight, players.weight),
-              photo_url = COALESCE(excluded.photo_url, players.photo_url),
-              description = COALESCE(excluded.description, players.description),
-              updated_at = datetime('now')`,
-            args: [
-              p.idPlayer,
-              p.strPlayer,
-              slugify(p.strPlayer),
-              teamId,
-              p.strPosition || null,
-              p.strNationality || null,
-              p.dateBorn || null,
-              p.strHeight || null,
-              p.strWeight || null,
-              photo,
-              p.strDescriptionEN || null,
-            ],
+          await upsertPlayerFromSportsDB({
+            thesportsdb_id: p.idPlayer,
+            name: p.strPlayer,
+            slug: slugify(p.strPlayer),
+            team_id: teamId,
+            position: p.strPosition || null,
+            nationality: p.strNationality || null,
+            date_of_birth: p.dateBorn || null,
+            height: p.strHeight || null,
+            weight: p.strWeight || null,
+            photo_url: photo,
+            description: p.strDescriptionEN || null,
           });
         }
         if (activePlayers.length > 0) {
@@ -512,24 +347,17 @@ export async function GET(request: NextRequest) {
   // ─── PHASE 3: Players missing photos ──────────────────────────
   console.log("PHASE 3: Enriching players without photos...");
 
-  const playersWithoutPhotos = await client.execute({
-    sql: `SELECT p.id, p.name, p.thesportsdb_id, t.thesportsdb_id AS team_tsdb_id
-          FROM players p
-          JOIN teams t ON p.team_id = t.id
-          WHERE (p.photo_url IS NULL OR p.photo_url = '')
-            AND t.thesportsdb_id IS NOT NULL
-          LIMIT 50`,
-    args: [],
-  });
+  const playersWithoutPhotosRows = await findPlayersWithoutPhotosWithTeam(50);
 
-  console.log(`  Found ${playersWithoutPhotos.rows.length} players without photos (with TSDB teams)`);
+  console.log(`  Found ${playersWithoutPhotosRows.length} players without photos (with TSDB teams)`);
 
-  for (const player of playersWithoutPhotos.rows) {
+  for (const player of playersWithoutPhotosRows) {
     try {
-      const playerId = player.id as number;
-      const playerName = player.name as string;
-      const teamTsdbId = player.team_tsdb_id as string;
+      const playerId = player.id;
+      const playerName = player.name;
+      const teamTsdbId = player.team_tsdb_id;
 
+      if (!teamTsdbId) continue;
       const players = (await lookupAllPlayers(teamTsdbId)) as SportsDBPlayer[];
       const match = players.find(
         (p) =>
@@ -540,14 +368,10 @@ export async function GET(request: NextRequest) {
       if (match) {
         const photo = match.strCutout || match.strThumb || match.strRender || null;
         if (photo) {
-          await client.execute({
-            sql: `UPDATE players SET
-              photo_url = COALESCE(NULLIF(photo_url, ''), ?),
-              thesportsdb_id = COALESCE(NULLIF(thesportsdb_id, ''), ?),
-              description = COALESCE(NULLIF(description, ''), ?),
-              updated_at = datetime('now')
-            WHERE id = ?`,
-            args: [photo, match.idPlayer || null, match.strDescriptionEN || null, playerId],
+          await updatePlayerPhoto(playerId, {
+            photo_url: photo,
+            thesportsdb_id: match.idPlayer || null,
+            description: match.strDescriptionEN || null,
           });
           results.playerPhotosEnriched++;
         }
@@ -559,16 +383,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Also try direct player lookup for those without TSDB team link
-  const playersWithoutPhotosNoTeam = await client.execute({
-    sql: `SELECT p.id, p.name, p.thesportsdb_id
-          FROM players p
-          WHERE (p.photo_url IS NULL OR p.photo_url = '')
-            AND p.thesportsdb_id IS NULL
-          LIMIT 20`,
-    args: [],
-  });
+  const playersWithoutPhotosNoTeamRows = await findPlayersWithoutPhotosNoTeam(20);
 
-  for (const player of playersWithoutPhotosNoTeam.rows) {
+  for (const player of playersWithoutPhotosNoTeamRows) {
     try {
       const searchResults = (await searchTeams(player.name as string)) as SportsDBTeam[];
       if (searchResults.length === 0) continue;
@@ -582,14 +399,10 @@ export async function GET(request: NextRequest) {
 
       if (match) {
         const photo = match.strCutout || match.strThumb || match.strRender || null;
-        await client.execute({
-          sql: `UPDATE players SET
-            photo_url = COALESCE(NULLIF(photo_url, ''), ?),
-            thesportsdb_id = COALESCE(NULLIF(thesportsdb_id, ''), ?),
-            description = COALESCE(NULLIF(description, ''), ?),
-            updated_at = datetime('now')
-          WHERE id = ?`,
-          args: [photo, match.idPlayer || null, match.strDescriptionEN || null, player.id as number],
+        await updatePlayerPhoto(player.id, {
+          photo_url: photo,
+          thesportsdb_id: match.idPlayer || null,
+          description: match.strDescriptionEN || null,
         });
         if (photo) results.playerPhotosEnriched++;
       }
@@ -612,22 +425,11 @@ export async function GET(request: NextRequest) {
 
   const currentSeasonStr = `${currentYear - 1}-${currentYear}`;
 
-  const teamsWithoutVideos = await client.execute({
-    sql: `SELECT t.id, t.name, t.league_slug
-          FROM teams t
-          WHERE t.league_slug != 'fifa-world-cup'
-            AND NOT EXISTS (
-              SELECT 1 FROM videos v
-              WHERE v.entity_type = 'team' AND v.entity_id = t.id
-            )
-          ORDER BY t.league_slug, t.name
-          LIMIT 50`,
-    args: [],
-  });
+  const teamsWithoutVideosRows = await findTeamsWithoutVideos(50);
 
-  console.log(`  Found ${teamsWithoutVideos.rows.length} teams without videos`);
+  console.log(`  Found ${teamsWithoutVideosRows.length} teams without videos`);
 
-  for (const team of teamsWithoutVideos.rows) {
+  for (const team of teamsWithoutVideosRows) {
     const teamId = team.id as number;
     const teamName = team.name as string;
     const leagueSlug = team.league_slug as string;
@@ -777,7 +579,7 @@ export async function GET(request: NextRequest) {
 
       if (bbsId) {
         try {
-          const scorers = await getTopScorersBBS(bbsId, 2025, 10);
+          const scorers = await getTopScorersBBS(bbsId, season, 10);
           for (const scorer of scorers) {
             await upsertTopScorer({
               league_slug: league.slug,
@@ -798,10 +600,9 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const apiFootballSeason = 2024;
       const scorers = (await getTopScorersAF(
         league.apiFootballId,
-        apiFootballSeason
+        season
       )) as ApiFootballScorer[];
 
       for (const scorer of scorers.slice(0, 10)) {
@@ -825,12 +626,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Refresh transfers (API-Football)
-  const apiFootballSeason = 2024;
   for (const league of LEAGUES) {
     try {
       const transfers = (await getTransfers(
         league.apiFootballId,
-        apiFootballSeason
+        season
       )) as ApiFootballTransfer[];
 
       for (const transfer of transfers.slice(0, 20)) {
@@ -865,13 +665,10 @@ export async function GET(request: NextRequest) {
       );
 
       for (const fixture of finishedFixtures.slice(0, 5)) {
-        const matchResult = await client.execute({
-          sql: "SELECT id FROM matches WHERE apifootball_id = ?",
-          args: [fixture.fixture.id.toString()],
-        });
+        const matchResult = await findMatchByApifootballId(fixture.fixture.id.toString());
 
-        if (matchResult.rows.length === 0) continue;
-        const matchId = matchResult.rows[0].id as number;
+        if (!matchResult) continue;
+        const matchId = matchResult.id;
 
         for (const lineup of fixture.lineups) {
           for (const player of lineup.startXI) {

@@ -160,7 +160,7 @@ football-world/
 │       ├── utils.ts            # stripAccents, sqlStripAccents
 │       ├── slugify.ts
 │       ├── flags.ts            # Country → flag emoji mapping
-│       └── date-format.ts
+│       └── slugify.ts
 ├── scripts/
 │   └── bootstrap/              # Full data import pipeline (15 phases)
 ├── public/                     # Static assets, favicon.svg, manifest.json
@@ -222,7 +222,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Production build |
 | `npm run bootstrap` | Full data import (resumable) |
 | `npm run validate` | Check for missing data |
-| `npm run lint` | ESLint |
+| `npm run lint` | oxlint |
 
 ---
 

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTursoClient } from "@/lib/turso/client";
 import { stripWikiMarkup } from "@/lib/utils";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -10,6 +9,12 @@ import { Users, MapPin, Calendar, Video, Trophy } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import type { Metadata } from "next";
+import { findTeamBySlug } from "@/lib/db/teams";
+import { findPlayersByTeam } from "@/lib/db/players";
+import { findMatchesWithBadgesByTeamName } from "@/lib/db/matches";
+import { findVideosByTeam } from "@/lib/db/videos";
+import { findRecentByTeam as findLineupsByTeam } from "@/lib/db/lineups";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -18,9 +23,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const client = getTursoClient();
-  const result = await client.execute({ sql: "SELECT name, badge_url FROM teams WHERE slug = ?", args: [slug] });
-  const team = result.rows[0];
+  const team = await findTeamBySlug(slug);
   if (!team) return { title: "Team not found" };
   return {
     title: `${team.name} | Football World`,
@@ -34,44 +37,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 async function getTeamData(slug: string) {
-  const client = getTursoClient();
-
-  const teamResult = await client.execute({ sql: "SELECT * FROM teams WHERE slug = ?", args: [slug] });
-  if (teamResult.rows.length === 0) return null;
-  const team = teamResult.rows[0];
+  const team = await findTeamBySlug(slug);
+  if (!team) return null;
 
   const [players, matches, videos, lineups] = await Promise.all([
-    client.execute({ sql: "SELECT * FROM players WHERE team_id = ? ORDER BY position, name", args: [team.id as number] }),
-    client.execute({
-      sql: `SELECT m.*, t1.badge_url as home_badge, t2.badge_url as away_badge
-            FROM matches m
-            LEFT JOIN teams t1 ON m.home_team_name = t1.name
-            LEFT JOIN teams t2 ON m.away_team_name = t2.name
-            WHERE m.home_team_name = ? OR m.away_team_name = ?
-            ORDER BY m.match_date DESC LIMIT 10`,
-      args: [team.name as string, team.name as string],
-    }),
-    client.execute({ sql: "SELECT * FROM videos WHERE entity_type = 'team' AND entity_id = ? ORDER BY published_at DESC LIMIT 10", args: [team.id as number] }),
-    client.execute({
-      sql: `SELECT ml.*, m.match_date, m.home_team_name, m.away_team_name
-            FROM match_lineups ml
-            JOIN matches m ON ml.match_id = m.id
-            WHERE ml.team_id = ?
-            ORDER BY m.match_date DESC, ml.position`,
-      args: [team.id as number],
-    }),
+    findPlayersByTeam(team.id),
+    findMatchesWithBadgesByTeamName(team.name, 10),
+    findVideosByTeam(team.id),
+    findLineupsByTeam(team.id, 5),
   ]);
 
   return {
     team,
-    players: players.rows,
-    matches: matches.rows,
-    videos: videos.rows,
-    lineups: lineups.rows,
+    players,
+    matches,
+    videos,
+    lineups,
   };
 }
 
-function FormationPitch({ players }: { players: Record<string, unknown>[] }) {
+function FormationPitch({ players }: { players: Array<{ player_number: number | null; player_name: string | null; position: string | null; starter: number }> }) {
   const positionMap: Record<string, { x: number; y: number }> = {
     "Goalkeeper": { x: 50, y: 90 },
     "Defender": { x: 50, y: 70 },
@@ -112,7 +97,7 @@ function FormationPitch({ players }: { players: Record<string, unknown>[] }) {
         <rect x="170" y="870" width="340" height="180" rx="0" fill="none" stroke="white" strokeWidth="3" opacity="0.6" />
         <path d="M 170 870 A 91.5 91.5 0 0 1 510 870" fill="none" stroke="white" strokeWidth="3" opacity="0.6" />
 
-        {positions.map((p: Record<string, unknown> & { x: number; y: number }, i) => {
+        {positions.map((p, i) => {
           const cx = (p.x / 100) * 680;
           const cy = (p.y / 100) * 1050;
           return (
@@ -143,7 +128,7 @@ export default async function TeamDetailPage({ params, searchParams }: PageProps
   const backHref = from || "/teams";
   const backLabel = from ? "Back" : "Back to Teams";
 
-  const starters = lineups.filter((l: Record<string, unknown>) => l.starter === 1);
+  const starters = lineups.filter((l) => l.starter === 1);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -209,13 +194,7 @@ export default async function TeamDetailPage({ params, searchParams }: PageProps
                       href={`/players/${player.slug}?from=/teams/${slug}`}
                       className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
-                      {player.photo_url ? (
-                        <img src={player.photo_url as string} alt={player.name as string} className="w-14 h-14 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
-                          {(player.name as string).split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-                        </div>
-                      )}
+                      <PlayerAvatar photoUrl={player.photo_url as string} name={player.name as string} className="w-14 h-14 rounded-full object-cover" />
                       <div className="min-w-0">
                         <div className="text-sm font-medium truncate">{player.name as string}</div>
                         <div className="text-xs text-red-400 dark:text-red-300">{player.position as string || "N/A"}</div>
@@ -237,7 +216,7 @@ export default async function TeamDetailPage({ params, searchParams }: PageProps
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {matches.map((match: Record<string, unknown>) => (
+                  {matches.map((match) => (
                     <div key={match.id as number} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         {match.home_badge ? <img src={match.home_badge as string} alt="" className="w-6 h-6 object-contain shrink-0" /> : null}

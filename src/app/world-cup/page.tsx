@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getTursoClient } from "@/lib/turso/client";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
@@ -11,6 +10,7 @@ import { WorldCupYearSelector } from "@/components/WorldCupYearSelector";
 import { getWorldCupEdition } from "@/lib/world-cup-data";
 import { getFlagUrl } from "@/lib/flags";
 import type { Metadata } from "next";
+import { findAllWorldCups, findWorldCupByYear, findWorldCupMatches, findWorldCupTeams } from "@/lib/db/world-cup";
 
 function FlagImg({ team, size = 20 }: { team: string | null; size?: number }) {
   if (!team) return null;
@@ -46,36 +46,22 @@ interface MatchRow {
 }
 
 async function getAllWorldCups() {
-  const client = getTursoClient();
-  const result = await client.execute("SELECT * FROM world_cups ORDER BY year DESC");
-  return result.rows;
+  return findAllWorldCups();
 }
 
 async function getWorldCupData(year: number) {
-  const client = getTursoClient();
+  const cup = await findWorldCupByYear(year);
+  if (!cup) return null;
 
-  const cupResult = await client.execute({
-    sql: "SELECT * FROM world_cups WHERE year = ?",
-    args: [year],
-  });
-  if (cupResult.rows.length === 0) return null;
-  const cup = cupResult.rows[0];
-
-  const [matchesResult, teamsResult] = await Promise.all([
-    client.execute({
-      sql: "SELECT * FROM world_cup_matches WHERE world_cup_id = ? ORDER BY match_date",
-      args: [cup.id as number],
-    }),
-    client.execute({
-      sql: "SELECT * FROM world_cup_teams WHERE world_cup_id = ? ORDER BY team_name",
-      args: [cup.id as number],
-    }),
+  const [matches, teams] = await Promise.all([
+    findWorldCupMatches(cup.id),
+    findWorldCupTeams(cup.id),
   ]);
 
   return {
     cup,
-    matches: matchesResult.rows as unknown as MatchRow[],
-    teams: teamsResult.rows,
+    matches,
+    teams,
   };
 }
 
@@ -363,11 +349,13 @@ export default async function WorldCupPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {teams.map((team: Record<string, unknown>) => (
+              {teams.map((team) => (
                 <div key={team.id as number} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
                   {team.badge_url ? (
                     <img src={team.badge_url as string} alt="" className="w-6 h-6 object-contain" />
-                  ) : null}
+                  ) : (
+                    <FlagImg team={team.team_name as string} size={24} />
+                  )}
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{team.team_name as string}</div>
                     {team.group_name ? (

@@ -3,7 +3,6 @@ import { getTursoClient } from "../turso/client";
 export interface Match {
   id: number;
   football_data_id: string | null;
-  apifootball_id: string | null;
   league_slug: string;
   season: string | null;
   matchday: number | null;
@@ -29,12 +28,11 @@ export async function upsertMatch(match: Partial<Match>): Promise<number> {
   const client = getTursoClient();
   const result = await client.execute({
     sql: `INSERT INTO matches (
-      football_data_id, apifootball_id, league_slug, season, matchday, status,
+      football_data_id, league_slug, season, matchday, status,
       home_team_id, home_team_name, home_score, away_team_id, away_team_name,
       away_score, match_date, match_time, venue
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(football_data_id) DO UPDATE SET
-      apifootball_id = excluded.apifootball_id,
       season = excluded.season,
       matchday = excluded.matchday,
       status = excluded.status,
@@ -50,7 +48,6 @@ export async function upsertMatch(match: Partial<Match>): Promise<number> {
     RETURNING id`,
     args: [
       match.football_data_id ?? null,
-      match.apifootball_id ?? null,
       match.league_slug ?? "",
       match.season ?? null,
       match.matchday ?? null,
@@ -145,7 +142,25 @@ export async function findRecentFinishedMatchesWithBadges(limit = 6): Promise<Ar
 export async function findRecentMatchesWithBadgesByLeague(leagueSlug: string, limit = 10): Promise<Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date < date('now') ORDER BY m.match_date DESC LIMIT ?`,
+    sql: `SELECT m.*,
+      COALESCE(t1.badge_url, t3.badge_url) as home_badge,
+      COALESCE(t1.slug, t3.slug) as home_team_slug,
+      COALESCE(t2.badge_url, t4.badge_url) as away_badge,
+      COALESCE(t2.slug, t4.slug) as away_team_slug
+      FROM matches m
+      LEFT JOIN teams t1 ON m.home_team_name = t1.name
+      LEFT JOIN teams t3 ON t1.id IS NULL AND (
+        REPLACE(REPLACE(REPLACE(REPLACE(m.home_team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ') = REPLACE(REPLACE(REPLACE(REPLACE(t3.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+        OR m.home_team_name LIKE t3.name || ' %'
+        OR t3.name LIKE m.home_team_name || ' %'
+      )
+      LEFT JOIN teams t2 ON m.away_team_name = t2.name
+      LEFT JOIN teams t4 ON t2.id IS NULL AND (
+        REPLACE(REPLACE(REPLACE(REPLACE(m.away_team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ') = REPLACE(REPLACE(REPLACE(REPLACE(t4.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+        OR m.away_team_name LIKE t4.name || ' %'
+        OR t4.name LIKE m.away_team_name || ' %'
+      )
+      WHERE m.league_slug = ? AND m.match_date < date('now') ORDER BY m.match_date DESC LIMIT ?`,
     args: [leagueSlug, limit],
   });
   return result.rows as unknown as Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>;
@@ -154,7 +169,25 @@ export async function findRecentMatchesWithBadgesByLeague(leagueSlug: string, li
 export async function findUpcomingMatchesWithBadgesByLeague(leagueSlug: string, limit = 10): Promise<Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: `SELECT m.*, t1.badge_url as home_badge, t1.slug as home_team_slug, t2.badge_url as away_badge, t2.slug as away_team_slug FROM matches m LEFT JOIN teams t1 ON m.home_team_name = t1.name LEFT JOIN teams t2 ON m.away_team_name = t2.name WHERE m.league_slug = ? AND m.match_date >= date('now') ORDER BY m.match_date ASC LIMIT ?`,
+    sql: `SELECT m.*,
+      COALESCE(t1.badge_url, t3.badge_url) as home_badge,
+      COALESCE(t1.slug, t3.slug) as home_team_slug,
+      COALESCE(t2.badge_url, t4.badge_url) as away_badge,
+      COALESCE(t2.slug, t4.slug) as away_team_slug
+      FROM matches m
+      LEFT JOIN teams t1 ON m.home_team_name = t1.name
+      LEFT JOIN teams t3 ON t1.id IS NULL AND (
+        REPLACE(REPLACE(REPLACE(REPLACE(m.home_team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ') = REPLACE(REPLACE(REPLACE(REPLACE(t3.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+        OR m.home_team_name LIKE t3.name || ' %'
+        OR t3.name LIKE m.home_team_name || ' %'
+      )
+      LEFT JOIN teams t2 ON m.away_team_name = t2.name
+      LEFT JOIN teams t4 ON t2.id IS NULL AND (
+        REPLACE(REPLACE(REPLACE(REPLACE(m.away_team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ') = REPLACE(REPLACE(REPLACE(REPLACE(t4.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+        OR m.away_team_name LIKE t4.name || ' %'
+        OR t4.name LIKE m.away_team_name || ' %'
+      )
+      WHERE m.league_slug = ? AND m.match_date >= date('now') ORDER BY m.match_date ASC LIMIT ?`,
     args: [leagueSlug, limit],
   });
   return result.rows as unknown as Array<Match & { home_badge: string | null; home_team_slug: string | null; away_badge: string | null; away_team_slug: string | null }>;
@@ -172,13 +205,4 @@ export async function findMatchesWithBadgesByTeamName(teamName: string, limit = 
     args: [teamName, teamName, limit],
   });
   return result.rows as unknown as Array<Match & { home_badge: string | null; away_badge: string | null }>;
-}
-
-export async function findMatchByApifootballId(apifootballId: string): Promise<Match | null> {
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: "SELECT id FROM matches WHERE apifootball_id = ?",
-    args: [apifootballId],
-  });
-  return (result.rows[0] as unknown as Match) ?? null;
 }

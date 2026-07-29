@@ -41,15 +41,6 @@ export async function upsertTransfer(transfer: Partial<Transfer>): Promise<void>
   });
 }
 
-export async function findRecentTransfers(limit = 20): Promise<Transfer[]> {
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: "SELECT * FROM transfers ORDER BY transfer_date DESC LIMIT ?",
-    args: [limit],
-  });
-  return result.rows as unknown as Transfer[];
-}
-
 export async function findRecentByTeam(teamName: string, limit = 10): Promise<Transfer[]> {
   const client = getTursoClient();
   const result = await client.execute({
@@ -66,15 +57,6 @@ export async function findRecentByLeague(leagueSlug: string, limit = 20): Promis
   const result = await client.execute({
     sql: "SELECT * FROM transfers WHERE league_slug = ? ORDER BY transfer_date DESC LIMIT ?",
     args: [leagueSlug, limit],
-  });
-  return result.rows as unknown as Transfer[];
-}
-
-export async function findBySeason(leagueSlug: string, season: string): Promise<Transfer[]> {
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: "SELECT * FROM transfers WHERE league_slug = ? AND season = ? ORDER BY transfer_date DESC",
-    args: [leagueSlug, season],
   });
   return result.rows as unknown as Transfer[];
 }

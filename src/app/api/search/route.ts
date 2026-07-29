@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
 
   if (type === "all" || type === "teams") {
     const teamsResult = await client.execute({
-      sql: `SELECT name, slug, badge_url, league_slug FROM teams WHERE name LIKE ? ORDER BY name LIMIT 10`,
+      sql: `SELECT t.name, t.slug, t.badge_url,
+              (SELECT tl.league_slug FROM team_leagues tl WHERE tl.team_id = t.id LIMIT 1) as league_slug
+            FROM teams t WHERE t.name LIKE ? ORDER BY t.name LIMIT 10`,
       args: [pattern],
     });
     results.teams = teamsResult.rows.map((row) => ({

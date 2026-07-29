@@ -48,9 +48,9 @@ A football wiki built with Next.js 16, React 19, Three.js, and Turso (libSQL). F
 | API | What | Key |
 |---|---|---|
 | [football-data.org](https://www.football-data.org) | Standings, fixtures, teams, World Cup data | `FOOTBALL_DATA_API_KEY` |
-| [API-Football](https://www.api-football.com) | Squads, top scorers, transfers, lineups | `APIFOOTBALL_KEY` |
 | [TheSportsDB](https://www.thesportsdb.com) | Player photos, team details, team badges | `THESPORTSDB_API_KEY` |
-| [SportsAPIPro](https://sportsapipro.com) | Squad fallback | `SPORTS_API_PRO_KEY` |
+| [Big Balls Data](https://www.bigballsdata.com) | Standings, scorers, lineups, transfers, squads | `BBS_API_KEY` |
+| [SportsAPIPro](https://sportsapipro.com) | Players, lineups, head-to-head | `SPORTS_API_PRO_KEY` |
 | [YouTube Data API](https://developers.google.com/youtube) | Team/league highlight videos | `YOUTUBE_API_KEY` (+ 4 rotation keys) |
 | Wikipedia | Player bios, career summaries | (scraped via Cheerio) |
 
@@ -76,20 +76,22 @@ Full one-time data import. Runs 15 phases sequentially with progress tracking (`
 
 Each phase saves progress, so re-running resumes from where it left off.
 
-### Cron Refresh (`/api/cron/refresh`)
+### Cron Pipelines
 
-Runs daily at 06:00 UTC via Vercel Cron. Prioritized pipeline that fills gaps before updating existing data:
+Each pipeline runs independently via Vercel Cron. Auth: `Bearer ${CRON_SECRET}` header.
 
-| Phase | What | Source |
-|---|---|---|
-| 1 | Leagues missing teams | football-data.org |
-| 2 | Teams missing players | API-Football → TheSportsDB cascading |
-| 3 | Players missing photos | TheSportsDB lookup |
-| 4 | Players missing bio | Wikipedia via `enrichPlayers()` |
-| 5 | Teams missing videos | YouTube highlights |
-| 6 | Update existing records | Standings, fixtures, top scorers, transfers, lineups, league videos, World Cup |
+| Endpoint | Schedule | What | Source |
+|---|---|---|---|
+| `/api/cron/standings` | Daily 06:00 | League standings | Big Balls → football-data.org |
+| `/api/cron/fixtures` | Daily 06:00 | Match fixtures | football-data.org |
+| `/api/cron/photos` | Monday 03:00 | Player photos (20/batch) | TheSportsDB |
+| `/api/cron/videos` | Monday 04:00 | Highlight videos | YouTube |
+| `/api/cron/tsdb-scrape` | Monday 03:00 | Teams + players scrape | TheSportsDB |
+| `/api/cron/fbdo-import` | Monday 02:00 | Area/team/scorer sync | football-data.org |
+| `/api/cron/bbd-import` | Monday 00:00 | Full data pass | Big Balls Data |
+| `/api/cron/sap-import` | Monday 04:00 | Player enrichment pass | SportsAPIPro |
 
-Auth: `Bearer ${CRON_SECRET}` header. In dev, set `CRON_SECRET=undefined` to pass auth.
+Test manually: `vercel crons run /api/cron/[name]`
 
 ### Data Validation (`npm run validate`)
 
@@ -132,8 +134,20 @@ football-world/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── api/
-│   │   │   ├── cron/refresh/   # Daily cron pipeline
-│   │   │   ├── players/        # Player search API
+│   │   │   ├── cron/              # 8 independent cron pipelines
+│   │   │   │   ├── auth.ts        # Shared auth helper
+│   │   │   │   ├── teams/         # Add missing teams
+│   │   │   │   ├── squads/        # Fetch player squads
+│   │   │   │   ├── photos/        # Enrich player photos
+│   │   │   │   ├── bios/          # Wikipedia bios
+│   │   │   │   ├── videos/        # Highlight videos
+│   │   │   │   ├── standings/     # League standings
+│   │   │   │   ├── fixtures/      # Match fixtures
+│   │   │   │   ├── scorers/       # Top scorers
+│   │   │   │   ├── transfers/     # Player transfers
+│   │   │   │   ├── lineups/       # Match lineups
+│   │   │   │   └── world-cup/     # World Cup data
+│   │   │   ├── players/           # Player search API
 │   │   │   └── search/         # Global search API
 │   │   ├── leagues/            # League list + detail
 │   │   ├── players/            # Player list + detail
@@ -153,7 +167,7 @@ football-world/
 │   │   ├── WorldCupYearSelector.tsx
 │   │   └── VideoSection.tsx
 │   └── lib/
-│       ├── api/                # API clients (football-data, api-football, sportsdb, youtube, bigballs)
+│       ├── api/                # API clients (football-data, sportsdb, youtube, bigballs, sportsapipro)
 │       ├── db/                 # Database helpers (standings, matches, players, etc.)
 │       ├── turso/              # Turso client, schema, seed
 │       ├── leagues.ts          # League configuration
@@ -162,9 +176,13 @@ football-world/
 │       ├── flags.ts            # Country → flag emoji mapping
 │       └── slugify.ts
 ├── scripts/
-│   └── bootstrap/              # Full data import pipeline (15 phases)
+│   ├── lib/                    # Shared logger
+│   ├── thesportsdb-importer/   # TSDB scraper (teams + players)
+│   ├── footballldataorg-importer/ # football-data.org sync
+│   ├── bigballsdata-importer/  # Big Balls Data scraper
+│   └── sportsapipro-importer/  # SportsAPIPro scraper
 ├── public/                     # Static assets, favicon.svg, manifest.json
-├── vercel.json                 # Cron schedule: daily at 06:00 UTC
+├── vercel.json                 # 8 cron schedules
 └── .env.local                  # API keys (not committed)
 ```
 
@@ -179,8 +197,8 @@ TURSO_AUTH_TOKEN=your-turso-token
 
 # Football APIs
 FOOTBALL_DATA_API_KEY=your-football-data-key
-APIFOOTBALL_KEY=your-api-football-key
 THESPORTSDB_API_KEY=1
+BBS_API_KEY=your-big-balls-data-key
 SPORTS_API_PRO_KEY=your-sportsapipro-key
 
 # YouTube (5 keys for rotation)

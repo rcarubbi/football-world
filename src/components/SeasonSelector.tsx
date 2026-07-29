@@ -31,7 +31,7 @@ export function SeasonSelector({ seasons, currentSeason }: SeasonSelectorProps) 
         >
           {seasons.map((s) => (
             <option key={s} value={s}>
-              {s}/{String(Number(s) + 1).slice(-2)}
+              {s.includes("/") ? s : `${s}/${String(Number(s) + 1).slice(-2)}`}
             </option>
           ))}
         </select>

@@ -54,9 +54,6 @@ export function Footer() {
               <a href="https://www.football-data.org" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 football-data.org
               </a>
-              <a href="https://www.api-football.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
-                API-Football
-              </a>
               <a href="https://www.bigballsdata.com" target="_blank" rel="noopener noreferrer" className="text-sm text-red-400 dark:text-red-300 hover:text-primary transition-colors">
                 Big Balls Data
               </a>

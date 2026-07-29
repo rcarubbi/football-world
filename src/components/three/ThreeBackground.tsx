@@ -23,7 +23,7 @@ RectAreaLightUniformsLib.init();
    CONSTANTS
    ═══════════════════════════════════════════════════════════════════ */
 
-const LEAGUES = [
+const _LEAGUES = [
   { slug: "premier-league", lat: 53.5, lng: -2 },
   { slug: "la-liga", lat: 40, lng: -4 },
   { slug: "bundesliga", lat: 51, lng: 10 },
@@ -70,7 +70,7 @@ function resolveCameraPreset(pathname: string, presets: Map<string, CameraPreset
   return { ...home, targetPos: [home.camX, home.camY, home.camZ] };
 }
 
-function latLngToSphere(lat: number, lng: number, r: number): [number, number, number] {
+function _latLngToSphere(lat: number, lng: number, r: number): [number, number, number] {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
   return [
@@ -276,7 +276,7 @@ const PITCH_MESH_NAMES = new Set([
 
 function Stadium() {
   const { scene } = useGLTF("/stadium.glb");
-  const { isDark } = useTheme();
+  const { isDark: _isDark } = useTheme();
 
   const { posX, posY, posZ, rotX, rotY, rotZ, scl } = useControls("Stadium", {
     posX: { value: 0, min: -20, max: 20, step: 0.01 },
@@ -440,7 +440,7 @@ function Goals() {
     return g2;
   }, [goal1]);
 
-  const [{ g1PosX, g1PosY, g1PosZ, g1RotX, g1RotY, g1RotZ, g1Scl, showGoal1 }, setGoal1] = useControls(() => ({
+  const [{ g1PosX, g1PosY, g1PosZ, g1RotX, g1RotY, g1RotZ, g1Scl, showGoal1 }, _setGoal1] = useControls(() => ({
     "Goal 1": folder({
       showGoal1: true,
       g1PosX: { value: 2.2, min: -10, max: 10, step: 0.01 },
@@ -453,7 +453,7 @@ function Goals() {
     })
   }), []);
 
-  const [{ g2PosX, g2PosY, g2PosZ, g2RotX, g2RotY, g2RotZ, g2Scl, showGoal2 }, setGoal2] = useControls(() => ({
+  const [{ g2PosX, g2PosY, g2PosZ, g2RotX, g2RotY, g2RotZ, g2Scl, showGoal2 }, _setGoal2] = useControls(() => ({
     "Goal 2": folder({
       showGoal2: true,
       g2PosX: { value: -2.21, min: -10, max: 10, step: 0.01 },

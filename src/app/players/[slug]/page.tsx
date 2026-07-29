@@ -94,7 +94,9 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
               <div className="text-center p-3 rounded-xl bg-muted/30">
                 <Calendar className="w-4 h-4 mx-auto mb-1 text-red-400 dark:text-red-300" />
                 <div className="text-sm font-medium">
-                  {new Date(player.date_of_birth as string).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  {/^\d{4}$/.test(player.date_of_birth as string)
+                    ? (player.date_of_birth as string)
+                    : new Date(player.date_of_birth as string).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </div>
                   <div className="text-xs text-red-400 dark:text-red-300">Birth</div>
               </div>
@@ -177,12 +179,12 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
               </h2>
             </CardHeader>
             <CardContent>
-              <div className="relative pl-6">
-                <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
+              <div className="relative">
+                <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-border" />
                 {formerTeams.map((ft: Record<string, unknown>, i: number) => (
-                  <div key={i} className="relative mb-4 last:mb-0">
-                    <div className="absolute -left-4 top-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                    <div className="p-3 rounded-xl bg-muted/30">
+                  <div key={i} className="flex items-center gap-4 mb-4 last:mb-0">
+                    <div className="w-3 h-3 rounded-full bg-primary border-2 border-background shrink-0 relative z-10" />
+                    <div className="p-3 rounded-xl bg-muted/30 flex-1">
                       <div className="text-sm font-medium">{ft.team_name as string}</div>
                       <div className="text-xs text-red-400 dark:text-red-300 mt-1">
                         {ft.joined ? `Joined: ${ft.joined}` : ""}

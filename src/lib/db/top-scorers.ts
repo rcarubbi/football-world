@@ -4,7 +4,6 @@ export interface TopScorer {
   id: number;
   league_slug: string;
   season: string | null;
-  apifootball_id: string | null;
   player_name: string | null;
   player_slug: string | null;
   team_name: string | null;
@@ -20,11 +19,10 @@ export async function upsertTopScorer(
   const client = getTursoClient();
   await client.execute({
     sql: `INSERT INTO top_scorers (
-      league_slug, season, apifootball_id, player_name, player_slug,
+      league_slug, season, player_name, player_slug,
       team_name, team_badge, goals, assists, penalties
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(league_slug, season, player_name) DO UPDATE SET
-      apifootball_id = excluded.apifootball_id,
       player_slug = excluded.player_slug,
       team_name = excluded.team_name,
       team_badge = excluded.team_badge,
@@ -35,7 +33,6 @@ export async function upsertTopScorer(
     args: [
       scorer.league_slug ?? "",
       scorer.season ?? null,
-      scorer.apifootball_id ?? null,
       scorer.player_name ?? null,
       scorer.player_slug ?? null,
       scorer.team_name ?? null,
@@ -63,27 +60,28 @@ export async function findTopScorersByLeagueAndSeason(
   season: string
 ): Promise<Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>> {
   const client = getTursoClient();
-  const result = await client.execute({
-    sql: `SELECT ts.*, 
-            COALESCE(p.name, ts.player_name) as player_name,
-            p.photo_url, p.slug as player_slug, t.slug as team_slug 
-            FROM top_scorers ts 
-            LEFT JOIN players p ON ts.player_slug = p.slug 
-              OR p.slug LIKE ts.player_slug || '%'
-              OR ts.player_slug || '-%' = p.slug
-            LEFT JOIN teams t ON ts.team_name = t.name
-              OR t.name = ts.team_name || ' FC'
-              OR t.name || ' FC' = ts.team_name
-              OR t.name = 'Manchester City FC' AND ts.team_name IN ('Manchester City')
-              OR t.name = 'Manchester United FC' AND ts.team_name IN ('Manchester United')
-              OR t.name = 'Tottenham Hotspur FC' AND ts.team_name IN ('Tottenham Hotspur')
-              OR t.name = 'Newcastle United FC' AND ts.team_name IN ('Newcastle')
-              OR t.name = 'Nottingham Forest FC' AND ts.team_name IN ('Nottingham Forest')
-              OR t.name = 'Wolverhampton Wanderers FC' AND ts.team_name IN ('Wolverhampton')
-              OR t.name = 'West Ham United FC' AND ts.team_name IN ('West Ham')
-              OR t.name = 'Brighton & Hove Albion FC' AND ts.team_name IN ('Brighton')
-            WHERE ts.league_slug = ? AND ts.season = ? ORDER BY ts.goals DESC LIMIT 10`,
+
+  // First, get top scorers (deduplicated via subquery)
+  // Team JOIN uses COALESCE to prefer exact name match over FC/CF suffix match
+  const scorerResult = await client.execute({
+    sql: `SELECT ts.id,
+            ts.player_name, ts.player_slug, ts.team_name, ts.team_badge, ts.league_slug, ts.season,
+            ts.goals, ts.assists, ts.penalties,
+            COALESCE(
+              (SELECT p.photo_url FROM players p WHERE p.slug = ts.player_slug AND p.photo_url IS NOT NULL AND p.photo_url != '' LIMIT 1),
+              ts.photo_url
+            ) as photo_url,
+            (SELECT p.slug FROM players p WHERE p.slug = ts.player_slug LIMIT 1) as player_slug_resolved,
+            COALESCE(
+              (SELECT t.slug FROM teams t WHERE t.name = ts.team_name LIMIT 1),
+              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' FC', '') = REPLACE(ts.team_name, ' FC', '') LIMIT 1),
+              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' CF', '') = REPLACE(ts.team_name, ' CF', '') LIMIT 1)
+            ) as team_slug
+          FROM top_scorers ts
+          WHERE ts.league_slug = ? AND ts.season = ? AND ts.goals > 0
+          ORDER BY ts.goals DESC LIMIT 10`,
     args: [leagueSlug, season],
   });
-  return result.rows as unknown as Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>;
+
+  return scorerResult.rows as unknown as Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>;
 }

@@ -1,8 +1,14 @@
 import { RateLimiter } from "./rate-limiter";
 
 const BASE_URL = "https://api.football-data.org/v4";
-function getApiKey(): string {
-  return process.env.FOOTBALLDATA_API_KEY || "";
+
+function getApiKeys(): string[] {
+  const keys: string[] = [];
+  if (process.env.FOOTBALLDATA_API_KEY) keys.push(process.env.FOOTBALLDATA_API_KEY);
+  if (process.env.FOOTBALLDATA_API_KEY_2) keys.push(process.env.FOOTBALLDATA_API_KEY_2);
+  if (process.env.FOOTBALLDATA_API_KEY_3) keys.push(process.env.FOOTBALLDATA_API_KEY_3);
+  if (process.env.FOOTBALLDATA_API_KEY_4) keys.push(process.env.FOOTBALLDATA_API_KEY_4);
+  return keys;
 }
 
 let limiter: RateLimiter | null = null;
@@ -18,16 +24,22 @@ async function fetchWithRetry(
   url: string,
   retries = 3
 ): Promise<unknown> {
+  const keys = getApiKeys();
   for (let i = 0; i < retries; i++) {
     try {
+      const apiKey = keys.length > 0 ? keys[i % keys.length] : "";
       const response = await fetch(url, {
         headers: {
-          "X-Auth-Token": getApiKey(),
+          "X-Auth-Token": apiKey,
         },
       });
       if (response.status === 429) {
         const waitTime = Math.pow(2, i) * 1000;
         await new Promise((resolve) => setTimeout(resolve, waitTime));
+        continue;
+      }
+      if (response.status === 401) {
+        console.warn(`Football-Data 401 with key index ${i % keys.length}, trying next...`);
         continue;
       }
       if (!response.ok) {
@@ -73,5 +85,56 @@ export async function getMatches(
 export async function getCompetition(competitionCode: string) {
   return getLimiter().add(async () => {
     return fetchWithRetry(`${BASE_URL}/competitions/${competitionCode}`);
+  });
+}
+
+export async function getTeams(competitionCode: string, season?: number) {
+  return getLimiter().add(async () => {
+    const seasonParam = season ? `?season=${season}` : "";
+    const data = (await fetchWithRetry(
+      `${BASE_URL}/competitions/${competitionCode}/teams${seasonParam}`
+    )) as { teams: unknown[] };
+    return data.teams || [];
+  });
+}
+
+export async function getScorers(
+  competitionCode: string,
+  season?: number,
+  limit = 10
+) {
+  return getLimiter().add(async () => {
+    const params = new URLSearchParams();
+    if (season) params.set("season", season.toString());
+    params.set("limit", limit.toString());
+    const qs = `?${params.toString()}`;
+    const data = (await fetchWithRetry(
+      `${BASE_URL}/competitions/${competitionCode}/scorers${qs}`
+    )) as { scorers: unknown[] };
+    return data.scorers || [];
+  });
+}
+
+export async function getTeamDetail(teamId: number) {
+  return getLimiter().add(async () => {
+    return fetchWithRetry(`${BASE_URL}/teams/${teamId}`);
+  });
+}
+
+export async function getPersonDetail(personId: number) {
+  return getLimiter().add(async () => {
+    return fetchWithRetry(`${BASE_URL}/persons/${personId}`);
+  });
+}
+
+export async function getMatchDetail(matchId: number) {
+  return getLimiter().add(async () => {
+    return fetchWithRetry(`${BASE_URL}/matches/${matchId}`);
+  });
+}
+
+export async function getAllAreas() {
+  return getLimiter().add(async () => {
+    return fetchWithRetry(`${BASE_URL}/areas`);
   });
 }

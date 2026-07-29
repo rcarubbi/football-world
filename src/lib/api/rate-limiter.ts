@@ -29,6 +29,8 @@ export class RateLimiter {
 
     return this.queue.add(async () => {
       this.dailyCounter++;
+      // Add 1s delay between requests to respect per-minute limits
+      await new Promise((r) => setTimeout(r, 1000));
       return fn();
     });
   }
@@ -39,9 +41,4 @@ export class RateLimiter {
   }
 }
 
-export function createRateLimiter(
-  concurrency: number,
-  dailyLimit: number
-): RateLimiter {
-  return new RateLimiter(concurrency, dailyLimit);
-}
+

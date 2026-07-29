@@ -2,9 +2,11 @@ import { getTursoClient } from "../turso/client";
 
 export interface Team {
   id: number;
+  source: string | null;
+  external_id: string | null;
   thesportsdb_id: string | null;
   football_data_id: string | null;
-  apifootball_id: string | null;
+  sportsapipro_id: string | null;
   name: string;
   slug: string;
   short_name: string | null;
@@ -18,20 +20,28 @@ export interface Team {
   league_slug: string;
   wikipedia_content: string | null;
   stadium_content: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  capacity: number | null;
+  venue_id: number | null;
+  bbd_id: string | null;
+  description: string | null;
+  website: string | null;
+  banner_url: string | null;
+  equipment_url: string | null;
 }
 
 export async function upsertTeam(team: Partial<Team>): Promise<number> {
   const client = getTursoClient();
   const result = await client.execute({
     sql: `INSERT INTO teams (
-      thesportsdb_id, football_data_id, apifootball_id, name, slug, short_name,
+      thesportsdb_id, football_data_id, name, slug, short_name,
       badge_url, kit_home_url, kit_away_url, kit_third_url, founded, stadium,
       location, league_slug, wikipedia_content, stadium_content
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       thesportsdb_id = COALESCE(excluded.thesportsdb_id, teams.thesportsdb_id),
       football_data_id = COALESCE(excluded.football_data_id, teams.football_data_id),
-      apifootball_id = excluded.apifootball_id,
       name = excluded.name,
       short_name = excluded.short_name,
       badge_url = excluded.badge_url,
@@ -49,7 +59,6 @@ export async function upsertTeam(team: Partial<Team>): Promise<number> {
     args: [
       team.thesportsdb_id ?? null,
       team.football_data_id ?? null,
-      team.apifootball_id ?? null,
       team.name ?? "",
       team.slug ?? "",
       team.short_name ?? null,
@@ -80,7 +89,9 @@ export async function findTeamBySlug(slug: string): Promise<Team | null> {
 export async function findTeamsByLeague(leagueSlug: string): Promise<Team[]> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: "SELECT * FROM teams WHERE league_slug = ? ORDER BY name",
+    sql: `SELECT t.* FROM teams t
+          JOIN team_leagues tl ON tl.team_id = t.id
+          WHERE tl.league_slug = ? ORDER BY t.name`,
     args: [leagueSlug],
   });
   return result.rows as unknown as Team[];
@@ -92,30 +103,9 @@ export async function findAllTeams(): Promise<Team[]> {
   return result.rows as unknown as Team[];
 }
 
-export async function updateTeamWikipedia(
-  id: number,
-  wikipediaContent: string | null,
-  stadiumContent: string | null
-): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `UPDATE teams SET wikipedia_content = ?, stadium_content = ?, updated_at = datetime('now') WHERE id = ?`,
-    args: [wikipediaContent, stadiumContent, id],
-  });
-}
-
 export async function countTeams(): Promise<number> {
   const client = getTursoClient();
   const result = await client.execute("SELECT COUNT(*) as n FROM teams");
-  return Number(result.rows[0]?.n ?? 0);
-}
-
-export async function countTeamsByLeague(leagueSlug: string): Promise<number> {
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: "SELECT COUNT(*) as n FROM teams WHERE league_slug = ?",
-    args: [leagueSlug],
-  });
   return Number(result.rows[0]?.n ?? 0);
 }
 
@@ -133,30 +123,19 @@ export async function findTopTeamsWithPlayerCount(limit = 8): Promise<Array<Team
   return result.rows as unknown as Array<Team & { player_count: number }>;
 }
 
-export async function findAllTeamsWithPlayerCount(): Promise<Array<Team & { player_count: number }>> {
+export async function findAllTeamsWithPlayerCount(): Promise<Array<Team & { player_count: number; league_slugs: string }>> {
   const client = getTursoClient();
   const result = await client.execute(`
     SELECT t.id, t.name, t.slug, t.badge_url, t.league_slug, t.stadium,
-           COUNT(p.id) as player_count
+           COUNT(DISTINCT p.id) as player_count,
+           GROUP_CONCAT(DISTINCT tl.league_slug) as league_slugs
     FROM teams t
     LEFT JOIN players p ON p.team_id = t.id
+    LEFT JOIN team_leagues tl ON tl.team_id = t.id
     GROUP BY t.id
     ORDER BY t.name
   `);
-  return result.rows as unknown as Array<Team & { player_count: number }>;
-}
-
-export async function findTeamsWithoutPlayers(): Promise<Array<Pick<Team, 'id' | 'name' | 'league_slug' | 'thesportsdb_id' | 'apifootball_id'>>> {
-  const client = getTursoClient();
-  const result = await client.execute({
-    sql: `SELECT t.id, t.name, t.league_slug, t.thesportsdb_id, t.apifootball_id
-          FROM teams t
-          WHERE NOT EXISTS (SELECT 1 FROM players p WHERE p.team_id = t.id)
-            AND t.league_slug != 'fifa-world-cup'
-          ORDER BY t.league_slug, t.name`,
-    args: [],
-  });
-  return result.rows as unknown as Array<Pick<Team, 'id' | 'name' | 'league_slug' | 'thesportsdb_id' | 'apifootball_id'>>;
+  return result.rows as unknown as Array<Team & { player_count: number; league_slugs: string }>;
 }
 
 export async function findTeamsWithoutVideos(limit = 50): Promise<Array<Pick<Team, 'id' | 'name' | 'league_slug'>>> {
@@ -176,55 +155,6 @@ export async function findTeamsWithoutVideos(limit = 50): Promise<Array<Pick<Tea
   return result.rows as unknown as Array<Pick<Team, 'id' | 'name' | 'league_slug'>>;
 }
 
-export async function updateTeamApifootballId(id: number, apifootballId: string): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `UPDATE teams SET apifootball_id = ? WHERE id = ?`,
-    args: [apifootballId, id],
-  });
-}
-
-export async function updateTeamFromSportsDB(
-  id: number,
-  data: {
-    thesportsdb_id?: string | null;
-    badge_url?: string | null;
-    stadium?: string | null;
-    location?: string | null;
-    founded?: string | null;
-    wikipedia_content?: string | null;
-  }
-): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `UPDATE teams SET
-      thesportsdb_id = COALESCE(NULLIF(thesportsdb_id, ''), ?),
-      badge_url = COALESCE(NULLIF(badge_url, ''), ?),
-      stadium = COALESCE(NULLIF(stadium, ''), ?),
-      location = COALESCE(NULLIF(location, ''), ?),
-      founded = COALESCE(NULLIF(founded, ''), ?),
-      wikipedia_content = COALESCE(NULLIF(wikipedia_content, ''), ?)
-    WHERE id = ?`,
-    args: [
-      data.thesportsdb_id ?? null,
-      data.badge_url ?? null,
-      data.stadium ?? null,
-      data.location ?? null,
-      data.founded ?? null,
-      data.wikipedia_content ?? null,
-      id,
-    ],
-  });
-}
-
-export async function updateTeamSportsdbId(id: number, thesportsdbId: string): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `UPDATE teams SET thesportsdb_id = ? WHERE id = ?`,
-    args: [thesportsdbId, id],
-  });
-}
-
 export async function findTeamById(id: number): Promise<Team | null> {
   const client = getTursoClient();
   const result = await client.execute({
@@ -234,13 +164,24 @@ export async function findTeamById(id: number): Promise<Team | null> {
   return (result.rows[0] as unknown as Team) ?? null;
 }
 
-export async function searchTeamsByName(pattern: string): Promise<Pick<Team, 'name' | 'slug' | 'badge_url' | 'league_slug'>[]> {
+export async function findTeamLeagues(teamId: number): Promise<string[]> {
   const client = getTursoClient();
   const result = await client.execute({
-    sql: `SELECT name, slug, badge_url, league_slug FROM teams WHERE name LIKE ? ORDER BY name LIMIT 10`,
+    sql: "SELECT league_slug FROM team_leagues WHERE team_id = ? ORDER BY league_slug",
+    args: [teamId],
+  });
+  return result.rows.map((r) => r.league_slug as string);
+}
+
+export async function searchTeamsByName(pattern: string): Promise<Array<Pick<Team, 'name' | 'slug' | 'badge_url' | 'league_slug'> & { league_slugs: string | null }>> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT t.name, t.slug, t.badge_url, t.league_slug,
+            (SELECT GROUP_CONCAT(tl.league_slug) FROM team_leagues tl WHERE tl.team_id = t.id) as league_slugs
+          FROM teams t WHERE t.name LIKE ? ORDER BY t.name LIMIT 10`,
     args: [pattern],
   });
-  return result.rows as unknown as Pick<Team, 'name' | 'slug' | 'badge_url' | 'league_slug'>[];
+  return result.rows as unknown as Array<Pick<Team, 'name' | 'slug' | 'badge_url' | 'league_slug'> & { league_slugs: string | null }>;
 }
 
 export const TEAM_NAME_MAP: Record<string, string> = {

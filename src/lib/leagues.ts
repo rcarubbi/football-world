@@ -4,8 +4,14 @@ export interface LeagueConfig {
   country: string;
   sportsdbId: string;
   footballDataCode: string;
-  apiFootballId: number;
   logoUrl: string;
+}
+
+export function getCurrentSeason(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  return month >= 8 ? year : year - 1;
 }
 
 export const LEAGUES: LeagueConfig[] = [
@@ -15,7 +21,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "England",
     sportsdbId: "4328",
     footballDataCode: "PL",
-    apiFootballId: 39,
     logoUrl: "/images/leagues/premier-league.png",
   },
   {
@@ -24,7 +29,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "Spain",
     sportsdbId: "4335",
     footballDataCode: "PD",
-    apiFootballId: 140,
     logoUrl: "/images/leagues/la-liga.png",
   },
   {
@@ -33,7 +37,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "Germany",
     sportsdbId: "4331",
     footballDataCode: "BL1",
-    apiFootballId: 78,
     logoUrl: "/images/leagues/bundesliga.png",
   },
   {
@@ -42,7 +45,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "Italy",
     sportsdbId: "4332",
     footballDataCode: "SA",
-    apiFootballId: 135,
     logoUrl: "/images/leagues/serie-a.png",
   },
   {
@@ -51,7 +53,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "France",
     sportsdbId: "4334",
     footballDataCode: "FL1",
-    apiFootballId: 61,
     logoUrl: "/images/leagues/ligue-1.png",
   },
   {
@@ -60,7 +61,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "Europe",
     sportsdbId: "4480",
     footballDataCode: "CL",
-    apiFootballId: 2,
     logoUrl: "/images/leagues/champions-league.png",
   },
   {
@@ -69,7 +69,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "International",
     sportsdbId: "4442",
     footballDataCode: "WC",
-    apiFootballId: 1,
     logoUrl: "/images/leagues/fifa-world-cup.png",
   },
   {
@@ -78,7 +77,6 @@ export const LEAGUES: LeagueConfig[] = [
     country: "Brazil",
     sportsdbId: "4340",
     footballDataCode: "BSA",
-    apiFootballId: 71,
     logoUrl: "/images/leagues/brasileirao-serie-a.png",
   },
 ];
@@ -87,18 +85,4 @@ export function getLeagueBySlug(slug: string): LeagueConfig | undefined {
   return LEAGUES.find((l) => l.slug === slug);
 }
 
-export function getLeagueBySportsdbId(id: string): LeagueConfig | undefined {
-  return LEAGUES.find((l) => l.sportsdbId === id);
-}
 
-export function getLeagueByFootballDataCode(
-  code: string
-): LeagueConfig | undefined {
-  return LEAGUES.find((l) => l.footballDataCode === code);
-}
-
-export function getLeagueByApiFootballId(
-  id: number
-): LeagueConfig | undefined {
-  return LEAGUES.find((l) => l.apiFootballId === id);
-}

@@ -2,8 +2,9 @@ import { getTursoClient } from "../turso/client";
 
 export interface Player {
   id: number;
+  source: string | null;
+  external_id: string | null;
   thesportsdb_id: string | null;
-  apifootball_id: string | null;
   name: string;
   slug: string;
   team_id: number | null;
@@ -15,18 +16,26 @@ export interface Player {
   photo_url: string | null;
   description: string | null;
   career_summary: string | null;
+  jersey_number: string | null;
+  bbd_id: string | null;
+  short_name: string | null;
+  date_of_death: string | null;
+  birth_location: string | null;
+  status: string | null;
+  cutout_url: string | null;
+  wikidata_id: string | null;
+  transfermarkt_id: string | null;
 }
 
 export async function upsertPlayer(player: Partial<Player>): Promise<number> {
   const client = getTursoClient();
   const result = await client.execute({
     sql: `INSERT INTO players (
-      thesportsdb_id, apifootball_id, name, slug, team_id, position,
+      thesportsdb_id, name, slug, team_id, position,
       nationality, date_of_birth, height, weight, photo_url, description, career_summary
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       thesportsdb_id = excluded.thesportsdb_id,
-      apifootball_id = excluded.apifootball_id,
       name = excluded.name,
       team_id = excluded.team_id,
       position = excluded.position,
@@ -41,7 +50,6 @@ export async function upsertPlayer(player: Partial<Player>): Promise<number> {
     RETURNING id`,
     args: [
       player.thesportsdb_id ?? null,
-      player.apifootball_id ?? null,
       player.name ?? "",
       player.slug ?? "",
       player.team_id ?? null,
@@ -74,38 +82,6 @@ export async function findPlayersByTeam(teamId: number): Promise<Player[]> {
     args: [teamId],
   });
   return result.rows as unknown as Player[];
-}
-
-export async function findAllPlayers(): Promise<Player[]> {
-  const client = getTursoClient();
-  const result = await client.execute("SELECT * FROM players ORDER BY name");
-  return result.rows as unknown as Player[];
-}
-
-export async function addPlayerHonour(
-  playerId: number,
-  honourName: string,
-  season: string | null,
-  teamName: string | null
-): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `INSERT INTO player_honours (player_id, honour_name, season, team_name) VALUES (?, ?, ?, ?)`,
-    args: [playerId, honourName, season, teamName],
-  });
-}
-
-export async function addPlayerFormerTeam(
-  playerId: number,
-  teamName: string,
-  joined: string | null,
-  departed: string | null
-): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `INSERT INTO player_former_teams (player_id, team_name, joined, departed) VALUES (?, ?, ?, ?)`,
-    args: [playerId, teamName, joined, departed],
-  });
 }
 
 export async function findPlayerHonours(playerId: number) {
@@ -229,91 +205,6 @@ export async function updatePlayerPhoto(
       updated_at = datetime('now')
     WHERE id = ?`,
     args: [data.photo_url ?? null, data.thesportsdb_id ?? null, data.description ?? null, playerId],
-  });
-}
-
-export async function upsertPlayerFromApiFootball(data: {
-  apifootball_id: string;
-  name: string;
-  slug: string;
-  team_id: number;
-  position: string | null;
-  nationality: string | null;
-  height: string | null;
-  weight: string | null;
-  photo_url: string | null;
-}): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `INSERT INTO players (
-      apifootball_id, name, slug, team_id, position,
-      nationality, height, weight, photo_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(slug) DO UPDATE SET
-      apifootball_id = COALESCE(excluded.apifootball_id, players.apifootball_id),
-      team_id = COALESCE(excluded.team_id, players.team_id),
-      position = COALESCE(excluded.position, players.position),
-      nationality = COALESCE(excluded.nationality, players.nationality),
-      height = COALESCE(excluded.height, players.height),
-      weight = COALESCE(excluded.weight, players.weight),
-      photo_url = COALESCE(excluded.photo_url, players.photo_url),
-      updated_at = datetime('now')`,
-    args: [
-      data.apifootball_id,
-      data.name,
-      data.slug,
-      data.team_id,
-      data.position,
-      data.nationality,
-      data.height,
-      data.weight,
-      data.photo_url,
-    ],
-  });
-}
-
-export async function upsertPlayerFromSportsDB(data: {
-  thesportsdb_id: string;
-  name: string;
-  slug: string;
-  team_id: number;
-  position: string | null;
-  nationality: string | null;
-  date_of_birth: string | null;
-  height: string | null;
-  weight: string | null;
-  photo_url: string | null;
-  description: string | null;
-}): Promise<void> {
-  const client = getTursoClient();
-  await client.execute({
-    sql: `INSERT INTO players (
-      thesportsdb_id, name, slug, team_id, position,
-      nationality, date_of_birth, height, weight, photo_url, description
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(slug) DO UPDATE SET
-      thesportsdb_id = COALESCE(excluded.thesportsdb_id, players.thesportsdb_id),
-      position = COALESCE(excluded.position, players.position),
-      nationality = COALESCE(excluded.nationality, players.nationality),
-      date_of_birth = COALESCE(excluded.date_of_birth, players.date_of_birth),
-      height = COALESCE(excluded.height, players.height),
-      weight = COALESCE(excluded.weight, players.weight),
-      photo_url = COALESCE(excluded.photo_url, players.photo_url),
-      description = COALESCE(excluded.description, players.description),
-      updated_at = datetime('now')`,
-    args: [
-      data.thesportsdb_id,
-      data.name,
-      data.slug,
-      data.team_id,
-      data.position,
-      data.nationality,
-      data.date_of_birth,
-      data.height,
-      data.weight,
-      data.photo_url,
-      data.description,
-    ],
   });
 }
 

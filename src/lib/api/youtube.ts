@@ -30,7 +30,6 @@ function getNextApiKey(): string {
   const keys = loadApiKeys();
   if (keys.length === 0) return "";
 
-  const startIndex = _currentKeyIndex;
   let attempts = 0;
 
   while (attempts < keys.length) {
@@ -77,9 +76,6 @@ async function fetchWithApiKey(
     try {
       const response = await fetch(url + `&key=${apiKey}`);
       if (response.status === 429 || response.status === 403) {
-        const body = await response.text().catch(() => "");
-        const isQuotaError = body.includes("quotaExceeded") || body.includes("quota") || body.includes("dailyLimit");
-
         markKeyExhausted(apiKey);
         throw new Error(`QUOTA_EXCEEDED`);
       }
@@ -134,13 +130,17 @@ export interface YouTubeSearchResult {
 
 export async function searchVideos(
   query: string,
-  maxResults = 5
+  maxResults = 5,
+  publishedAfter?: string
 ): Promise<YouTubeSearchResult[]> {
   const keys = loadApiKeys();
   if (keys.length === 0) return [];
 
   return getLimiter().add(async () => {
-    const searchUrl = `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&order=viewCount&maxResults=${maxResults}`;
+    let searchUrl = `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&order=viewCount&maxResults=${maxResults}`;
+    if (publishedAfter) {
+      searchUrl += `&publishedAfter=${publishedAfter}`;
+    }
 
     const data = (await fetchWithAnyKey(searchUrl)) as {
       items: Array<{

@@ -4,7 +4,7 @@ import { LeagueIcon } from "@/components/LeagueIcon";
 import { Card } from "@/components/ui/Card";
 import { HeroInteractive } from "@/components/three/HeroInteractive";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { Trophy, Users, Star, Video, ChevronRight, Calendar, TrendingUp } from "lucide-react";
+import { Users, Star, Video, ChevronRight, Calendar, TrendingUp } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { countTeams } from "@/lib/db/teams";
 import { countPlayers } from "@/lib/db/players";

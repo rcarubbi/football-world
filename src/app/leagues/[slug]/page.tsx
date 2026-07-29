@@ -8,7 +8,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { VideoSection } from "@/components/VideoSection";
-import { Trophy, TrendingUp, Calendar, Video, ArrowRight, Star } from "lucide-react";
+import { TrendingUp, Calendar, Video, ArrowRight, Star } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import { SeasonSelector } from "@/components/SeasonSelector";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -45,9 +45,8 @@ export function generateStaticParams() {
 }
 
 async function getLeagueData(slug: string, season: string) {
-  const [standings, seasons, topScorers, upcomingMatches, recentMatches, videos, transfers] = await Promise.all([
+  const [standings, topScorers, upcomingMatches, recentMatches, videos, transfers] = await Promise.all([
     findStandingsByLeagueAndSeason(slug, season),
-    findSeasonsByLeague(slug),
     findTopScorersByLeagueAndSeason(slug, season),
     findUpcomingMatchesWithBadgesByLeague(slug, 10),
     findRecentMatchesWithBadgesByLeague(slug, 10),
@@ -57,7 +56,6 @@ async function getLeagueData(slug: string, season: string) {
 
   return {
     standings,
-    seasons,
     topScorers,
     upcomingMatches,
     recentMatches,
@@ -72,9 +70,8 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
   const league = getLeagueBySlug(slug);
   if (!league) notFound();
 
-  const now = new Date();
-  const defaultSeason = (now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1).toString();
-  const season = requestedSeason || defaultSeason;
+  const availableSeasons = await findSeasonsByLeague(slug);
+  const season = requestedSeason || availableSeasons[0] || new Date().getFullYear().toString();
   const data = await getLeagueData(slug, season);
   const backHref = from || "/leagues";
   const backLabel = from ? "Back" : "Back to Leagues";
@@ -103,7 +100,7 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                   </h2>
                   <Suspense>
                     <SeasonSelector
-                      seasons={data.seasons}
+                      seasons={availableSeasons}
                       currentSeason={season}
                     />
                   </Suspense>
@@ -255,16 +252,16 @@ export default async function LigaDetailPage({ params, searchParams }: PageProps
                   {data.topScorers.map((scorer, i) => (
                     <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                       <span className="text-base font-bold text-red-400 dark:text-red-300 w-7 text-center shrink-0">{i + 1}</span>
-                      {scorer.player_slug ? (
-                        <Link href={`/players/${scorer.player_slug}?from=/leagues/${slug}%3Fseason%3D${season}`}>
+                      {(scorer as any).player_slug_resolved ? (
+                        <Link href={`/players/${(scorer as any).player_slug_resolved}?from=/leagues/${slug}%3Fseason%3D${season}`}>
                           <PlayerAvatar photoUrl={scorer.photo_url as string} name={scorer.player_name as string} className="w-12 h-12 rounded-full object-cover shrink-0 hover:ring-2 hover:ring-primary/50 transition-all" />
                         </Link>
                       ) : (
                         <PlayerAvatar photoUrl={scorer.photo_url as string} name={scorer.player_name as string} className="w-12 h-12 rounded-full object-cover shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        {scorer.player_slug ? (
-                          <Link href={`/players/${scorer.player_slug}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-semibold truncate hover:opacity-80 transition-opacity block">{scorer.player_name as string}</Link>
+                        {(scorer as any).player_slug_resolved ? (
+                          <Link href={`/players/${(scorer as any).player_slug_resolved}?from=/leagues/${slug}%3Fseason%3D${season}`} className="text-sm font-semibold truncate hover:opacity-80 transition-opacity block">{scorer.player_name as string}</Link>
                         ) : (
                           <div className="text-sm font-semibold truncate">{scorer.player_name as string}</div>
                         )}

@@ -71,13 +71,15 @@ export async function findStandingsByLeague(
   const result = await client.execute({
     sql: `SELECT ls.*,
           COALESCE(t.slug, t2.slug) as team_slug,
-          COALESCE(ls.team_badge, t.badge_url, t2.badge_url) as team_badge_resolved
+          COALESCE(t.badge_url, t2.badge_url, ls.team_badge) as team_badge_resolved
           FROM league_standings ls
           LEFT JOIN teams t ON ls.team_id = t.id
           LEFT JOIN teams t2 ON t.id IS NULL AND (
             t2.name = ls.team_name
-            OR t2.name = ls.team_name || ' FC'
-            OR t2.name || ' FC' = ls.team_name
+            OR REPLACE(REPLACE(REPLACE(REPLACE(t2.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+                = REPLACE(REPLACE(REPLACE(REPLACE(ls.team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+            OR t2.name = 'Bournemouth' AND ls.team_name IN ('AFC Bournemouth')
+            OR t2.name = 'Deportivo Alavés' AND ls.team_name IN ('Alavés')
             OR t2.name = 'Manchester United FC' AND ls.team_name IN ('Man Utd', 'Manchester United')
             OR t2.name = 'Manchester City FC' AND ls.team_name IN ('Man City', 'Manchester City')
             OR t2.name = 'Tottenham Hotspur FC' AND ls.team_name IN ('Tottenham', 'Tottenham Hotspur')
@@ -92,6 +94,8 @@ export async function findStandingsByLeague(
             OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan', 'AC Milan')
             OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
             OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
+            OR LENGTH(ls.team_name) >= 4 AND t2.name LIKE '%' || ls.team_name || '%'
+            OR LENGTH(t2.name) >= 4 AND ls.team_name LIKE '%' || t2.name || '%'
           )
           WHERE ls.league_slug = ?
           ORDER BY ls.position`,
@@ -108,20 +112,22 @@ export async function findStandingsByLeagueAndSeason(
   const result = await client.execute({
     sql: `SELECT ls.*,
           COALESCE(t.slug, t2.slug) as team_slug,
-          COALESCE(ls.team_badge, t.badge_url, t2.badge_url) as team_badge_resolved
+          COALESCE(t.badge_url, t2.badge_url, ls.team_badge) as team_badge_resolved
           FROM league_standings ls
           LEFT JOIN teams t ON ls.team_id = t.id
           LEFT JOIN teams t2 ON t.id IS NULL AND (
             t2.name = ls.team_name
-            OR t2.name = ls.team_name || ' FC'
-            OR t2.name || ' FC' = ls.team_name
+            OR REPLACE(REPLACE(REPLACE(REPLACE(t2.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+                = REPLACE(REPLACE(REPLACE(REPLACE(ls.team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+            OR t2.name = 'Bournemouth' AND ls.team_name IN ('AFC Bournemouth')
+            OR t2.name = 'Deportivo Alavés' AND ls.team_name IN ('Alavés')
             OR t2.name = 'Manchester United FC' AND ls.team_name IN ('Man Utd', 'Manchester United')
             OR t2.name = 'Manchester City FC' AND ls.team_name IN ('Man City', 'Manchester City')
             OR t2.name = 'Tottenham Hotspur FC' AND ls.team_name IN ('Tottenham', 'Tottenham Hotspur', 'Spurs')
             OR t2.name = 'Newcastle United FC' AND ls.team_name IN ('Newcastle', 'Newcastle Utd')
             OR t2.name = 'Nottingham Forest FC' AND ls.team_name IN ('Nottm Forest', 'Nottingham Forest')
             OR t2.name = 'Wolverhampton Wanderers FC' AND ls.team_name IN ('Wolves', 'Wolverhampton')
-            OR t2.name = 'Brighton & Hove Albion FC' AND ls.team_name IN ('Brighton')
+            OR t2.name = 'Brighton & Hove Albion FC' AND ls.team_name IN ('Brighton', 'Brighton & Hove Albion')
             OR t2.name = 'West Ham United FC' AND ls.team_name IN ('West Ham')
             OR t2.name = 'Real Madrid CF' AND ls.team_name IN ('Real Madrid')
             OR t2.name = 'FC Barcelona' AND ls.team_name IN ('Barcelona')
@@ -132,6 +138,8 @@ export async function findStandingsByLeagueAndSeason(
             OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan')
             OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
             OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
+            OR LENGTH(ls.team_name) >= 4 AND t2.name LIKE '%' || ls.team_name || '%'
+            OR LENGTH(t2.name) >= 4 AND ls.team_name LIKE '%' || t2.name || '%'
           )
           WHERE ls.league_slug = ? AND ls.season = ? ORDER BY ls.position`,
     args: [leagueSlug, season],
@@ -146,4 +154,28 @@ export async function findSeasonsByLeague(leagueSlug: string): Promise<string[]>
     args: [leagueSlug],
   });
   return result.rows.map((r) => r.season as string);
+}
+
+export async function findStandingByTeamId(
+  teamId: number,
+  leagueSlug: string
+): Promise<Standing | null> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `SELECT ls.*,
+          COALESCE(t.slug, t2.slug) as team_slug,
+          COALESCE(t.badge_url, t2.badge_url, ls.team_badge) as team_badge_resolved
+          FROM league_standings ls
+          LEFT JOIN teams t ON ls.team_id = t.id
+          LEFT JOIN teams t2 ON t.id IS NULL AND (
+            t2.name = ls.team_name
+            OR REPLACE(REPLACE(REPLACE(REPLACE(t2.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+                = REPLACE(REPLACE(REPLACE(REPLACE(ls.team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
+          )
+          WHERE (ls.team_id = ? OR t2.id = ?) AND ls.league_slug = ?
+          ORDER BY ls.season DESC
+          LIMIT 1`,
+    args: [teamId, teamId, leagueSlug],
+  });
+  return (result.rows[0] as unknown as Standing) ?? null;
 }

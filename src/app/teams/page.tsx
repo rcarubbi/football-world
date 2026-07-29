@@ -29,14 +29,19 @@ export default async function TimesPage({
 
   let teams = await findAllTeamsWithPlayerCount();
 
-  const leagueCounts = teams.reduce((acc, t) => {
-    const slug = t.league_slug as string;
-    acc[slug] = (acc[slug] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const leagueCounts: Record<string, number> = {};
+  for (const t of teams) {
+    const slugs = (t.league_slugs || t.league_slug || "").split(",").filter(Boolean);
+    for (const slug of slugs) {
+      leagueCounts[slug] = (leagueCounts[slug] || 0) + 1;
+    }
+  }
 
   if (leagueFilter) {
-    teams = teams.filter((t) => t.league_slug === leagueFilter);
+    teams = teams.filter((t) => {
+      const slugs = (t.league_slugs || t.league_slug || "").split(",");
+      return slugs.includes(leagueFilter);
+    });
   }
 
   if (searchQuery) {
@@ -102,7 +107,7 @@ export default async function TimesPage({
                     {team.player_count as number} players
               </div>
               <div className="mt-2">
-                <LeagueIcon slug={team.league_slug as string} className="w-5 h-5 text-[8px] mx-auto" />
+                <LeagueIcon slug={(team.league_slugs || team.league_slug || '').split(',')[0] || ''} className="w-5 h-5 text-[8px] mx-auto" />
               </div>
             </Card>
           </Link>

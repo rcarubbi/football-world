@@ -546,6 +546,197 @@ CREATE TABLE IF NOT EXISTS tsdb_schedule (
   fetched_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Staging: SAP (additional)
+CREATE TABLE IF NOT EXISTS sap_team_transfers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_team_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tournament_id INTEGER NOT NULL,
+  season_id INTEGER NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_match_detail (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_match_lineups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_match_statistics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_match_incidents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_match_shotmap (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_players (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_id TEXT NOT NULL UNIQUE,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sap_player_statistics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sap_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Staging: BBD (additional)
+CREATE TABLE IF NOT EXISTS bbd_team_form (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_team_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_team_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_team_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_team_elo (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_team_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_match_detail (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_match_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_match_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_match_odds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_player_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_player_id TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_player_career (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_player_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS bbd_predictions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bbd_match_id TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Staging: Football-Data.org
+CREATE TABLE IF NOT EXISTS fbdo_areas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL UNIQUE,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_competitions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL UNIQUE,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_teams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL,
+  competition_code TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_team_detail (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_scorers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL,
+  competition_code TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_persons (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS fbdo_match_detail (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fd_id INTEGER NOT NULL,
+  competition_code TEXT NOT NULL,
+  raw_json TEXT NOT NULL,
+  fetched_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Staging: YouTube
 CREATE TABLE IF NOT EXISTS yt_videos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

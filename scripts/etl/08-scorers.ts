@@ -28,8 +28,15 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     const leagueId = leagueBySlug.get(leagueSlug) || null;
     const seasonName = raw.season?.name || null;
 
-    const entries = raw.topPlayers || [];
-    for (const entry of entries) {
+    const allPlayers: any[] = [];
+    if (Array.isArray(raw.topPlayers)) {
+      allPlayers.push(...raw.topPlayers);
+    } else if (raw.topPlayers && typeof raw.topPlayers === "object") {
+      for (const cat of Object.values(raw.topPlayers) as any) {
+        if (Array.isArray(cat)) allPlayers.push(...cat);
+      }
+    }
+    for (const entry of allPlayers) {
       const playerName = entry.player?.name || entry.name;
       if (!playerName) continue;
 
@@ -76,7 +83,7 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     const category = row.category as string;
 
     const raw = JSON.parse(row.raw_json as string);
-    const entries = Array.isArray(raw) ? raw : (raw.scorers || raw.players || []);
+      const entries = Array.isArray(raw) ? raw : (Array.isArray(raw.scorers) ? raw.scorers : Array.isArray(raw.players) ? raw.players : []);
     for (const entry of entries) {
       const playerName = entry.player?.name || entry.player_name || entry.name;
       if (!playerName) continue;

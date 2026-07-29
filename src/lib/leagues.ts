@@ -75,7 +75,7 @@ export const LEAGUES: LeagueConfig[] = [
     slug: "brasileirao-serie-a",
     name: "Campeonato Brasileiro Série A",
     country: "Brazil",
-    sportsdbId: "4340",
+    sportsdbId: "4351",
     footballDataCode: "BSA",
     logoUrl: "/images/leagues/brasileirao-serie-a.png",
   },

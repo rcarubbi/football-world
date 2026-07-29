@@ -51,18 +51,22 @@ async function getAlreadyFetchedIds(
 async function getMatchIdsForLeague(
   league: LeagueConfig
 ): Promise<number[]> {
-  const season = getCurrentSeason();
-  try {
-    const matches = (await getMatches(
-      league.footballDataCode,
-      undefined,
-      season
-    )) as { id: number }[];
-
-    return matches.map((m) => m.id);
-  } catch {
-    return [];
+  const seasons = [getCurrentSeason(), new Date().getFullYear()];
+  for (const season of [...new Set(seasons)]) {
+    try {
+      const matches = (await getMatches(
+        league.footballDataCode,
+        undefined,
+        season
+      )) as { id: number }[];
+      if (matches.length > 0) {
+        return matches.map((m) => m.id);
+      }
+    } catch {
+      // try next season
+    }
   }
+  return [];
 }
 
 async function getTeamIdsFromFbdoTeams(

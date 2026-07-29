@@ -70,38 +70,53 @@ function resolveLeagues(filter?: string): string[] {
   process.exit(1);
 }
 
+const MANUAL_SAP_MAP: Record<string, number> = {
+  "brasileirao-serie-a": 325,
+};
+
 async function resolveSAPLeagues(slugs: string[]): Promise<LeagueResolution[]> {
   const resolutions: LeagueResolution[] = [];
   for (const slug of slugs) {
     const league = LEAGUES.find((l) => l.slug === slug);
     if (!league) continue;
-    console.log(`  Resolving SAP tournament for ${league.name}...`);
-    try {
-      const { searchAll } = await import("../../src/lib/api/sportsapipro");
-      const results = await searchAll(league.name);
-      console.log(`  Search results for "${league.name}": ${(results as unknown[]).length} items`);
-      const tournament = (results as { type: string; entity: { id: number; name: string } }[])
-        .find((r) => r.type === "tournament" || r.type === "uniqueTournament");
-      if (!tournament) {
-        console.warn(`  Could not find SAP tournament for ${league.name}`);
-        console.warn(`  Types found: ${(results as { type: string }[]).map(r => r.type).join(', ')}`);
+    let tournamentId: number | null = MANUAL_SAP_MAP[slug] ?? null;
+    if (!tournamentId) {
+      console.log(`  Resolving SAP tournament for ${league.name}...`);
+      try {
+        const { searchAll } = await import("../../src/lib/api/sportsapipro");
+        const results = await searchAll(league.name);
+        console.log(`  Search results for "${league.name}": ${(results as unknown[]).length} items`);
+        const tournament = (results as { type: string; entity: { id: number; name: string } }[])
+          .find((r) => r.type === "tournament" || r.type === "uniqueTournament");
+        if (!tournament) {
+          console.warn(`  Could not find SAP tournament for ${league.name}`);
+          console.warn(`  Types found: ${(results as { type: string }[]).map(r => r.type).join(', ')}`);
+          continue;
+        }
+        tournamentId = tournament.entity.id;
+      } catch (err) {
+        console.error(`  Error resolving ${league.name}: ${err}`);
         continue;
       }
-      const seasons = await getTournamentSeasons(tournament.entity.id) as { id: number; name: string }[];
+    } else {
+      console.log(`  Using manual SAP tournament ID for ${league.name}: ${tournamentId}`);
+    }
+    try {
+      const seasons = await getTournamentSeasons(tournamentId) as { id: number; name: string }[];
       if (!seasons.length) {
         console.warn(`  No seasons for ${league.name}`);
         continue;
       }
-      const currentSeason = seasons[0]; // most recent
+      const currentSeason = seasons[0];
       resolutions.push({
         slug,
         name: league.name,
-        sapTournamentId: tournament.entity.id,
+        sapTournamentId: tournamentId,
         sapSeasonId: currentSeason.id,
       });
-      console.log(`  ${league.name}: tournament=${tournament.entity.id}, season=${currentSeason.id} (${currentSeason.name})`);
+      console.log(`  ${league.name}: tournament=${tournamentId}, season=${currentSeason.id} (${currentSeason.name})`);
     } catch (err) {
-      console.error(`  Error resolving ${league.name}: ${err}`);
+      console.error(`  Error resolving season for ${league.name}: ${err}`);
     }
   }
   return resolutions;

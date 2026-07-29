@@ -170,6 +170,7 @@ export const LEAGUE_MAP: Record<string, string> = {
   "ligue-1": "ligue1",
   "champions-league": "ucl",
   "fifa-world-cup": "wc2026",
+  "brasileirao-serie-a": "bsa",
 };
 
 export function getBBSLeagueId(slug: string): string | null {

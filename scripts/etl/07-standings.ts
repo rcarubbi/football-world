@@ -76,6 +76,7 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     for (const entry of entries) {
       const teamName = entry.teamName;
       if (!teamName) continue;
+      if (!entry.played || entry.played === 0) continue;
       const teamId = entry.teamId ? (sapTeamIdToDbId.get(Number(entry.teamId)) || teamByName.get(normalizeName(teamName)) || null) : teamByName.get(normalizeName(teamName)) || null;
 
       await client.execute({
@@ -100,6 +101,7 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
   }
 
   // ── BBD standings ──────────────────────────────────────────
+  // Skip BBD entries with zero games_played (pre-season placeholder)
   // Build bbd_id → league_slug from leagues table
   const leagueBbdRes = await client.execute("SELECT slug, bbd_id FROM leagues WHERE bbd_id IS NOT NULL");
   const bbdIdToSlug = new Map<string, string>();
@@ -126,6 +128,8 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
       const played = toInt(entry.games_played);
       const gf = toInt(entry.points_for);
       const ga = toInt(entry.points_against);
+
+      if (!played || played === 0) continue;
 
       await client.execute({
         sql: `INSERT INTO league_standings (league_id, league_slug, season, team_id, team_name, position, played, won, drawn, lost, goals_for, goals_against, goal_difference, points, form, source)

@@ -81,6 +81,12 @@ export async function findTopScorersByLeagueAndSeason(
               (SELECT p.slug FROM players p WHERE
                  SUBSTR(ts.player_name, 1, 1) = SUBSTR(p.name, 1, 1)
                  AND SUBSTR(ts.player_name, INSTR(ts.player_name, ' ') + 1) = SUBSTR(p.name, INSTR(p.name, ' ') + 1)
+                 LIMIT 1),
+              -- FBDO persons fallback
+              (SELECT LOWER(REPLACE(fp.name, ' ', '-')) FROM fbdo_persons fp WHERE LOWER(fp.name) = LOWER(ts.player_name) LIMIT 1),
+              (SELECT LOWER(REPLACE(fp.name, ' ', '-')) FROM fbdo_persons fp WHERE
+                 SUBSTR(ts.player_name, 1, 1) = SUBSTR(fp.name, 1, 1)
+                 AND SUBSTR(ts.player_name, INSTR(ts.player_name, ' ') + 1) = SUBSTR(fp.name, INSTR(fp.name, ' ') + 1)
                  LIMIT 1)
             ) as player_slug_resolved,
             COALESCE(

@@ -29,7 +29,21 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     const lastName = name.split(" ").pop()?.toLowerCase() || "";
     if (lastName) playerByLastName.set(lastName, { slug, name, photoUrl });
   }
-  log(`  Players indexed: ${playerBySlug.size} slugs, ${playerByLastName.size} last names`);
+
+  // Build FBDO persons lookup as additional fallback
+  const fdPersonsRes = await client.execute("SELECT name, raw_json FROM fbdo_persons");
+  const fdPersonByName = new Map<string, { slug: string; name: string }>();
+  for (const row of fdPersonsRes.rows) {
+    const name = row.name as string;
+    if (!name) continue;
+    const raw = JSON.parse(row.raw_json as string);
+    const slug = (raw.slug || name.toLowerCase().replace(/\s+/g, "-")) as string;
+    fdPersonByName.set(name.toLowerCase(), { slug, name });
+    // Also index by last name
+    const lastName = name.split(" ").pop()?.toLowerCase() || "";
+    if (lastName && !fdPersonByName.has(lastName)) fdPersonByName.set(lastName, { slug, name });
+  }
+  log(`  Players indexed: ${playerBySlug.size} slugs, ${playerByLastName.size} last names, ${fdPersonByName.size} FD persons`);
 
   // Resolve player slug with fuzzy fallback for abbreviated names
   function resolvePlayerSlug(playerName: string): { slug: string; photoUrl: string | null } {
@@ -44,6 +58,17 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
       const fuzzy = playerByLastName.get(lastName);
       if (fuzzy) return { slug: fuzzy.slug, photoUrl: fuzzy.photoUrl };
     }
+
+    // Fallback: try FBDO persons lookup
+    const fdName = fdPersonByName.get(playerName.toLowerCase());
+    if (fdName) return { slug: fdName.slug, photoUrl: null };
+
+    // Fallback: try FBDO by last name
+    if (lastName) {
+      const fdLast = fdPersonByName.get(lastName);
+      if (fdLast) return { slug: fdLast.slug, photoUrl: null };
+    }
+
     return { slug: directSlug, photoUrl: null };
   }
 

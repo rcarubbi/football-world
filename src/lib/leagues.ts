@@ -7,6 +7,20 @@ export interface LeagueConfig {
   logoUrl: string;
 }
 
+export interface LeagueRow {
+  id: number;
+  slug: string;
+  name: string;
+  country: string | null;
+  badge_url: string | null;
+  logo_url: string | null;
+  sportsapipro_id: number | null;
+  thesportsdb_id: string | null;
+  bbd_id: string | null;
+  football_data_code: string | null;
+  current_season: string | null;
+}
+
 export function getCurrentSeason(): number {
   const now = new Date();
   const year = now.getFullYear();
@@ -14,6 +28,7 @@ export function getCurrentSeason(): number {
   return month >= 8 ? year : year - 1;
 }
 
+// Static config for 8 core leagues (used by importers that need FD codes)
 export const LEAGUES: LeagueConfig[] = [
   {
     slug: "premier-league",
@@ -83,6 +98,26 @@ export const LEAGUES: LeagueConfig[] = [
 
 export function getLeagueBySlug(slug: string): LeagueConfig | undefined {
   return LEAGUES.find((l) => l.slug === slug);
+}
+
+// DB-backed leagues (all ~160 leagues, not just the 8 core)
+export async function getLeaguesFromDb(): Promise<LeagueRow[]> {
+  const { getTursoClient } = await import("./turso/client");
+  const client = getTursoClient();
+  const result = await client.execute(
+    "SELECT * FROM leagues ORDER BY slug"
+  );
+  return result.rows as unknown as LeagueRow[];
+}
+
+export async function getLeagueBySlugFromDb(slug: string): Promise<LeagueRow | null> {
+  const { getTursoClient } = await import("./turso/client");
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: "SELECT * FROM leagues WHERE slug = ? LIMIT 1",
+    args: [slug],
+  });
+  return (result.rows[0] as unknown as LeagueRow) ?? null;
 }
 
 

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS leagues (
   sportsapipro_id INTEGER,
   thesportsdb_id TEXT,
   bbd_id TEXT,
+  football_data_code TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -761,7 +762,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_scorers_natural ON top_scorers(player_name
 CREATE UNIQUE INDEX IF NOT EXISTS idx_honours_natural ON player_honours(player_name, honour_name, year, source);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_transfers_natural ON transfers(league_slug, season, player_name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_former_teams_natural ON player_former_teams(player_name, team_name, source);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_source_ext ON videos(source, external_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_video_id ON videos(video_id);
+CREATE INDEX IF NOT EXISTS idx_videos_source_ext ON videos(source, external_id);
 CREATE INDEX IF NOT EXISTS idx_match_events_natural ON match_events(match_id, event_type, event_time, player_name);
 CREATE INDEX IF NOT EXISTS idx_match_events_match ON match_events(match_id);
 CREATE INDEX IF NOT EXISTS idx_teams_slug_league ON teams(slug, league_slug);

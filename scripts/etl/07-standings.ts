@@ -3,9 +3,16 @@ import { resolve } from "path";
 config({ path: resolve(__dirname, "../../.env.local") });
 
 import { getTursoClient } from "../../src/lib/turso/client";
-import { normalizeName, toInt } from "./normalization";
+import { normalizeName, resolveLeagueSlug, toInt } from "./normalization";
 
 const log = (msg: string) => console.log(`[standings] ${msg}`);
+
+function getCurrentSeason(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  return month >= 8 ? year : year - 1;
+}
 
 export async function runEtl(client: ReturnType<typeof getTursoClient>) {
   log("Starting...");
@@ -37,16 +44,34 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
   }
   log(`  SAP teamId→db_id mapped: ${sapTeamIdToDbId.size} teams`);
 
-  // Pull from SAP standings (flat array of {position, teamId, teamName, played, won, drawn, lost, goalsFor, goalsAgainst, points})
-  const sapRes = await client.execute("SELECT raw_json FROM sap_standings");
+  // Build tournament_id → league_slug from sap_tournaments
+  const tourneyRes = await client.execute("SELECT raw_json FROM sap_tournaments");
+  const tourneyIdToSlug = new Map<number, string>();
+  for (const row of tourneyRes.rows) {
+    const raw = JSON.parse(row.raw_json as string);
+    if (Array.isArray(raw)) {
+      for (const t of raw) {
+        if (t.id && t.name) {
+          tourneyIdToSlug.set(Number(t.id), resolveLeagueSlug(t.name));
+        }
+      }
+    }
+  }
+  log(`  Tournament ID→slug mapped: ${tourneyIdToSlug.size} tournaments`);
+
+  const currentSeason = getCurrentSeason().toString();
   let inserted = 0;
 
+  // ── SAP standings ──────────────────────────────────────────
+  const sapRes = await client.execute("SELECT tournament_id, raw_json FROM sap_standings");
   for (const row of sapRes.rows) {
     const raw = JSON.parse(row.raw_json as string);
     const entries = Array.isArray(raw) ? raw : (raw.standings?.[0]?.rows || raw.rows || []);
-    const leagueSlug = "premier-league"; // SAP standings are for PL
+    if (entries.length === 0) continue;
+
+    const tid = Number(row.tournament_id);
+    const leagueSlug = tourneyIdToSlug.get(tid) || "unknown";
     const leagueId = leagueBySlug.get(leagueSlug) || null;
-    const seasonName = "2026/2027"; // Current SAP season
 
     for (const entry of entries) {
       const teamName = entry.teamName;
@@ -63,7 +88,7 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
                 goal_difference=excluded.goal_difference, points=excluded.points,
                 form=excluded.form, source=excluded.source, updated_at=datetime('now')`,
         args: [
-          leagueId, leagueSlug, seasonName, teamId, teamName,
+          leagueId, leagueSlug, currentSeason, teamId, teamName,
           toInt(entry.position), toInt(entry.played), toInt(entry.won),
           toInt(entry.drawn), toInt(entry.lost), toInt(entry.goalsFor),
           toInt(entry.goalsAgainst), (toInt(entry.goalsFor) ?? 0) - (toInt(entry.goalsAgainst) ?? 0),
@@ -74,20 +99,20 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     }
   }
 
-  // Also pull from bbd_standings
-  const bbdLeagueMap: Record<string, string> = {
-    epl: "premier-league", laliga: "la-liga", bundesliga: "bundesliga",
-    "serie-a": "serie-a", "seriea": "serie-a",
-    "ligue-1": "ligue-1", "ligue1": "ligue-1",
-    "champions-league": "champions-league",
-  };
+  // ── BBD standings ──────────────────────────────────────────
+  // Build bbd_id → league_slug from leagues table
+  const leagueBbdRes = await client.execute("SELECT slug, bbd_id FROM leagues WHERE bbd_id IS NOT NULL");
+  const bbdIdToSlug = new Map<string, string>();
+  for (const row of leagueBbdRes.rows) {
+    bbdIdToSlug.set(row.bbd_id as string, row.slug as string);
+  }
 
   const bbdRes = await client.execute("SELECT league_id, season, raw_json FROM bbd_standings");
   for (const row of bbdRes.rows) {
     const bbdLeagueId = row.league_id as string;
-    const leagueSlug = bbdLeagueMap[bbdLeagueId] || bbdLeagueId;
+    const leagueSlug = bbdIdToSlug.get(bbdLeagueId) || bbdLeagueId;
     const leagueId = leagueBySlug.get(leagueSlug) || null;
-    const seasonName = row.season as string || null;
+    const seasonName = row.season as string || currentSeason;
 
     const raw = JSON.parse(row.raw_json as string);
     const entries = Array.isArray(raw) ? raw : (raw.table || raw.rows || []);

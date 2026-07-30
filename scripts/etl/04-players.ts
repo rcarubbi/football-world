@@ -3,7 +3,7 @@ import { resolve } from "path";
 config({ path: resolve(__dirname, "../../.env.local") });
 
 import { getTursoClient } from "../../src/lib/turso/client";
-import { normalizeName, normalizeTeamName, toStr } from "./normalization";
+import { normalizeName, normalizeTeamName, toStr, toInt } from "./normalization";
 
 const log = (msg: string) => console.log(`[players] ${msg}`);
 
@@ -94,6 +94,123 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
     await client.batch(statements);
     inserted += batch.length;
     if (inserted % 500 === 0) log(`  ... ${inserted}/${entries.length}`);
+  }
+
+  // Also pull from fbdo_persons
+  // Build slug→id lookup of existing players to match FD data
+  const existingPlayers = await client.execute("SELECT id, slug FROM players");
+  const playerBySlug = new Map<string, number>();
+  for (const row of existingPlayers.rows) {
+    const s = row.slug as string;
+    if (s) playerBySlug.set(s, row.id as number);
+  }
+
+  const fdRes = await client.execute(
+    "SELECT fd_id, name, first_name, last_name, date_of_birth, nationality, position, shirt_number FROM fbdo_persons"
+  );
+  for (const row of fdRes.rows) {
+    const name = row.name as string;
+    if (!name) continue;
+
+    const slug = normalizeName(name).replace(/\s+/g, "-");
+    const existingId = playerBySlug.get(slug);
+
+    if (existingId) {
+      await client.execute({
+        sql: `UPDATE players SET
+                source=COALESCE(?, source),
+                name=?, short_name=COALESCE(?, short_name),
+                position=COALESCE(?, position),
+                nationality=COALESCE(?, nationality),
+                date_of_birth=COALESCE(?, date_of_birth),
+                jersey_number=COALESCE(?, jersey_number),
+                updated_at=datetime('now')
+              WHERE id=?`,
+        args: [
+          "footballdata", name,
+          (row.first_name as string) || (row.last_name as string) || null,
+          toStr(row.position), toStr(row.nationality), toStr(row.date_of_birth),
+          row.shirt_number ?? null, existingId,
+        ],
+      });
+      inserted++;
+    } else {
+      await client.execute({
+        sql: `INSERT INTO players (source, external_id, name, slug, short_name, position, nationality, date_of_birth, jersey_number)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(external_id) DO UPDATE SET
+                name=excluded.name, source=excluded.source,
+                short_name=COALESCE(excluded.short_name, players.short_name),
+                position=COALESCE(excluded.position, players.position),
+                nationality=COALESCE(excluded.nationality, players.nationality),
+                date_of_birth=COALESCE(excluded.date_of_birth, players.date_of_birth),
+                jersey_number=COALESCE(excluded.jersey_number, players.jersey_number),
+                updated_at=datetime('now')`,
+        args: [
+          "footballdata", "fd-" + (row.fd_id as number),
+          name, slug,
+          (row.first_name as string) || (row.last_name as string) || null,
+          toStr(row.position), toStr(row.nationality), toStr(row.date_of_birth),
+          row.shirt_number ?? null,
+        ],
+      });
+      inserted++;
+    }
+  }
+
+  // Also pull from sap_squads to link players to teams
+  // Build sap_team_id → team_id mapping from sap_teams
+  const sapTeamsRes = await client.execute("SELECT sap_id, raw_json FROM sap_teams");
+  const sapTeamToDbId = new Map<string, number>();
+  for (const row of sapTeamsRes.rows) {
+    const raw = JSON.parse(row.raw_json as string);
+    const team = raw.team || raw;
+    const name = toStr(team.name) || toStr(team.shortName);
+    if (!name) continue;
+    const normName = normalizeTeamName(name);
+    // Look up in teamByName from existing teams
+    for (const [tName, tId] of teamByName) {
+      if (normalizeTeamName(tName) === normName) {
+        sapTeamToDbId.set(row.sap_id as string, tId);
+        break;
+      }
+    }
+  }
+
+  const sapSquadRes = await client.execute("SELECT sap_team_id, raw_json FROM sap_squads");
+  for (const row of sapSquadRes.rows) {
+    const raw = JSON.parse(row.raw_json as string);
+    const players = Array.isArray(raw.players) ? raw.players : (Array.isArray(raw) ? raw : []);
+    const teamId = sapTeamToDbId.get(row.sap_team_id as string) || null;
+
+    for (const entry of players) {
+      const p = entry.player || entry;
+      const playerName = toStr(p.name);
+      if (!playerName) continue;
+
+      const slug = normalizeName(playerName).replace(/\s+/g, "-");
+      const existingId = playerBySlug.get(slug);
+      if (!existingId) continue;
+
+      const pos = toStr(p.position);
+      const jersey = toInt(p.jerseyNumber);
+      if ((!pos && !jersey && !teamId)) continue;
+
+      const updates: string[] = [];
+      const args: unknown[] = [];
+      if (teamId) { updates.push("team_id=COALESCE(?, team_id)"); args.push(teamId); }
+      if (pos) { updates.push("position=COALESCE(?, position)"); args.push(pos); }
+      if (jersey) { updates.push("jersey_number=COALESCE(?, jersey_number)"); args.push(jersey); }
+      if (updates.length === 0) continue;
+      updates.push("updated_at=datetime('now')");
+      args.push(existingId);
+
+      await client.execute({
+        sql: `UPDATE players SET ${updates.join(", ")} WHERE id=?`,
+        args,
+      });
+      inserted++;
+    }
   }
 
   log(`Done: ${inserted} players upserted`);

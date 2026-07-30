@@ -61,21 +61,34 @@ export async function findTopScorersByLeagueAndSeason(
 ): Promise<Array<TopScorer & { photo_url: string | null; player_slug_resolved: string | null; team_slug: string | null }>> {
   const client = getTursoClient();
 
-  // First, get top scorers (deduplicated via subquery)
-  // Team JOIN uses COALESCE to prefer exact name match over FC/CF suffix match
   const scorerResult = await client.execute({
     sql: `SELECT ts.id,
             ts.player_name, ts.player_slug, ts.team_name, ts.team_badge, ts.league_slug, ts.season,
             ts.goals, ts.assists, ts.penalties,
             COALESCE(
               (SELECT p.photo_url FROM players p WHERE p.slug = ts.player_slug AND p.photo_url IS NOT NULL AND p.photo_url != '' LIMIT 1),
+              -- Fuzzy fallback: match first initial + last name for abbreviated names
+              (SELECT p.photo_url FROM players p WHERE
+                 SUBSTR(ts.player_name, 1, 1) = SUBSTR(p.name, 1, 1)
+                 AND SUBSTR(ts.player_name, INSTR(ts.player_name, ' ') + 1) = SUBSTR(p.name, INSTR(p.name, ' ') + 1)
+                 AND p.photo_url IS NOT NULL AND p.photo_url != ''
+                 LIMIT 1),
               ts.photo_url
             ) as photo_url,
-            (SELECT p.slug FROM players p WHERE p.slug = ts.player_slug LIMIT 1) as player_slug_resolved,
+            COALESCE(
+              (SELECT p.slug FROM players p WHERE p.slug = ts.player_slug LIMIT 1),
+              -- Fuzzy fallback for slug resolution
+              (SELECT p.slug FROM players p WHERE
+                 SUBSTR(ts.player_name, 1, 1) = SUBSTR(p.name, 1, 1)
+                 AND SUBSTR(ts.player_name, INSTR(ts.player_name, ' ') + 1) = SUBSTR(p.name, INSTR(p.name, ' ') + 1)
+                 LIMIT 1)
+            ) as player_slug_resolved,
             COALESCE(
               (SELECT t.slug FROM teams t WHERE t.name = ts.team_name LIMIT 1),
               (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' FC', '') = REPLACE(ts.team_name, ' FC', '') LIMIT 1),
-              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' CF', '') = REPLACE(ts.team_name, ' CF', '') LIMIT 1)
+              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' CF', '') = REPLACE(ts.team_name, ' CF', '') LIMIT 1),
+              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' AFC', '') = REPLACE(ts.team_name, ' AFC', '') LIMIT 1),
+              (SELECT t.slug FROM teams t WHERE REPLACE(t.name, ' & ', ' and ') = REPLACE(ts.team_name, ' & ', ' and ') LIMIT 1)
             ) as team_slug
           FROM top_scorers ts
           WHERE ts.league_slug = ? AND ts.season = ? AND ts.goals > 0

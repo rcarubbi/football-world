@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth, getCurrentSeason, sleep } from "../auth";
-import { LEAGUES } from "../../../../lib/leagues";
+import { getLeaguesFromDb } from "../../../../lib/leagues";
 import { searchVideos, parseDuration } from "../../../../lib/api/youtube";
 import { upsertVideo } from "../../../../lib/db/videos";
 import { findTeamsWithoutVideos } from "../../../../lib/db/teams";
@@ -75,7 +75,8 @@ export async function GET(request: NextRequest) {
   }
 
   // League videos
-  for (const league of LEAGUES) {
+  const dbLeagues = await getLeaguesFromDb();
+  for (const league of dbLeagues) {
     try {
       const query = `${league.name} football highlights ${season}`;
       const videos = await searchVideos(query, 5);

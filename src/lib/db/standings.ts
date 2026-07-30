@@ -73,8 +73,8 @@ export async function findStandingsByLeague(
           COALESCE(t.slug, t2.slug) as team_slug,
           COALESCE(t.badge_url, t2.badge_url, ls.team_badge) as team_badge_resolved
           FROM league_standings ls
-          LEFT JOIN teams t ON ls.team_id = t.id
-          LEFT JOIN teams t2 ON t.id IS NULL AND (
+          LEFT JOIN teams t ON ls.team_id = t.id AND t.league_slug = ls.league_slug
+          LEFT JOIN teams t2 ON t.id IS NULL AND t2.league_slug = ls.league_slug AND (
             t2.name = ls.team_name
             OR REPLACE(REPLACE(REPLACE(REPLACE(t2.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
                 = REPLACE(REPLACE(REPLACE(REPLACE(ls.team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
@@ -94,8 +94,6 @@ export async function findStandingsByLeague(
             OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan', 'AC Milan')
             OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
             OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
-            OR LENGTH(ls.team_name) >= 4 AND t2.name LIKE '%' || ls.team_name || '%'
-            OR LENGTH(t2.name) >= 4 AND ls.team_name LIKE '%' || t2.name || '%'
           )
           WHERE ls.league_slug = ?
           ORDER BY ls.position`,
@@ -114,8 +112,8 @@ export async function findStandingsByLeagueAndSeason(
           COALESCE(t.slug, t2.slug) as team_slug,
           COALESCE(t.badge_url, t2.badge_url, ls.team_badge) as team_badge_resolved
           FROM league_standings ls
-          LEFT JOIN teams t ON ls.team_id = t.id
-          LEFT JOIN teams t2 ON t.id IS NULL AND (
+          LEFT JOIN teams t ON ls.team_id = t.id AND t.league_slug = ls.league_slug
+          LEFT JOIN teams t2 ON t.id IS NULL AND t2.league_slug = ls.league_slug AND (
             t2.name = ls.team_name
             OR REPLACE(REPLACE(REPLACE(REPLACE(t2.name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
                 = REPLACE(REPLACE(REPLACE(REPLACE(ls.team_name, ' FC', ''), ' CF', ''), ' AFC', ''), ' & ', ' and ')
@@ -138,8 +136,6 @@ export async function findStandingsByLeagueAndSeason(
             OR t2.name = 'AC Milan' AND ls.team_name IN ('Milan')
             OR t2.name = 'Juventus FC' AND ls.team_name IN ('Juventus')
             OR t2.name = 'Atlético de Madrid' AND ls.team_name IN ('Atlético Madrid', 'Atletico Madrid')
-            OR LENGTH(ls.team_name) >= 4 AND t2.name LIKE '%' || ls.team_name || '%'
-            OR LENGTH(t2.name) >= 4 AND ls.team_name LIKE '%' || t2.name || '%'
           )
           WHERE ls.league_slug = ? AND ls.season = ? ORDER BY ls.position`,
     args: [leagueSlug, season],

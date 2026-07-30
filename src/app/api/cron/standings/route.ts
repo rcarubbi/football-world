@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth, getCurrentSeason } from "../auth";
-import { LEAGUES } from "../../../../lib/leagues";
+import { getLeaguesFromDb } from "../../../../lib/leagues";
 import { getStandings as getStandingsFD } from "../../../../lib/api/football-data";
 import { getStandings as getStandingsBBS, getBBSLeagueId } from "../../../../lib/api/bigballs";
 import { upsertStanding } from "../../../../lib/db/standings";
@@ -31,13 +31,62 @@ export async function GET(request: NextRequest) {
   let updated = 0;
   let source = "none";
 
-  for (const league of LEAGUES) {
-    try {
-      const bbsId = getBBSLeagueId(league.slug);
+  const dbLeagues = await getLeaguesFromDb();
 
+  for (const league of dbLeagues) {
+    const slug = league.slug;
+    const name = league.name;
+    const fdCode = league.football_data_code;
+
+    try {
+      // 1) Try Football-Data.org first (real data)
+      if (fdCode) {
+        try {
+          const standings = (await getStandingsFD(
+            fdCode,
+            season
+          )) as FootballDataStanding[];
+          const regularSeason =
+            standings.find((s) => s.stage === "REGULAR_SEASON") || standings[0];
+          if (regularSeason) {
+            for (const entry of regularSeason.table) {
+              const team = await findTeamIdByName(entry.team.name);
+              await upsertStanding({
+                league_slug: slug,
+                season: season.toString(),
+                position: entry.position,
+                team_id: team?.id ?? null,
+                team_name: team?.name ?? entry.team.name,
+                team_badge: entry.team.crest ?? team?.badge_url ?? null,
+                played: entry.playedGames,
+                won: entry.won,
+                drawn: entry.draw,
+                lost: entry.lost,
+                goals_for: entry.goalsFor,
+                goals_against: entry.goalsAgainst,
+                goal_difference: entry.goalDifference,
+                points: entry.points,
+                form: entry.form,
+              });
+              updated++;
+            }
+            source = "football-data";
+            continue;
+          }
+        } catch (e) {
+          console.error(`Football-Data standings failed for ${name}, falling back:`, (e as Error).message);
+        }
+      }
+
+      // 2) Fallback: Big Balls Data
+      const bbsId = getBBSLeagueId(slug);
       if (bbsId) {
         try {
           const rows = await getStandingsBBS(bbsId);
+          if (rows.length > 0 && rows.every(r => (r.games_played ?? 0) === 0)) {
+            console.warn(`BBS standings for ${name} are pre-season (all zeros), skipping`);
+            continue;
+          }
           for (const entry of rows) {
             const team = await findTeamIdByName(entry.team_name);
             const wins = entry.wins;
@@ -45,7 +94,7 @@ export async function GET(request: NextRequest) {
             const gf = entry.points_for ?? 0;
             const ga = entry.points_against ?? 0;
             await upsertStanding({
-              league_slug: league.slug,
+              league_slug: slug,
               season: season.toString(),
               position: entry.rank,
               team_id: team?.id ?? null,
@@ -63,44 +112,12 @@ export async function GET(request: NextRequest) {
             updated++;
           }
           source = "bigballs";
-          continue;
         } catch (e) {
-          console.error(`Big Balls standings failed for ${league.name}, falling back:`, (e as Error).message);
+          console.error(`Big Balls standings failed for ${name}:`, (e as Error).message);
         }
       }
-
-      const standings = (await getStandingsFD(
-        league.footballDataCode,
-        season
-      )) as FootballDataStanding[];
-      const regularSeason =
-        standings.find((s) => s.stage === "REGULAR_SEASON") || standings[0];
-      if (!regularSeason) continue;
-
-      for (const entry of regularSeason.table) {
-        const team = await findTeamIdByName(entry.team.name);
-        await upsertStanding({
-          league_slug: league.slug,
-          season: season.toString(),
-          position: entry.position,
-          team_id: team?.id ?? null,
-          team_name: team?.name ?? entry.team.name,
-          team_badge: entry.team.crest ?? team?.badge_url ?? null,
-          played: entry.playedGames,
-          won: entry.won,
-          drawn: entry.draw,
-          lost: entry.lost,
-          goals_for: entry.goalsFor,
-          goals_against: entry.goalsAgainst,
-          goal_difference: entry.goalDifference,
-          points: entry.points,
-          form: entry.form,
-        });
-        updated++;
-      }
-      source = "football-data";
     } catch (error) {
-      console.error(`Error refreshing standings for ${league.name}:`, error);
+      console.error(`Error refreshing standings for ${name}:`, error);
     }
   }
 

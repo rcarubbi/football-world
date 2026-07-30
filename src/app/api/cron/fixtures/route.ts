@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth, getCurrentSeason } from "../auth";
-import { LEAGUES } from "../../../../lib/leagues";
+import { getLeaguesFromDb } from "../../../../lib/leagues";
 import { getMatches } from "../../../../lib/api/football-data";
 import { upsertMatch } from "../../../../lib/db/matches";
 
@@ -22,10 +22,14 @@ export async function GET(request: NextRequest) {
   const season = getCurrentSeason();
   let updated = 0;
 
-  for (const league of LEAGUES) {
+  const dbLeagues = await getLeaguesFromDb();
+  for (const league of dbLeagues) {
+    const fdCode = league.football_data_code;
+    if (!fdCode) continue;
+
     try {
       const matches = (await getMatches(
-        league.footballDataCode,
+        fdCode,
         undefined,
         season
       )) as FootballDataMatch[];

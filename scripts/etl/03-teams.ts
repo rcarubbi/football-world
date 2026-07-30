@@ -3,6 +3,7 @@ import { resolve } from "path";
 config({ path: resolve(__dirname, "../../.env.local") });
 
 import { getTursoClient } from "../../src/lib/turso/client";
+import { LEAGUES } from "../../src/lib/leagues";
 import { normalizeTeamName, resolveLeagueSlug, toStr, toInt } from "./normalization";
 
 const log = (msg: string) => console.log(`[teams] ${msg}`);
@@ -95,6 +96,98 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
         leagueSlug, toStr(raw.strDescriptionEN), sap?.primary || null, sap?.secondary || null,
         toInt(raw.intStadiumCapacity), venueId, toStr(raw.strWebsite),
         toStr(raw.strBanner), toStr(raw.strEquipment),
+      ],
+    });
+    inserted++;
+  }
+
+  // Also pull from fbdo_teams
+  const fdCodeToSlug = new Map<string, string>();
+  for (const l of LEAGUES) {
+    if (l.footballDataCode) fdCodeToSlug.set(l.footballDataCode, l.slug);
+  }
+
+  const fdRes = await client.execute(
+    "SELECT fd_id, competition_code, name, short_name, crest_url, address, founded, venue FROM fbdo_teams"
+  );
+  for (const row of fdRes.rows) {
+    const code = row.competition_code as string;
+    const leagueSlug = fdCodeToSlug.get(code);
+    if (!leagueSlug) continue;
+    const name = row.name as string;
+    if (!name) continue;
+    const slug = normalizeTeamName(name).replace(/\s+/g, "-");
+    const shortName = row.short_name as string || null;
+    const badgeUrl = row.crest_url as string || null;
+    const venueName = row.venue as string || null;
+
+    await client.execute({
+      sql: `INSERT INTO teams (source, external_id, football_data_id, name, slug, short_name, badge_url, founded, location, stadium, league_slug)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(slug) DO UPDATE SET
+              football_data_id=COALESCE(excluded.football_data_id, teams.football_data_id),
+              name=excluded.name,
+              short_name=COALESCE(excluded.short_name, teams.short_name),
+              badge_url=COALESCE(excluded.badge_url, teams.badge_url),
+              founded=COALESCE(excluded.founded, teams.founded),
+              stadium=COALESCE(excluded.stadium, teams.stadium),
+              updated_at=datetime('now')`,
+      args: [
+        "footballdata", "fd-" + (row.fd_id as number), row.fd_id as number,
+        name, slug, shortName, badgeUrl,
+        toStr(row.founded), toStr(row.address), venueName, leagueSlug,
+      ],
+    });
+    inserted++;
+  }
+
+  // Also pull from tsdb_team_equipment for kit URLs
+  const equipRes = await client.execute("SELECT team_tsdb_id, raw_json FROM tsdb_team_equipment WHERE raw_json IS NOT NULL");
+  const kitsByTeam = new Map<string, { home: string | null; away: string | null }>();
+  for (const row of equipRes.rows) {
+    const raw = JSON.parse(row.raw_json as string);
+    const teamTsdbId = raw.idTeam as string;
+    const url = raw.strEquipment as string;
+    const type = (raw.strType as string || "").toLowerCase();
+    if (!teamTsdbId || !url) continue;
+    let kit = kitsByTeam.get(teamTsdbId);
+    if (!kit) { kit = { home: null, away: null }; kitsByTeam.set(teamTsdbId, kit); }
+    if (type.startsWith("1st") || type.startsWith("home") || (!kit.home)) kit.home = url;
+    else if (type.startsWith("2nd") || type.startsWith("away")) kit.away = url;
+  }
+  for (const [tsdbId, kit] of kitsByTeam) {
+    const r = await client.execute({
+      sql: "UPDATE teams SET kit_home_url=COALESCE(?, kit_home_url), kit_away_url=COALESCE(?, kit_away_url), updated_at=datetime('now') WHERE thesportsdb_id=?",
+      args: [kit.home, kit.away, tsdbId],
+    });
+    if (r.rowsAffected > 0) inserted++;
+  }
+
+  // Also pull from fbdo_team_detail for extra team info
+  const fdDetailRes = await client.execute(
+    "SELECT fd_id, name, crest_url, venue, founded, coach_name, address, website FROM fbdo_team_detail"
+  );
+  for (const row of fdDetailRes.rows) {
+    const name = row.name as string;
+    if (!name) continue;
+    const slug = normalizeTeamName(name).replace(/\s+/g, "-");
+
+    await client.execute({
+      sql: `INSERT INTO teams (source, external_id, football_data_id, name, slug, short_name, badge_url, founded, stadium, location, league_slug)
+            VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 'unknown')
+            ON CONFLICT(slug) DO UPDATE SET
+              football_data_id=COALESCE(excluded.football_data_id, teams.football_data_id),
+              name=excluded.name,
+              badge_url=COALESCE(excluded.badge_url, teams.badge_url),
+              founded=COALESCE(?, teams.founded),
+              stadium=COALESCE(?, teams.stadium),
+              website=COALESCE(?, teams.website),
+              updated_at=datetime('now')`,
+      args: [
+        "footballdata", "fd-" + (row.fd_id as number) + "-detail", row.fd_id as number,
+        name, slug, row.crest_url as string || null,
+        toStr(row.founded), toStr(row.venue), toStr(row.address),
+        toStr(row.founded), toStr(row.venue), toStr(row.website),
       ],
     });
     inserted++;

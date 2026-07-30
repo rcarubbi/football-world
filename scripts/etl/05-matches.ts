@@ -3,6 +3,7 @@ import { resolve } from "path";
 config({ path: resolve(__dirname, "../../.env.local") });
 
 import { getTursoClient } from "../../src/lib/turso/client";
+import { LEAGUES } from "../../src/lib/leagues";
 import { normalizeTeamName, resolveLeagueSlug, toStr, toInt } from "./normalization";
 
 const log = (msg: string) => console.log(`[matches] ${msg}`);
@@ -75,6 +76,50 @@ export async function runEtl(client: ReturnType<typeof getTursoClient>) {
         toStr(raw.strHomeTeamBadge), toStr(raw.strAwayTeamBadge),
         toStr(raw.strPoster), toStr(raw.strThumb), toStr(raw.strBanner),
         toStr(raw.strSquare), toStr(raw.strVideo), toStr(raw.idAPIfootball),
+      ],
+    });
+    inserted++;
+  }
+
+  // Also pull from fbdo_match_detail
+  const fdCodeToSlug = new Map<string, string>();
+  for (const l of LEAGUES) {
+    if (l.footballDataCode) fdCodeToSlug.set(l.footballDataCode, l.slug);
+  }
+
+  const fdRes = await client.execute(
+    "SELECT competition_code, season, matchday, status, home_team_name, away_team_name, home_score, away_score, match_date, match_time, venue, attendance FROM fbdo_match_detail"
+  );
+  for (const row of fdRes.rows) {
+    const code = row.competition_code as string;
+    const leagueSlug = fdCodeToSlug.get(code);
+    if (!leagueSlug) continue;
+
+    const homeName = row.home_team_name as string;
+    const awayName = row.away_team_name as string;
+    const matchDate = row.match_date as string;
+    if (!homeName || !awayName || !matchDate) continue;
+
+    const homeTeamId = teamByName.get(normalizeTeamName(homeName)) || null;
+    const awayTeamId = teamByName.get(normalizeTeamName(awayName)) || null;
+    const leagueId = leagueBySlug.get(leagueSlug) || null;
+    const venueName = row.venue as string || null;
+    const venueId = venueName ? venueByName.get(normalizeTeamName(venueName)) || null : null;
+
+    await client.execute({
+      sql: `INSERT INTO matches (source, league_slug, league_id, season, matchday, status, home_team_id, home_team_name, home_score, away_team_id, away_team_name, away_score, match_date, match_time, venue, venue_id, spectators)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(home_team_name, away_team_name, match_date, season) DO UPDATE SET
+              status=excluded.status, home_score=excluded.home_score, away_score=excluded.away_score,
+              match_time=excluded.match_time, venue=excluded.venue, venue_id=excluded.venue_id,
+              spectators=excluded.spectators`,
+      args: [
+        "footballdata", leagueSlug, leagueId,
+        toStr(row.season), toInt(row.matchday), toStr(row.status),
+        homeTeamId, homeName, toInt(row.home_score),
+        awayTeamId, awayName, toInt(row.away_score),
+        matchDate, toStr(row.match_time), venueName, venueId,
+        toInt(row.attendance),
       ],
     });
     inserted++;

@@ -20,6 +20,7 @@ async function main() {
     { name: "09-honours", fn: () => import("./09-honours").then(m => m.runEtl(client)) },
     { name: "10-former-teams", fn: () => import("./10-former-teams").then(m => m.runEtl(client)) },
     { name: "11-videos", fn: () => import("./11-videos").then(m => m.runEtl(client)) },
+    { name: "12-transfers", fn: () => import("./12-transfers").then(m => m.runEtl(client)) },
   ];
 
   console.log("=== ETL Run Starting ===\n");

@@ -21,6 +21,7 @@ async function main() {
     { name: "10-former-teams", fn: () => import("./10-former-teams").then(m => m.runEtl(client)) },
     { name: "11-videos", fn: () => import("./11-videos").then(m => m.runEtl(client)) },
     { name: "12-transfers", fn: () => import("./12-transfers").then(m => m.runEtl(client)) },
+    { name: "13-world-cup", fn: () => import("./13-world-cup").then(m => m.runEtl(client)) },
   ];
 
   console.log("=== ETL Run Starting ===\n");

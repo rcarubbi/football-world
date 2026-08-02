@@ -33,6 +33,13 @@ const COUNTRY_TO_CODE: Record<string, string> = {
   "georgia": "ge", "armenia": "am", "azerbaijan": "az",
   "albania": "al", "honduras": "hn",
   "jamaica": "jm", "bolivia": "bo", "chile": "cl",
+  "costa rica": "cr", "united arab emirates": "ae",
+  "west germany": "de", "east germany": "de",
+  "soviet union": "ru", "czechoslovakia": "cz",
+  "yugoslavia": "rs", "serbia and montenegro": "rs",
+  "zaire": "cd", "dutch east indies": "id",
+  "netherlands antilles": "cw", "trinidad and tobago": "tt",
+  "northern ireland": "gb-nir", "germany fr": "de",
 };
 
 function getCountryCode(nationality: string): string | null {
